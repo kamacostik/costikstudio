@@ -55,23 +55,36 @@ class ProductCard extends StatelessWidget {
               ),
               if (!compact) ...[
                 const SizedBox(height: 18),
-                for (final feature in product.features.take(2))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.check_circle_rounded,
-                          color: accent,
-                          size: 18,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final feature in product.features.take(2))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle_rounded,
+                                color: accent,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  feature,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(feature)),
-                      ],
-                    ),
+                    ],
                   ),
-              ],
-              const Spacer(),
+                ),
+              ] else
+                const Spacer(),
               const SizedBox(height: 18),
               Row(
                 children: [

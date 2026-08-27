@@ -98,7 +98,7 @@ class HomePage extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 380,
-                    mainAxisExtent: 330,
+                    mainAxisExtent: 380,
                     crossAxisSpacing: 18,
                     mainAxisSpacing: 18,
                   ),
