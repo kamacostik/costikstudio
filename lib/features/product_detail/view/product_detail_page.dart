@@ -92,13 +92,13 @@ class ProductDetailPage extends StatelessWidget {
                     children: [
                       if (item.hasAdmin)
                         FilledButton.icon(
-                          onPressed: () {},
+                          onPressed: () => context.go('/support'),
                           icon: const Icon(Icons.open_in_new_rounded),
                           label: const Text('Open web admin'),
                         ),
                       if (item.hasDownload)
                         OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: () => context.go('/apps'),
                           icon: const Icon(Icons.download_rounded),
                           label: const Text('Download app'),
                         ),

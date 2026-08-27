@@ -13,8 +13,10 @@ const dummyProducts = <ProductItem>[
     adminUrl: 'https://admin.cospos.costikstudio.com',
     features: [
       'Web admin and cashier dashboard',
-      'Products, discounts, customers, and outlets',
+      'Products, ingredients, discounts, customers, and outlets',
       'Sales, payment, debt, and stock reports',
+      'Built-in Chat Support for mobile & web admin',
+      'CosPOS store app_type login guard enforcement',
     ],
   ),
   ProductItem(
@@ -31,6 +33,24 @@ const dummyProducts = <ProductItem>[
       'Generic product and sales flow',
       'Multi-outlet and staff management',
       'Subscription-ready PRO features',
+      'Universal POS branding (No coffee shop locked copy)',
+    ],
+  ),
+  ProductItem(
+    id: 'scoreboard-online',
+    name: 'Scoreboard Online',
+    tagline: 'Multi-sport digital scoreboard & realtime match timeline.',
+    description: 'A mobile scoreboard for badminton, basketball, soccer, volleyball, and casual matches with realtime tracking, stats, frequency-capped AdMob monetization, and optional lifetime Remove Ads purchase.',
+    category: ProductCategory.productivity,
+    status: ProductStatus.live,
+    accentHex: 0xFF10B981,
+    productUrl: 'https://scoreboard.costikstudio.com',
+    downloadUrl: 'https://apps.costikstudio.com/scoreboard-online',
+    features: [
+      'Multi-sport landscape scoreboard with tap to score',
+      'Debounced realtime match persistence & Supabase stats',
+      'Policy-safe AdMob setup (Frequency caps + Adaptive banners)',
+      'Remove Ads Lifetime in-app purchase integration',
     ],
   ),
   ProductItem(
