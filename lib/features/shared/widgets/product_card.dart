@@ -15,7 +15,7 @@ class ProductCard extends StatelessWidget {
 
     return Card(
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(18),
         onTap: () => context.go('/products/${product.id}'),
         child: Padding(
           padding: EdgeInsets.all(compact ? 18 : 24),
@@ -28,7 +28,7 @@ class ProductCard extends StatelessWidget {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       _iconForCategory(product.category),
@@ -42,14 +42,19 @@ class ProductCard extends StatelessWidget {
               const SizedBox(height: 20),
               Text(
                 product.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w900,
                   color: CostikStudioTheme.navy,
+                  letterSpacing: -0.3,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 product.tagline,
+                maxLines: compact ? 3 : 4,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium
                     ?.copyWith(color: CostikStudioTheme.slate, height: 1.5),
               ),
@@ -133,7 +138,8 @@ class _StatusChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         label,

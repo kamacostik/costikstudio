@@ -32,17 +32,18 @@ class HomePage extends StatelessWidget {
                           const _HeroBadge(),
                           const SizedBox(height: 24),
                           Text(
-                            'Build, launch, and manage Costik digital products from one studio.',
+                            'One studio for apps, web admins, and digital products.',
                             style: Theme.of(context).textTheme.displayMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.w900,
-                                  height: 1.05,
-                                  letterSpacing: -1.2,
+                                  height: 1.04,
+                                  letterSpacing: -1.4,
+                                  color: CostikStudioTheme.navy,
                                 ),
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'CostikStudio is the central portal for CosPOS, IPTV, business tools, and free apps created by Kamaruddin.',
+                            'CostikStudio is the official product hub for CosPOS, IPTV, business tools, and downloadable apps built for real users and client operations.',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   color: CostikStudioTheme.slate,
@@ -82,14 +83,29 @@ class HomePage extends StatelessWidget {
               },
             ),
           ),
+          const ResponsiveSection(
+            padding: EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: _StatsStrip(),
+          ),
           ResponsiveSection(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Featured products',
-                  style: Theme.of(context).textTheme.headlineMedium
-                      ?.copyWith(fontWeight: FontWeight.w900),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Featured products',
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => context.go('/products'),
+                      icon: const Icon(Icons.arrow_forward_rounded),
+                      label: const Text('View all'),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 GridView.builder(
@@ -108,6 +124,13 @@ class HomePage extends StatelessWidget {
               ],
             ),
           ),
+          ResponsiveSection(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 80),
+            child: _LaunchpadSection(
+              onProductsTap: () => context.go('/products'),
+              onAppsTap: () => context.go('/apps'),
+            ),
+          ),
         ],
       ),
     );
@@ -124,6 +147,9 @@ class _HeroBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: CostikStudioTheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: CostikStudioTheme.primary.withValues(alpha: 0.18),
+        ),
       ),
       child: const Text(
         'CostikStudio Product Portal',
@@ -131,6 +157,64 @@ class _HeroBadge extends StatelessWidget {
           color: CostikStudioTheme.primary,
           fontWeight: FontWeight.w900,
         ),
+      ),
+    );
+  }
+}
+
+class _StatsStrip extends StatelessWidget {
+  const _StatsStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+        child: Wrap(
+          spacing: 34,
+          runSpacing: 18,
+          alignment: WrapAlignment.spaceBetween,
+          children: const [
+            _StatItem(value: '7+', label: 'Projects listed'),
+            _StatItem(value: '3', label: 'Web admin portals'),
+            _StatItem(value: '4+', label: 'Downloadable apps'),
+            _StatItem(value: 'Cloudflare', label: 'Pages-ready portal'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  const _StatItem({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 190,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: CostikStudioTheme.primary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: CostikStudioTheme.slate,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -147,10 +231,18 @@ class _PortalPreviewCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           gradient: const LinearGradient(
-            colors: [Color(0xFF0F172A), Color(0xFF1D4ED8)],
+            colors: [Color(0xFF061B31), Color(0xFF533AFD), Color(0xFF0EA5E9)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF32325D).withValues(alpha: 0.25),
+              blurRadius: 45,
+              offset: const Offset(0, 30),
+              spreadRadius: -30,
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,6 +305,84 @@ class _PreviewLine extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LaunchpadSection extends StatelessWidget {
+  const _LaunchpadSection({
+    required this.onProductsTap,
+    required this.onAppsTap,
+  });
+
+  final VoidCallback onProductsTap;
+  final VoidCallback onAppsTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(34),
+      decoration: BoxDecoration(
+        color: CostikStudioTheme.navy,
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 760;
+          return Flex(
+            direction: isWide ? Axis.horizontal : Axis.vertical,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: isWide ? 6 : 0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ready for subdomains, downloads, and product access.',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'This first version keeps the portal static and clean, so Cloudflare Pages can deploy it quickly before we connect live product data later.',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        height: 1.6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isWide)
+                const SizedBox(width: 24)
+              else
+                const SizedBox(height: 20),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  FilledButton(
+                    onPressed: onProductsTap,
+                    child: const Text('Manage products'),
+                  ),
+                  OutlinedButton(
+                    onPressed: onAppsTap,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('View downloads'),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
