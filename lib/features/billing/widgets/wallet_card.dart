@@ -16,29 +16,65 @@ class WalletCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.account_balance_wallet_rounded, size: 34),
-            const SizedBox(height: 18),
-            const Text(
-              'Wallet balance',
-              style: TextStyle(
-                color: CostikStudioTheme.slate,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              formatRupiah(balance),
-              style: Theme.of(context).textTheme.headlineMedium
-                  ?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onTopUp,
-                icon: const Icon(Icons.add_card_rounded),
-                label: const Text('Top up dummy Rp100.000'),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: CostikStudioTheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.account_balance_wallet_rounded,
+                        color: CostikStudioTheme.primary,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Wallet balance',
+                          style: TextStyle(
+                            color: CostikStudioTheme.slate,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          formatRupiah(balance),
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: CostikStudioTheme.navy,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  onPressed: onTopUp,
+                  icon: const Icon(Icons.add_rounded, size: 16),
+                  label: const Text('Top Up'),
+                ),
+              ],
             ),
           ],
         ),

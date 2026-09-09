@@ -56,6 +56,24 @@ class BillingCubit extends Cubit<BillingState> {
     await _runMutation(() => repository.topUp(amount: 100000));
   }
 
+  void clearMessage() {
+    if (state.snapshot != null && state.snapshot!.message != null) {
+      emit(
+        state.copyWith(
+          snapshot: BillingSnapshot(
+            wallet: state.snapshot!.wallet,
+            products: state.snapshot!.products,
+            plans: state.snapshot!.plans,
+            subscriptions: state.snapshot!.subscriptions,
+            transactions: state.snapshot!.transactions,
+            invoices: state.snapshot!.invoices,
+            message: null,
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> checkoutPlan(String planId) async {
     await _runMutation(() => repository.checkoutPlan(planId: planId));
   }

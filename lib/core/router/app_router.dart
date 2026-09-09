@@ -9,6 +9,7 @@ import 'package:costikstudio/features/billing/view/billing_dashboard_page.dart';
 import 'package:costikstudio/features/home/view/home_page.dart';
 import 'package:costikstudio/features/product_detail/view/product_detail_page.dart';
 import 'package:costikstudio/features/products/view/products_page.dart';
+import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
 import 'package:costikstudio/features/support/view/support_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,6 +35,11 @@ GoRouter createAppRouter(AppExperience experience) {
               path: AppRoutes.products,
               name: AppRouteNames.products,
               builder: (context, state) => const ProductsPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.subscribeIptv,
+              name: AppRouteNames.subscribeIptv,
+              builder: (context, state) => const IptvSubscriptionPage(),
             ),
             GoRoute(
               path: '${AppRoutes.products}/:id',
@@ -142,7 +148,7 @@ class CostikStudioShell extends StatelessWidget {
                 const _NavItem('Home', AppRoutes.home),
                 const _NavItem('Products', AppRoutes.products),
                 if (authState.isAuthenticated) ...[
-                  const _NavItem('Billing', AppRoutes.billing),
+                  const _NavItem('Dashboard', AppRoutes.billing),
                   const _NavItem('Support', AppRoutes.support),
                 ],
               ];

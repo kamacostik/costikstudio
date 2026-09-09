@@ -1,8 +1,10 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
+import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class ProductDetailPage extends StatelessWidget {
@@ -34,6 +36,9 @@ class ProductDetailPage extends StatelessWidget {
     }
 
     final accent = Color(item.accentHex);
+    final isAuthenticated = context.select<AuthCubit, bool>(
+      (cubit) => cubit.state.isAuthenticated,
+    );
 
     return SingleChildScrollView(
       child: ResponsiveSection(
@@ -91,23 +96,37 @@ class ProductDetailPage extends StatelessWidget {
                     spacing: 12,
                     runSpacing: 12,
                     children: [
-                      if (item.hasAdmin)
+                      if (isAuthenticated) ...[
+                        if (item.hasAdmin)
+                          FilledButton.icon(
+                            onPressed: () => context.go('/support'),
+                            icon: const Icon(Icons.open_in_new_rounded),
+                            label: const Text('Open web admin'),
+                          ),
                         FilledButton.icon(
-                          onPressed: () => context.go('/support'),
-                          icon: const Icon(Icons.open_in_new_rounded),
-                          label: const Text('Open web admin'),
+                          onPressed: () {
+                            if (item.id == 'costik-iptv') {
+                              context.go(AppRoutes.subscribeIptv);
+                            } else {
+                              context.go(AppRoutes.billing);
+                            }
+                          },
+                          icon: const Icon(Icons.workspace_premium_rounded),
+                          label: const Text('Berlangganan sekarang'),
                         ),
-                      FilledButton.icon(
-                        onPressed: () => context.go(AppRoutes.billing),
-                        icon: const Icon(Icons.workspace_premium_rounded),
-                        label: const Text('Berlangganan sekarang'),
-                      ),
-                      if (item.hasDownload)
-                        OutlinedButton.icon(
-                          onPressed: () => context.go(AppRoutes.apps),
-                          icon: const Icon(Icons.download_rounded),
-                          label: const Text('Download app'),
+                        if (item.hasDownload)
+                          OutlinedButton.icon(
+                            onPressed: () => context.go(AppRoutes.apps),
+                            icon: const Icon(Icons.download_rounded),
+                            label: const Text('Download app'),
+                          ),
+                      ] else ...[
+                        FilledButton.icon(
+                          onPressed: () => context.go(AppRoutes.login),
+                          icon: const Icon(Icons.login_rounded),
+                          label: const Text('Login untuk berlangganan'),
                         ),
+                      ],
                     ],
                   ),
                 ],

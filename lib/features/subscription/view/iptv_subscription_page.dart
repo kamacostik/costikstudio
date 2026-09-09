@@ -1,0 +1,583 @@
+import 'package:costikstudio/app/theme/costik_studio_theme.dart';
+import 'package:costikstudio/core/billing/billing_format.dart';
+import 'package:costikstudio/core/data/dummy_products.dart';
+import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/core/router/app_routes.dart';
+import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+
+class IptvSubscriptionPage extends StatefulWidget {
+  const IptvSubscriptionPage({super.key, this.onBack, this.isEmbedded = false});
+
+  final VoidCallback? onBack;
+  final bool isEmbedded;
+
+  @override
+  State<IptvSubscriptionPage> createState() => _IptvSubscriptionPageState();
+}
+
+class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _deviceCountController = TextEditingController(text: '10');
+  final _organizationController = TextEditingController();
+  final _contactNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+
+  static const int pricePerDevice = 20000;
+  int _deviceCount = 10;
+  int _billingCycleMonths = 1; // 1, 3, 6, 12 bulan
+
+  ProductItem get _product =>
+      dummyProducts.firstWhere(
+        (p) => p.id == 'costik-iptv',
+        orElse: () => dummyProducts.first,
+      );
+
+  @override
+  void initState() {
+    super.initState();
+    _deviceCountController.addListener(_onDeviceCountChanged);
+  }
+
+  void _onDeviceCountChanged() {
+    final parsed = int.tryParse(_deviceCountController.text.trim()) ?? 0;
+    if (parsed != _deviceCount) {
+      setState(() {
+        _deviceCount = parsed;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _deviceCountController.dispose();
+    _organizationController.dispose();
+    _contactNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  int get _totalPrice => _deviceCount * pricePerDevice * _billingCycleMonths;
+
+  void _submitOrder() {
+    if (!_formKey.currentState!.validate()) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: const [
+            Icon(Icons.check_circle_rounded, color: Colors.green, size: 28),
+            SizedBox(width: 10),
+            Text('Langganan Berhasil Didaftarkan'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Terima kasih! Pesanan langganan Costik IPTV Anda telah dicatat:',
+              style: TextStyle(color: CostikStudioTheme.slate),
+            ),
+            const SizedBox(height: 16),
+            _SummaryRow(label: 'Produk', value: 'Costik IPTV'),
+            _SummaryRow(label: 'Jumlah Device', value: '$_deviceCount Device'),
+            _SummaryRow(
+              label: 'Durasi',
+              value: '$_billingCycleMonths Bulan',
+            ),
+            _SummaryRow(
+              label: 'Total Tagihan',
+              value: formatRupiah(_totalPrice),
+              isBold: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Tutup'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.go(AppRoutes.billing);
+            },
+            child: const Text('Ke Dashboard Billing'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = Color(_product.accentHex);
+
+    final content = Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Breadcrumb / Back
+          TextButton.icon(
+            onPressed: widget.onBack ??
+                () => context.go('${AppRoutes.products}/costik-iptv'),
+            icon: const Icon(Icons.arrow_back_rounded, size: 18),
+            label: const Text('Kembali ke Katalog Produk'),
+            style: TextButton.styleFrom(
+              foregroundColor: CostikStudioTheme.slate,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+              // Title Section
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      Icons.tv_rounded,
+                      color: accent,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Formulir Berlangganan Costik IPTV',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: CostikStudioTheme.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Hitung kebutuhan lisensi device IPTV untuk hotel atau bisnis Anda dan lakukan aktivasi.',
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+
+              // Main Layout (Form & Summary Card)
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth > 800;
+
+                  final formSection = Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Card Device Calculation
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.devices_other_rounded,
+                                      color: CostikStudioTheme.primary),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Kalkulasi Kebutuhan Device',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(fontWeight: FontWeight.w900),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Harga lisensi Costik IPTV adalah ${formatRupiah(pricePerDevice)} / device / bulan.',
+                                style: const TextStyle(
+                                    color: CostikStudioTheme.slate),
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Input Device
+                              TextFormField(
+                                controller: _deviceCountController,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                decoration: InputDecoration(
+                                  labelText: 'Jumlah Device (Kamar / Layar)',
+                                  hintText: 'Contoh: 25',
+                                  helperText:
+                                      'Minimal 1 device (${formatRupiah(pricePerDevice)}/device/bulan)',
+                                  prefixIcon:
+                                      const Icon(Icons.tv_rounded),
+                                  suffixText: 'Device',
+                                ),
+                                validator: (val) {
+                                  final num = int.tryParse(val?.trim() ?? '');
+                                  if (num == null || num < 1) {
+                                    return 'Masukkan jumlah minimal 1 device';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 18),
+
+                              // Quick device selection buttons
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [10, 25, 50, 100, 200].map((preset) {
+                                  final isSelected = _deviceCount == preset;
+                                  return ChoiceChip(
+                                    label: Text('$preset Device'),
+                                    selected: isSelected,
+                                    onSelected: (selected) {
+                                      if (selected) {
+                                        _deviceCountController.text =
+                                            preset.toString();
+                                      }
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+
+                              const SizedBox(height: 26),
+                              const Divider(),
+                              const SizedBox(height: 18),
+
+                              // Billing duration
+                              Text(
+                                'Durasi Berlangganan',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: [
+                                  {'label': '1 Bulan', 'months': 1},
+                                  {'label': '3 Bulan', 'months': 3},
+                                  {'label': '6 Bulan', 'months': 6},
+                                  {'label': '1 Tahun (12 Bln)', 'months': 12},
+                                ].map((item) {
+                                  final months = item['months'] as int;
+                                  final label = item['label'] as String;
+                                  final isSelected =
+                                      _billingCycleMonths == months;
+                                  return ChoiceChip(
+                                    label: Text(label),
+                                    selected: isSelected,
+                                    onSelected: (selected) {
+                                      if (selected) {
+                                        setState(() {
+                                          _billingCycleMonths = months;
+                                        });
+                                      }
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Card Business & Contact Details
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: const [
+                                  Icon(Icons.business_rounded,
+                                      color: CostikStudioTheme.primary),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'Informasi Bisnis / Hotel',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              TextFormField(
+                                controller: _organizationController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Nama Hotel / Instansi / Perusahaan',
+                                  hintText: 'Contoh: Grand Costik Hotel & Resort',
+                                  prefixIcon: Icon(Icons.apartment_rounded),
+                                ),
+                                validator: (val) =>
+                                    (val == null || val.trim().isEmpty)
+                                        ? 'Harap isi nama hotel/perusahaan'
+                                        : null,
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _contactNameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Nama Penanggung Jawab (PIC)',
+                                  hintText: 'Contoh: Budi Santoso',
+                                  prefixIcon: Icon(Icons.person_rounded),
+                                ),
+                                validator: (val) =>
+                                    (val == null || val.trim().isEmpty)
+                                        ? 'Harap isi nama kontak penanggung jawab'
+                                        : null,
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _emailController,
+                                      keyboardType: TextInputType.emailAddress,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Alamat Email',
+                                        hintText: 'pic@hotel.com',
+                                        prefixIcon: Icon(Icons.email_rounded),
+                                      ),
+                                      validator: (val) {
+                                        if (val == null || val.trim().isEmpty) {
+                                          return 'Harap isi email';
+                                        }
+                                        if (!val.contains('@')) {
+                                          return 'Format email tidak valid';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _phoneController,
+                                      keyboardType: TextInputType.phone,
+                                      decoration: const InputDecoration(
+                                        labelText: 'No. WhatsApp / Telepon',
+                                        hintText: '08123456789',
+                                        prefixIcon: Icon(Icons.phone_rounded),
+                                      ),
+                                      validator: (val) =>
+                                          (val == null || val.trim().isEmpty)
+                                              ? 'Harap isi nomor telepon'
+                                              : null,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+
+                  final summarySection = Card(
+                    color: CostikStudioTheme.navy,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Ringkasan Pesanan',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _OrderSummaryRow(
+                            label: 'Produk',
+                            value: 'Costik IPTV',
+                          ),
+                          _OrderSummaryRow(
+                            label: 'Tarif per Device',
+                            value: '${formatRupiah(pricePerDevice)} / bln',
+                          ),
+                          _OrderSummaryRow(
+                            label: 'Jumlah Device',
+                            value: '$_deviceCount unit',
+                          ),
+                          _OrderSummaryRow(
+                            label: 'Durasi Berlangganan',
+                            value: '$_billingCycleMonths Bulan',
+                          ),
+                          const Divider(color: Colors.white24, height: 28),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Total Estimasi',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                formatRupiah(_totalPrice),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: CostikStudioTheme.primary,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                              ),
+                              onPressed: _submitOrder,
+                              icon: const Icon(Icons.check_circle_rounded),
+                              label: const Text(
+                                'Konfirmasi & Lanjut Pembayaran',
+                                style: TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Center(
+                            child: Text(
+                              'Aktivasi instan & dukungan setup server cloud',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+
+                  if (isWide) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 3, child: formSection),
+                        const SizedBox(width: 24),
+                        SizedBox(width: 360, child: summarySection),
+                      ],
+                    );
+                  }
+
+                  return Column(
+                    children: [
+                      formSection,
+                      const SizedBox(height: 24),
+                      summarySection,
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+
+    if (widget.isEmbedded) {
+      return content;
+    }
+
+    return SingleChildScrollView(
+      child: ResponsiveSection(
+        child: content,
+      ),
+    );
+  }
+}
+
+class _OrderSummaryRow extends StatelessWidget {
+  const _OrderSummaryRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    this.isBold = false,
+  });
+
+  final String label;
+  final String value;
+  final bool isBold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: CostikStudioTheme.slate)),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: isBold ? FontWeight.w900 : FontWeight.w600,
+              color: isBold ? CostikStudioTheme.primary : CostikStudioTheme.navy,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

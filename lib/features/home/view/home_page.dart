@@ -2,6 +2,7 @@ import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/core/router/app_router.dart';
+import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,67 +43,70 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1040),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 86, 24, 96),
-            child: Column(
-              children: [
-                const _HeroBadge(),
-                const SizedBox(height: 28),
-                Text(
-                  'Launch business apps from one clean studio.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    color: CostikStudioTheme.navy,
-                    fontWeight: FontWeight.w900,
-                    height: 1.04,
-                    letterSpacing: -1.6,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 690),
-                  child: Text(
-                    'CostikStudio brings billing, downloads, and product access into a simple portal for IPTV, Digital Signage, CosHRIS, and Smart INV.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: CostikStudioTheme.slate,
-                      height: 1.65,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 34),
-                Wrap(
-                  spacing: 14,
-                  runSpacing: 14,
-                  alignment: WrapAlignment.center,
+      child: Column(
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1040),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 86, 24, 96),
+                child: Column(
                   children: [
-                    FilledButton.icon(
-                      onPressed: () => context.go('/billing'),
-                      icon: const Icon(Icons.account_balance_wallet_rounded),
-                      label: const Text('Open Billing'),
+                    const _HeroBadge(),
+                    const SizedBox(height: 28),
+                    Text(
+                      'Launch business apps from one clean studio.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                        color: CostikStudioTheme.navy,
+                        fontWeight: FontWeight.w900,
+                        height: 1.04,
+                        letterSpacing: -1.6,
+                      ),
                     ),
-                    OutlinedButton.icon(
-                      onPressed: HomePage.scrollToProducts,
-                      icon: const Icon(Icons.apps_rounded),
-                      label: const Text('View Products'),
+                    const SizedBox(height: 18),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 690),
+                      child: Text(
+                        'CostikStudio brings all your business applications into a single central portal for IPTV, Digital Signage, CosHRIS, and Smart INV.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: CostikStudioTheme.slate,
+                          height: 1.65,
+                        ),
+                      ),
                     ),
+                    const SizedBox(height: 34),
+                    Wrap(
+                      spacing: 14,
+                      runSpacing: 14,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        FilledButton.icon(
+                          onPressed: () => context.go(AppRoutes.login),
+                          icon: const Icon(Icons.login_rounded),
+                          label: const Text('Login'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: HomePage.scrollToProducts,
+                          icon: const Icon(Icons.apps_rounded),
+                          label: const Text('View Products'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 54),
+                    const _MinimalPortalPreview(),
+                    const SizedBox(height: 92),
+                    _ProductSection(key: _productsKey, products: _focusProducts),
+                    const SizedBox(height: 92),
+                    const _HowItWorksSection(),
                   ],
                 ),
-                const SizedBox(height: 54),
-                const _MinimalPortalPreview(),
-                const SizedBox(height: 92),
-                _ProductSection(key: _productsKey, products: _focusProducts),
-                const SizedBox(height: 92),
-                const _HowItWorksSection(),
-                const SizedBox(height: 92),
-                const SiteFooter(),
-              ],
+              ),
             ),
           ),
-        ),
+          const SiteFooter(),
+        ],
       ),
     );
   }
@@ -160,19 +164,19 @@ class _MinimalPortalPreview extends StatelessWidget {
             final isWide = constraints.maxWidth > 720;
             final items = const [
               _PreviewItem(
-                icon: Icons.wallet_rounded,
-                title: 'Billing wallet',
-                description: 'Top-up and subscription flow for customers.',
+                icon: Icons.hub_rounded,
+                title: 'Central Access',
+                description: 'A single portal gate to access and launch all your Costik products.',
               ),
               _PreviewItem(
-                icon: Icons.cloud_download_rounded,
-                title: 'App downloads',
-                description: 'Central place for installers and app files.',
+                icon: Icons.grid_view_rounded,
+                title: 'Integrated Ecosystem',
+                description: 'Unified solutions for IPTV, Digital Signage, HRIS, and Smart INV.',
               ),
               _PreviewItem(
-                icon: Icons.dashboard_customize_rounded,
-                title: 'Product hub',
-                description: 'Short paths to active Costik products.',
+                icon: Icons.devices_rounded,
+                title: 'Cloud & Multi-Platform',
+                description: 'Seamlessly managed from cloud across web, mobile, TV, and desktop.',
               ),
             ];
 

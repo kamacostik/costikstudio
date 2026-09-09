@@ -4,10 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class ProductCard extends StatelessWidget {
-  const ProductCard({super.key, required this.product, this.compact = false});
+  const ProductCard({
+    super.key,
+    required this.product,
+    this.compact = false,
+    this.onTap,
+  });
 
   final ProductItem product;
   final bool compact;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +22,7 @@ class ProductCard extends StatelessWidget {
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => context.go('/products/${product.id}'),
+        onTap: onTap ?? () => context.go('/products/${product.id}'),
         child: Padding(
           padding: EdgeInsets.all(compact ? 18 : 24),
           child: Column(

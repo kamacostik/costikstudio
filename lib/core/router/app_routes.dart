@@ -9,6 +9,7 @@ class AppRoutes {
   static const billing = '/billing';
   static const adminBilling = '/admin/billing';
   static const support = '/support';
+  static const subscribeIptv = '/products/costik-iptv/subscribe';
 }
 
 class AppRouteNames {
@@ -17,6 +18,7 @@ class AppRouteNames {
   static const home = 'home';
   static const products = 'products';
   static const productDetail = 'product-detail';
+  static const subscribeIptv = 'subscribe-iptv';
   static const apps = 'apps';
   static const login = 'login';
   static const billing = 'billing';
