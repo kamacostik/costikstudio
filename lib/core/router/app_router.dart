@@ -196,6 +196,181 @@ class CostikStudioShell extends StatelessWidget {
   }
 }
 
+class SiteFooter extends StatelessWidget {
+  const SiteFooter({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final linkStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      color: Colors.white.withValues(alpha: 0.72),
+      height: 1.9,
+      fontWeight: FontWeight.w600,
+    );
+
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF07111F),
+      padding: const EdgeInsets.fromLTRB(24, 42, 24, 26),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1180),
+          child: Column(
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth > 760;
+                  final columns = [
+                    _FooterBrand(linkStyle: linkStyle),
+                    _FooterColumn(
+                      title: 'Quick Links',
+                      links: const ['Home', 'Products', 'Login'],
+                      linkStyle: linkStyle,
+                    ),
+                    _FooterColumn(
+                      title: 'Product',
+                      links: const ['Apps', 'Billing', 'Support'],
+                      linkStyle: linkStyle,
+                    ),
+                    _FooterColumn(
+                      title: 'Legal',
+                      links: const [
+                        'Privacy Policy',
+                        'Terms of Service',
+                        'Refund Policy',
+                      ],
+                      linkStyle: linkStyle,
+                    ),
+                    _FooterContact(linkStyle: linkStyle),
+                  ];
+
+                  return Wrap(
+                    spacing: isWide ? 56 : 28,
+                    runSpacing: 28,
+                    alignment: WrapAlignment.spaceBetween,
+                    children: [
+                      for (final column in columns)
+                        SizedBox(
+                          width: isWide ? 180 : double.infinity,
+                          child: column,
+                        ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 30),
+              Divider(color: Colors.white.withValues(alpha: 0.12)),
+              const SizedBox(height: 18),
+              Text(
+                '© 2026 CostikStudio - Costik Digital Solutions. All rights reserved.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FooterBrand extends StatelessWidget {
+  const _FooterBrand({required this.linkStyle});
+
+  final TextStyle? linkStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 300,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Wrap(
+            spacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
+              Text(
+                'CostikStudio',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Simple business app portal for subscriptions, downloads, billing, and support across Costik products.',
+            style: linkStyle,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FooterColumn extends StatelessWidget {
+  const _FooterColumn({
+    required this.title,
+    required this.links,
+    required this.linkStyle,
+  });
+
+  final String title;
+  final List<String> links;
+  final TextStyle? linkStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 12),
+        for (final link in links)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(link, style: linkStyle),
+          ),
+      ],
+    );
+  }
+}
+
+class _FooterContact extends StatelessWidget {
+  const _FooterContact({required this.linkStyle});
+
+  final TextStyle? linkStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Contact',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 12),
+        Text('support@costikstudio.com', style: linkStyle),
+        Text('Kendari, Indonesia', style: linkStyle),
+      ],
+    );
+  }
+}
+
 class _HeaderNavButton extends StatelessWidget {
   const _HeaderNavButton({
     required this.label,

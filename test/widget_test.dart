@@ -16,5 +16,14 @@ void main() {
     expect(find.text('Billing wallet'), findsOneWidget);
     expect(find.text('App downloads'), findsOneWidget);
     expect(find.text('Product hub'), findsOneWidget);
+    expect(find.text('Quick Links'), findsOneWidget);
+    expect(find.text('Legal'), findsOneWidget);
+    expect(find.text('support@costikstudio.com'), findsOneWidget);
+    expect(
+      find.text(
+        '© 2026 CostikStudio - Costik Digital Solutions. All rights reserved.',
+      ),
+      findsOneWidget,
+    );
   });
 }

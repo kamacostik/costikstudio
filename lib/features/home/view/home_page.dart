@@ -1,4 +1,5 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
+import 'package:costikstudio/core/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -59,6 +60,8 @@ class HomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 54),
                 const _MinimalPortalPreview(),
+                const SizedBox(height: 72),
+                const SiteFooter(),
               ],
             ),
           ),
