@@ -1,5 +1,7 @@
 import 'package:costikstudio/core/data/dummy_products.dart';
+import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/apps/view/apps_page.dart';
+import 'package:costikstudio/features/billing/view/billing_dashboard_page.dart';
 import 'package:costikstudio/features/home/view/home_page.dart';
 import 'package:costikstudio/features/product_detail/view/product_detail_page.dart';
 import 'package:costikstudio/features/products/view/products_page.dart';
@@ -13,32 +15,40 @@ final appRouter = GoRouter(
       builder: (context, state, child) => CostikStudioShell(child: child),
       routes: [
         GoRoute(
-          path: '/',
-          name: 'home',
+          path: AppRoutes.home,
+          name: AppRouteNames.home,
           builder: (context, state) => const HomePage(),
         ),
         GoRoute(
-          path: '/products',
-          name: 'products',
+          path: AppRoutes.products,
+          name: AppRouteNames.products,
           builder: (context, state) => const ProductsPage(),
         ),
         GoRoute(
-          path: '/products/:id',
-          name: 'product-detail',
+          path: '${AppRoutes.products}/:id',
+          name: AppRouteNames.productDetail,
           builder: (context, state) {
             final product = findProductById(state.pathParameters['id'] ?? '');
             return ProductDetailPage(product: product);
           },
         ),
         GoRoute(
-          path: '/apps',
-          name: 'apps',
+          path: AppRoutes.apps,
+          name: AppRouteNames.apps,
           builder: (context, state) => const AppsPage(),
         ),
-        GoRoute(path: '/downloads', redirect: (context, state) => '/apps'),
         GoRoute(
-          path: '/support',
-          name: 'support',
+          path: AppRoutes.downloads,
+          redirect: (context, state) => AppRoutes.apps,
+        ),
+        GoRoute(
+          path: AppRoutes.billing,
+          name: AppRouteNames.billing,
+          builder: (context, state) => const BillingDashboardPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.support,
+          name: AppRouteNames.support,
           builder: (context, state) => const SupportPage(),
         ),
       ],
@@ -52,10 +62,11 @@ class CostikStudioShell extends StatelessWidget {
   final Widget child;
 
   static const _navItems = [
-    _NavItem('Home', '/'),
-    _NavItem('Products', '/products'),
-    _NavItem('Apps', '/apps'),
-    _NavItem('Support', '/support'),
+    _NavItem('Home', AppRoutes.home),
+    _NavItem('Products', AppRoutes.products),
+    _NavItem('Apps', AppRoutes.apps),
+    _NavItem('Billing', AppRoutes.billing),
+    _NavItem('Support', AppRoutes.support),
   ];
 
   @override
@@ -65,7 +76,7 @@ class CostikStudioShell extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: InkWell(
-          onTap: () => context.go('/'),
+          onTap: () => context.go(AppRoutes.home),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
