@@ -1,6 +1,7 @@
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/apps/view/apps_page.dart';
+import 'package:costikstudio/features/billing/view/admin_billing_page.dart';
 import 'package:costikstudio/features/billing/view/billing_dashboard_page.dart';
 import 'package:costikstudio/features/home/view/home_page.dart';
 import 'package:costikstudio/features/product_detail/view/product_detail_page.dart';
@@ -47,6 +48,11 @@ final appRouter = GoRouter(
           builder: (context, state) => const BillingDashboardPage(),
         ),
         GoRoute(
+          path: AppRoutes.adminBilling,
+          name: AppRouteNames.adminBilling,
+          builder: (context, state) => const AdminBillingPage(),
+        ),
+        GoRoute(
           path: AppRoutes.support,
           name: AppRouteNames.support,
           builder: (context, state) => const SupportPage(),
@@ -66,6 +72,7 @@ class CostikStudioShell extends StatelessWidget {
     _NavItem('Products', AppRoutes.products),
     _NavItem('Apps', AppRoutes.apps),
     _NavItem('Billing', AppRoutes.billing),
+    _NavItem('Admin Billing', AppRoutes.adminBilling),
     _NavItem('Support', AppRoutes.support),
   ];
 

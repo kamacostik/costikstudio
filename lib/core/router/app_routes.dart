@@ -6,6 +6,7 @@ class AppRoutes {
   static const apps = '/apps';
   static const downloads = '/downloads';
   static const billing = '/billing';
+  static const adminBilling = '/admin/billing';
   static const support = '/support';
 }
 
@@ -17,5 +18,6 @@ class AppRouteNames {
   static const productDetail = 'product-detail';
   static const apps = 'apps';
   static const billing = 'billing';
+  static const adminBilling = 'admin-billing';
   static const support = 'support';
 }
