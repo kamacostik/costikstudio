@@ -1,0 +1,1 @@
+enum AppExperience { user, admin }

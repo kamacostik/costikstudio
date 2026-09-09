@@ -29,8 +29,9 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
     await tester.pumpAndSettle();
 
-    // Admin nav option should now be visible
+    // User build stays separated: admin dashboard nav never appears here.
     expect(find.byIcon(Icons.admin_panel_settings_rounded), findsWidgets);
-    expect(find.text('Admin'), findsWidgets);
+    expect(find.text('Admin Billing'), findsNothing);
+    expect(find.text('Pending top ups'), findsNothing);
   });
 }
