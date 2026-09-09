@@ -1,7 +1,4 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
-import 'package:costikstudio/core/data/dummy_products.dart';
-import 'package:costikstudio/features/shared/widgets/product_card.dart';
-import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,128 +7,62 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final featuredProducts = dummyProducts.take(3).toList();
-
     return SingleChildScrollView(
-      child: Column(
-        children: [
-          ResponsiveSection(
-            padding: const EdgeInsets.fromLTRB(24, 72, 24, 48),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 860;
-                return Flex(
-                  direction: isWide ? Axis.horizontal : Axis.vertical,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      flex: isWide ? 6 : 0,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const _HeroBadge(),
-                          const SizedBox(height: 24),
-                          Text(
-                            'One studio for apps, web admins, and digital products.',
-                            style: Theme.of(context).textTheme.displayMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  height: 1.04,
-                                  letterSpacing: -1.4,
-                                  color: CostikStudioTheme.navy,
-                                ),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            'CostikStudio is the official product hub for CosPOS, IPTV, business tools, and downloadable apps built for real users and client operations.',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  color: CostikStudioTheme.slate,
-                                  height: 1.6,
-                                ),
-                          ),
-                          const SizedBox(height: 32),
-                          Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            children: [
-                              FilledButton.icon(
-                                onPressed: () => context.go('/products'),
-                                icon: const Icon(Icons.grid_view_rounded),
-                                label: const Text('Explore products'),
-                              ),
-                              OutlinedButton.icon(
-                                onPressed: () => context.go('/apps'),
-                                icon: const Icon(Icons.download_rounded),
-                                label: const Text('Download apps'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isWide)
-                      const SizedBox(width: 48)
-                    else
-                      const SizedBox(height: 36),
-                    Expanded(
-                      flex: isWide ? 4 : 0,
-                      child: const _PortalPreviewCard(),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-          const ResponsiveSection(
-            padding: EdgeInsets.fromLTRB(24, 16, 24, 32),
-            child: _StatsStrip(),
-          ),
-          ResponsiveSection(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1040),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 86, 24, 96),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Featured products',
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(fontWeight: FontWeight.w900),
-                      ),
+                const _HeroBadge(),
+                const SizedBox(height: 28),
+                Text(
+                  'Launch business apps from one clean studio.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                    color: CostikStudioTheme.navy,
+                    fontWeight: FontWeight.w900,
+                    height: 1.04,
+                    letterSpacing: -1.6,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 690),
+                  child: Text(
+                    'CostikStudio brings billing, downloads, and product access into a simple portal for tools like CosPOS, Signage, IPTV, and HRIS.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: CostikStudioTheme.slate,
+                      height: 1.65,
                     ),
-                    TextButton.icon(
+                  ),
+                ),
+                const SizedBox(height: 34),
+                Wrap(
+                  spacing: 14,
+                  runSpacing: 14,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: () => context.go('/billing'),
+                      icon: const Icon(Icons.account_balance_wallet_rounded),
+                      label: const Text('Open Billing'),
+                    ),
+                    OutlinedButton.icon(
                       onPressed: () => context.go('/products'),
-                      icon: const Icon(Icons.arrow_forward_rounded),
-                      label: const Text('View all'),
+                      icon: const Icon(Icons.apps_rounded),
+                      label: const Text('View Products'),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                GridView.builder(
-                  itemCount: featuredProducts.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 380,
-                    mainAxisExtent: 420,
-                    crossAxisSpacing: 18,
-                    mainAxisSpacing: 18,
-                  ),
-                  itemBuilder: (context, index) =>
-                      ProductCard(product: featuredProducts[index]),
-                ),
+                const SizedBox(height: 54),
+                const _MinimalPortalPreview(),
               ],
             ),
           ),
-          ResponsiveSection(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 80),
-            child: _LaunchpadSection(
-              onProductsTap: () => context.go('/products'),
-              onAppsTap: () => context.go('/apps'),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -145,248 +76,132 @@ class _HeroBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: CostikStudioTheme.primary.withValues(alpha: 0.1),
+        color: CostikStudioTheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: CostikStudioTheme.primary.withValues(alpha: 0.18),
+          color: CostikStudioTheme.primary.withValues(alpha: 0.16),
         ),
       ),
       child: const Text(
-        'CostikStudio Product Portal',
+        'CostikStudio Portal',
         style: TextStyle(
           color: CostikStudioTheme.primary,
+          fontSize: 13,
           fontWeight: FontWeight.w900,
+          letterSpacing: 0.2,
         ),
       ),
     );
   }
 }
 
-class _StatsStrip extends StatelessWidget {
-  const _StatsStrip();
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
-        child: Wrap(
-          spacing: 34,
-          runSpacing: 18,
-          alignment: WrapAlignment.spaceBetween,
-          children: const [
-            _StatItem(value: '7+', label: 'Projects listed'),
-            _StatItem(value: '3', label: 'Web admin portals'),
-            _StatItem(value: '4+', label: 'Downloadable apps'),
-            _StatItem(value: 'Cloudflare', label: 'Pages-ready portal'),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  const _StatItem({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 190,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: CostikStudioTheme.primary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              color: CostikStudioTheme.slate,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PortalPreviewCard extends StatelessWidget {
-  const _PortalPreviewCard();
+class _MinimalPortalPreview extends StatelessWidget {
+  const _MinimalPortalPreview();
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF061B31), Color(0xFF533AFD), Color(0xFF0EA5E9)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF32325D).withValues(alpha: 0.25),
-              blurRadius: 45,
-              offset: const Offset(0, 30),
-              spreadRadius: -30,
+              color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+              blurRadius: 34,
+              offset: const Offset(0, 22),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(Icons.hub_rounded, color: Colors.white, size: 42),
-            const SizedBox(height: 26),
-            Text(
-              'One brand, many products.',
-              style: Theme.of(context).textTheme.headlineSmall
-                  ?.copyWith(color: Colors.white, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              'Use CostikStudio as the launchpad for web admins, product pages, documentation, downloads, and support.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.white.withValues(alpha: 0.78),
-                height: 1.6,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 720;
+            final items = const [
+              _PreviewItem(
+                icon: Icons.wallet_rounded,
+                title: 'Billing wallet',
+                description: 'Top-up and subscription flow for customers.',
               ),
-            ),
-            const SizedBox(height: 28),
-            const _PreviewLine(label: 'Portal', value: 'costikstudio.com'),
-            const _PreviewLine(
-              label: 'CosPOS Admin',
-              value: 'admin.cospos.costikstudio.com',
-            ),
-            const _PreviewLine(
-              label: 'IPTV Admin',
-              value: 'admin.iptv.costikstudio.com',
-            ),
-          ],
+              _PreviewItem(
+                icon: Icons.cloud_download_rounded,
+                title: 'App downloads',
+                description: 'Central place for installers and app files.',
+              ),
+              _PreviewItem(
+                icon: Icons.dashboard_customize_rounded,
+                title: 'Product hub',
+                description: 'Short paths to active Costik products.',
+              ),
+            ];
+
+            return Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                for (final item in items)
+                  SizedBox(
+                    width: isWide
+                        ? (constraints.maxWidth - 32) / 3
+                        : double.infinity,
+                    child: item,
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 }
 
-class _PreviewLine extends StatelessWidget {
-  const _PreviewLine({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.58)),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              value,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LaunchpadSection extends StatelessWidget {
-  const _LaunchpadSection({
-    required this.onProductsTap,
-    required this.onAppsTap,
+class _PreviewItem extends StatelessWidget {
+  const _PreviewItem({
+    required this.icon,
+    required this.title,
+    required this.description,
   });
 
-  final VoidCallback onProductsTap;
-  final VoidCallback onAppsTap;
+  final IconData icon;
+  final String title;
+  final String description;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(34),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: CostikStudioTheme.navy,
-        borderRadius: BorderRadius.circular(28),
+        color: CostikStudioTheme.background,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 760;
-          return Flex(
-            direction: isWide ? Axis.horizontal : Axis.vertical,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: isWide ? 6 : 0,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ready for subdomains, downloads, and product access.',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'This first version keeps the portal static and clean, so Cloudflare Pages can deploy it quickly before we connect live product data later.',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.72),
-                        height: 1.6,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isWide)
-                const SizedBox(width: 24)
-              else
-                const SizedBox(height: 20),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  FilledButton(
-                    onPressed: onProductsTap,
-                    child: const Text('Manage products'),
-                  ),
-                  OutlinedButton(
-                    onPressed: onAppsTap,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('View downloads'),
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: CostikStudioTheme.primary.withValues(alpha: 0.09),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: CostikStudioTheme.primary, size: 22),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: CostikStudioTheme.navy,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: CostikStudioTheme.slate, height: 1.5),
+          ),
+        ],
       ),
     );
   }
