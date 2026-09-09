@@ -297,11 +297,15 @@ class _PreviewLine extends StatelessWidget {
               style: TextStyle(color: Colors.white.withValues(alpha: 0.58)),
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],

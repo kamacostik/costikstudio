@@ -1,6 +1,7 @@
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/apps/view/apps_page.dart';
+import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:costikstudio/features/billing/view/admin_billing_page.dart';
 import 'package:costikstudio/features/billing/view/billing_dashboard_page.dart';
 import 'package:costikstudio/features/home/view/home_page.dart';
@@ -8,6 +9,7 @@ import 'package:costikstudio/features/product_detail/view/product_detail_page.da
 import 'package:costikstudio/features/products/view/products_page.dart';
 import 'package:costikstudio/features/support/view/support_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouter = GoRouter(
@@ -50,6 +52,13 @@ final appRouter = GoRouter(
         GoRoute(
           path: AppRoutes.adminBilling,
           name: AppRouteNames.adminBilling,
+          redirect: (context, state) {
+            final authCubit = context.read<AuthCubit>();
+            if (!authCubit.state.isAdmin) {
+              return AppRoutes.billing;
+            }
+            return null;
+          },
           builder: (context, state) => const AdminBillingPage(),
         ),
         GoRoute(
@@ -67,43 +76,79 @@ class CostikStudioShell extends StatelessWidget {
 
   final Widget child;
 
-  static const _navItems = [
-    _NavItem('Home', AppRoutes.home),
-    _NavItem('Products', AppRoutes.products),
-    _NavItem('Apps', AppRoutes.apps),
-    _NavItem('Billing', AppRoutes.billing),
-    _NavItem('Admin Billing', AppRoutes.adminBilling),
-    _NavItem('Support', AppRoutes.support),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: InkWell(
-          onTap: () => context.go(AppRoutes.home),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.auto_awesome_rounded),
-              SizedBox(width: 10),
-              Text('CostikStudio'),
-            ],
-          ),
-        ),
-        actions: [
-          for (final item in _navItems)
-            _HeaderNavButton(
-              label: item.label,
-              path: item.path,
-              isSelected: location == item.path,
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, authState) {
+        final navItems = [
+          const _NavItem('Home', AppRoutes.home),
+          const _NavItem('Products', AppRoutes.products),
+          const _NavItem('Apps', AppRoutes.apps),
+          const _NavItem('Billing', AppRoutes.billing),
+          if (authState.isAdmin)
+            const _NavItem('Admin', AppRoutes.adminBilling),
+          const _NavItem('Support', AppRoutes.support),
+        ];
+
+        return Scaffold(
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(56),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return AppBar(
+                  title: InkWell(
+                    onTap: () => context.go(AppRoutes.home),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.auto_awesome_rounded),
+                        SizedBox(width: 6),
+                        Text('CostikStudio'),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final item in navItems)
+                            _HeaderNavButton(
+                              label: item.label,
+                              path: item.path,
+                              isSelected: location == item.path,
+                            ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            tooltip:
+                                'Role: ${authState.isAdmin ? "Admin" : "User"}',
+                            icon: Icon(
+                              authState.isAdmin
+                                  ? Icons.admin_panel_settings_rounded
+                                  : Icons.person_rounded,
+                            ),
+                            onPressed: () {
+                              context.read<AuthCubit>().toggleRole();
+                              if (location == AppRoutes.adminBilling) {
+                                context.go(AppRoutes.billing);
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-          const SizedBox(width: 18),
-        ],
-      ),
-      body: child,
+          ),
+          body: child,
+        );
+      },
     );
   }
 }
@@ -122,6 +167,10 @@ class _HeaderNavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextButton(
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        minimumSize: const Size(40, 36),
+      ),
       onPressed: () => context.go(path),
       child: Text(
         label,

@@ -4,10 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('renders dummy admin billing dashboard', (tester) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(TextButton, 'Admin Billing'));
+    await tester.tap(find.byIcon(Icons.person_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Admin'));
     await tester.pumpAndSettle();
 
     expect(find.text('Admin Billing'), findsWidgets);
@@ -21,10 +27,16 @@ void main() {
   testWidgets('approves dummy top up in admin billing dashboard', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(TextButton, 'Admin Billing'));
+    await tester.tap(find.byIcon(Icons.person_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Admin'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Approve Rp 250.000'));
     await tester.pumpAndSettle();
