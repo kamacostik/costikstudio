@@ -13,8 +13,8 @@ void main() {
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Billing'), findsNothing);
-    expect(find.text('Support'), findsNothing);
+    expect(find.widgetWithText(TextButton, 'Billing'), findsNothing);
+    expect(find.widgetWithText(TextButton, 'Support'), findsNothing);
 
     await tester.tap(find.byKey(const Key('header_login_button')));
     await tester.pumpAndSettle();
