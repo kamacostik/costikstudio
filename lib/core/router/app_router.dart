@@ -2,6 +2,7 @@ import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/apps/view/apps_page.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
+import 'package:costikstudio/features/auth/view/login_page.dart';
 import 'package:costikstudio/features/billing/view/admin_billing_page.dart';
 import 'package:costikstudio/features/billing/view/billing_dashboard_page.dart';
 import 'package:costikstudio/features/home/view/home_page.dart';
@@ -43,6 +44,11 @@ final appRouter = GoRouter(
         GoRoute(
           path: AppRoutes.downloads,
           redirect: (context, state) => AppRoutes.apps,
+        ),
+        GoRoute(
+          path: AppRoutes.login,
+          name: AppRouteNames.login,
+          builder: (context, state) => const LoginPage(),
         ),
         GoRoute(
           path: AppRoutes.billing,
@@ -100,47 +106,45 @@ class CostikStudioShell extends StatelessWidget {
                 return AppBar(
                   title: InkWell(
                     onTap: () => context.go(AppRoutes.home),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.auto_awesome_rounded),
-                        SizedBox(width: 6),
-                        Text('CostikStudio'),
-                      ],
-                    ),
+                    child: const Text('CostikStudio'),
                   ),
                   actions: [
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (final item in navItems)
-                            _HeaderNavButton(
-                              label: item.label,
-                              path: item.path,
-                              isSelected: location == item.path,
-                            ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            tooltip:
-                                'Role: ${authState.isAdmin ? "Admin" : "User"}',
-                            icon: Icon(
-                              authState.isAdmin
-                                  ? Icons.admin_panel_settings_rounded
-                                  : Icons.person_rounded,
-                            ),
-                            onPressed: () {
-                              context.read<AuthCubit>().toggleRole();
-                              if (location == AppRoutes.adminBilling) {
-                                context.go(AppRoutes.billing);
-                              }
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                        ],
+                    for (final item in navItems)
+                      _HeaderNavButton(
+                        label: item.label,
+                        path: item.path,
+                        isSelected: location == item.path,
                       ),
-                    ),
+                    const SizedBox(width: 8),
+                    if (authState.isAuthenticated) ...[
+                      Chip(
+                        avatar: Icon(
+                          authState.isAdmin
+                              ? Icons.admin_panel_settings_rounded
+                              : Icons.person_rounded,
+                          size: 16,
+                        ),
+                        label: Text(
+                          authState.userEmail ?? '',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      OutlinedButton(
+                        onPressed: () {
+                          context.read<AuthCubit>().logout();
+                          context.go(AppRoutes.home);
+                        },
+                        child: const Text('Keluar'),
+                      ),
+                    ] else
+                      ElevatedButton.icon(
+                        key: const Key('header_login_button'),
+                        onPressed: () => context.go(AppRoutes.login),
+                        icon: const Icon(Icons.login_rounded, size: 16),
+                        label: const Text('Login'),
+                      ),
+                    const SizedBox(width: 8),
                   ],
                 );
               },

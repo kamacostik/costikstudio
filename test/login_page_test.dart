@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('hides Admin Billing nav for customer until logged in as admin', (
+  testWidgets('renders login page with quick fill presets and handles login', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1280, 800);
@@ -13,24 +13,23 @@ void main() {
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    // Unauthenticated / default customer view: no Admin Billing nav
-    expect(find.text('Admin Billing'), findsNothing);
-    expect(find.widgetWithText(ElevatedButton, 'Login'), findsOneWidget);
-
-    // Tap Login to go to login page
+    // Click Login button from header
     await tester.tap(find.byKey(const Key('header_login_button')));
     await tester.pumpAndSettle();
 
     expect(find.text('Masuk ke CostikStudio'), findsOneWidget);
+    expect(find.text('Fill Customer (user@costik.com)'), findsOneWidget);
+    expect(find.text('Fill Admin (admin@costik.com)'), findsOneWidget);
 
-    // Login as admin
-    await tester.tap(find.text('Fill Admin (admin@costik.com)'));
+    // Quick fill customer
+    await tester.tap(find.text('Fill Customer (user@costik.com)'));
     await tester.pumpAndSettle();
+
     await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
     await tester.pumpAndSettle();
 
-    // Admin nav option should now be visible
-    expect(find.byIcon(Icons.admin_panel_settings_rounded), findsWidgets);
-    expect(find.text('Admin'), findsWidgets);
+    // redirected to billing & header shows user email
+    expect(find.text('user@costik.com'), findsOneWidget);
+    expect(find.text('Keluar'), findsOneWidget);
   });
 }

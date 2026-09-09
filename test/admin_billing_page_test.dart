@@ -11,7 +11,11 @@ void main() {
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.person_rounded));
+    await tester.tap(find.byKey(const Key('header_login_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fill Admin (admin@costik.com)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(TextButton, 'Admin'));
     await tester.pumpAndSettle();
@@ -34,7 +38,11 @@ void main() {
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.person_rounded));
+    await tester.tap(find.byKey(const Key('header_login_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fill Admin (admin@costik.com)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(TextButton, 'Admin'));
     await tester.pumpAndSettle();
