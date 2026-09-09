@@ -18,6 +18,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('header_nav_/billing')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('dashboard_nav_invoices')));
+    await tester.pumpAndSettle();
 
     expect(find.text('Invoices'), findsOneWidget);
     expect(find.text('INV-20260909-001'), findsOneWidget);
@@ -42,12 +44,13 @@ void main() {
 
     await tester.tap(find.byKey(const Key('header_nav_/billing')));
     await tester.pumpAndSettle();
-    final topUpButton = find.widgetWithText(
-      FilledButton,
-      'Top up dummy Rp100.000',
+    await tester.tap(find.byKey(const Key('dashboard_nav_billing')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Top up dummy Rp100.000'),
     );
-    await tester.ensureVisible(topUpButton);
-    await tester.tap(topUpButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('dashboard_nav_invoices')));
     await tester.pumpAndSettle();
 
     expect(find.text('INV-20260909-002'), findsOneWidget);

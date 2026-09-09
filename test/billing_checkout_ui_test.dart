@@ -23,8 +23,15 @@ void main() {
     await tester.tap(subscribeButton);
     await tester.pumpAndSettle();
 
+    await tester.tap(find.byKey(const Key('dashboard_nav_billing')));
+    await tester.pumpAndSettle();
     expect(find.text('Rp 300.000'), findsWidgets);
+
+    await tester.tap(find.byKey(const Key('dashboard_nav_activity')));
+    await tester.pumpAndSettle();
     expect(find.text('Plan purchase'), findsWidgets);
+    await tester.tap(find.byKey(const Key('dashboard_nav_subscriptions')));
+    await tester.pumpAndSettle();
     expect(find.text('Basic • expires 31/10/2026'), findsOneWidget);
   });
 
@@ -54,6 +61,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Saldo kurang Rp 250.000'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('dashboard_nav_billing')));
+    await tester.pumpAndSettle();
     expect(find.text('Rp 50.000'), findsWidgets);
   });
 }
