@@ -23,8 +23,9 @@ void main() {
     await tester.tap(find.byKey(const Key('header_nav_/billing')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Dashboard Menu'), findsOneWidget);
-    expect(find.widgetWithText(TextButton, 'Aplikasi'), findsOneWidget);
+    expect(find.text('User Console'), findsOneWidget);
+    expect(find.text('Customer portal'), findsOneWidget);
+    expect(find.text('Paket & produk'), findsOneWidget);
     expect(
       find.byKey(const Key('dashboard_nav_subscriptions')),
       findsOneWidget,

@@ -210,70 +210,129 @@ class _DashboardNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = const [
-      _DashboardNavItem(_DashboardTab.apps, 'Aplikasi', Icons.apps_rounded),
+      _DashboardNavItem(
+        _DashboardTab.apps,
+        'Aplikasi',
+        'Paket & produk',
+        Icons.grid_view_rounded,
+      ),
       _DashboardNavItem(
         _DashboardTab.subscriptions,
         'Subscription',
-        Icons.workspace_premium_rounded,
+        'Paket aktif',
+        Icons.verified_rounded,
       ),
       _DashboardNavItem(
         _DashboardTab.billing,
         'Billing',
+        'Wallet & top-up',
         Icons.account_balance_wallet_rounded,
       ),
       _DashboardNavItem(
         _DashboardTab.activity,
         'Aktivitas',
-        Icons.receipt_long_rounded,
+        'Riwayat wallet',
+        Icons.timeline_rounded,
       ),
       _DashboardNavItem(
         _DashboardTab.invoices,
         'Invoice',
-        Icons.description_rounded,
+        'Tagihan & bukti',
+        Icons.receipt_rounded,
       ),
     ];
 
-    return Card(
-      child: Container(
-        width: isCompact ? double.infinity : 236,
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 14),
-              child: Text(
-                'Dashboard Menu',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: CostikStudioTheme.navy,
-                ),
-              ),
+    return Container(
+      width: isCompact ? double.infinity : 264,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B1220),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.12),
+            blurRadius: 28,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
-            if (isCompact)
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  for (final item in items)
-                    _DashboardNavButton(
-                      item: item,
-                      selected: selectedTab == item.tab,
-                      onPressed: () => onChanged(item.tab),
-                      isCompact: true,
-                    ),
-                ],
-              )
-            else
-              for (final item in items)
-                _DashboardNavButton(
-                  item: item,
-                  selected: selectedTab == item.tab,
-                  onPressed: () => onChanged(item.tab),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: CostikStudioTheme.primary,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.dashboard_customize_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
-          ],
-        ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'User Console',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                            ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Customer portal',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.58),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (isCompact)
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final item in items)
+                  _DashboardNavButton(
+                    item: item,
+                    selected: selectedTab == item.tab,
+                    onPressed: () => onChanged(item.tab),
+                    isCompact: true,
+                  ),
+              ],
+            )
+          else
+            for (final item in items) ...[
+              _DashboardNavButton(
+                item: item,
+                selected: selectedTab == item.tab,
+                onPressed: () => onChanged(item.tab),
+              ),
+              const SizedBox(height: 8),
+            ],
+        ],
       ),
     );
   }
@@ -294,29 +353,109 @@ class _DashboardNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextButton.icon(
-      key: ValueKey('dashboard_nav_${item.tab.name}'),
-      onPressed: onPressed,
-      icon: Icon(item.icon, size: 18),
-      label: Text(item.label),
-      style: TextButton.styleFrom(
-        alignment: Alignment.centerLeft,
-        foregroundColor: selected ? Colors.white : CostikStudioTheme.navy,
-        backgroundColor: selected
-            ? CostikStudioTheme.primary
-            : CostikStudioTheme.primary.withValues(alpha: 0.06),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        minimumSize: isCompact ? null : const Size(double.infinity, 44),
+    final foreground = selected
+        ? Colors.white
+        : Colors.white.withValues(alpha: 0.76);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: selected
+            ? const LinearGradient(
+                colors: [Color(0xFF2563EB), Color(0xFF14B8A6)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              )
+            : null,
+        color: selected ? null : Colors.transparent,
+        border: Border.all(
+          color: selected
+              ? Colors.white.withValues(alpha: 0.12)
+              : Colors.white.withValues(alpha: 0.06),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: ValueKey('dashboard_nav_${item.tab.name}'),
+          borderRadius: BorderRadius.circular(18),
+          onTap: onPressed,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isCompact ? 12 : 14,
+              vertical: isCompact ? 10 : 13,
+            ),
+            child: Row(
+              mainAxisSize: isCompact ? MainAxisSize.min : MainAxisSize.max,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? Colors.white.withValues(alpha: 0.16)
+                        : Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(item.icon, size: 18, color: foreground),
+                ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: foreground,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      if (!isCompact) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          item.subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white.withValues(
+                              alpha: selected ? 0.78 : 0.46,
+                            ),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (!isCompact) ...[
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white.withValues(
+                      alpha: selected ? 0.8 : 0.22,
+                    ),
+                    size: 20,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
 class _DashboardNavItem {
-  const _DashboardNavItem(this.tab, this.label, this.icon);
+  const _DashboardNavItem(this.tab, this.label, this.subtitle, this.icon);
 
   final _DashboardTab tab;
   final String label;
+  final String subtitle;
   final IconData icon;
 }

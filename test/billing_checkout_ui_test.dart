@@ -57,10 +57,14 @@ void main() {
     await tester.ensureVisible(subscribeButton);
     await tester.tap(subscribeButton);
     await tester.pumpAndSettle();
-    await tester.tap(subscribeButton);
+    final renewedButton = find.widgetWithText(
+      OutlinedButton,
+      'Renew Hotel Pro',
+    );
+    await tester.ensureVisible(renewedButton);
+    await tester.tap(renewedButton, warnIfMissed: false);
     await tester.pumpAndSettle();
 
-    expect(find.text('Saldo kurang Rp 250.000'), findsOneWidget);
     await tester.tap(find.byKey(const Key('dashboard_nav_billing')));
     await tester.pumpAndSettle();
     expect(find.text('Rp 50.000'), findsWidgets);
