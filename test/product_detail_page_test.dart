@@ -21,6 +21,7 @@ void main() {
         find.text('Live TV and guest room entertainment flow'),
         findsOneWidget,
       );
+      expect(find.text('Berlangganan sekarang'), findsOneWidget);
     },
   );
 

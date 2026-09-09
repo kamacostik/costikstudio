@@ -10,8 +10,8 @@ class AppsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final downloadableProducts = dummyProducts
-        .where((product) => product.hasDownload || product.isFree)
+    final products = dummyProducts
+        .where((product) => product.id == 'costik-iptv')
         .toList();
 
     return SingleChildScrollView(
@@ -19,49 +19,72 @@ class AppsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: CostikStudioTheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: CostikStudioTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.apps_rounded,
+                      color: CostikStudioTheme.primary,
+                      size: 30,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.download_for_offline_rounded,
-                    color: CostikStudioTheme.primary,
-                    size: 32,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Produk Aplikasi',
+                          style: Theme.of(context).textTheme.displaySmall
+                              ?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Pilih aplikasi yang dipasarkan CostikStudio, lihat informasi produk, lalu lanjut berlangganan.',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: CostikStudioTheme.slate,
+                                height: 1.5,
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Download Center',
-                        style: Theme.of(context).textTheme.displaySmall
-                            ?.copyWith(fontWeight: FontWeight.w900),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Official APK builds, Play Store badges, and direct links for CostikStudio mobile apps.',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: CostikStudioTheme.slate,
-                              height: 1.5,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 36),
-            for (final item in downloadableProducts) ...[
-              _DownloadCard(item: item),
-              const SizedBox(height: 20),
-            ],
+            const SizedBox(height: 28),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth > 760;
+                return Wrap(
+                  spacing: 18,
+                  runSpacing: 18,
+                  children: [
+                    for (final product in products)
+                      SizedBox(
+                        width: isWide
+                            ? (constraints.maxWidth - 18) / 2
+                            : double.infinity,
+                        child: _AppProductCard(item: product),
+                      ),
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -69,8 +92,8 @@ class AppsPage extends StatelessWidget {
   }
 }
 
-class _DownloadCard extends StatelessWidget {
-  const _DownloadCard({required this.item});
+class _AppProductCard extends StatelessWidget {
+  const _AppProductCard({required this.item});
 
   final ProductItem item;
 
@@ -78,98 +101,76 @@ class _DownloadCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = Color(item.accentHex);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Card(
+      child: InkWell(
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        onTap: () => context.go('/products/${item.id}'),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(Icons.android_rounded, color: accent, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.name,
-                      style: Theme.of(context).textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w900),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    Text(
-                      item.tagline,
-                      style: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(color: CostikStudioTheme.slate),
+                    child: Icon(Icons.tv_rounded, color: accent, size: 26),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.name,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.status.name.toUpperCase(),
+                          style: TextStyle(
+                            color: accent,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text(
+                item.tagline,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: CostikStudioTheme.navy,
+                  fontWeight: FontWeight.w800,
+                  height: 1.4,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            item.description,
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: CostikStudioTheme.slate, height: 1.5),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 12,
-            runSpacing: 10,
-            children: [
-              ElevatedButton.icon(
+              const SizedBox(height: 10),
+              Text(
+                item.description,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: CostikStudioTheme.slate, height: 1.5),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
                 onPressed: () => context.go('/products/${item.id}'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: accent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.info_outline_rounded, size: 18),
-                label: const Text('View Details'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () {},
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.download_rounded, size: 18),
-                label: const Text('Download APK (v1.0.0)'),
+                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                label: const Text('Lihat informasi & berlangganan'),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

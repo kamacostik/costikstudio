@@ -1,5 +1,6 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -96,9 +97,14 @@ class ProductDetailPage extends StatelessWidget {
                           icon: const Icon(Icons.open_in_new_rounded),
                           label: const Text('Open web admin'),
                         ),
+                      FilledButton.icon(
+                        onPressed: () => context.go(AppRoutes.billing),
+                        icon: const Icon(Icons.workspace_premium_rounded),
+                        label: const Text('Berlangganan sekarang'),
+                      ),
                       if (item.hasDownload)
                         OutlinedButton.icon(
-                          onPressed: () => context.go('/apps'),
+                          onPressed: () => context.go(AppRoutes.apps),
                           icon: const Icon(Icons.download_rounded),
                           label: const Text('Download app'),
                         ),
