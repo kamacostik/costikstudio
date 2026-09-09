@@ -388,6 +388,7 @@ class _HeaderNavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextButton(
+      key: ValueKey('header_nav_$path'),
       style: TextButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         minimumSize: const Size(40, 36),

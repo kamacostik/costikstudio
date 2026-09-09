@@ -16,7 +16,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(TextButton, 'Billing'));
+    await tester.tap(find.byKey(const Key('header_nav_/billing')));
     await tester.pumpAndSettle();
 
     expect(find.text('Invoices'), findsOneWidget);
@@ -26,6 +26,10 @@ void main() {
   });
 
   testWidgets('top up creates visible paid top up invoice', (tester) async {
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
@@ -36,11 +40,14 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(TextButton, 'Billing'));
+    await tester.tap(find.byKey(const Key('header_nav_/billing')));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.widgetWithText(FilledButton, 'Top up dummy Rp100.000'),
+    final topUpButton = find.widgetWithText(
+      FilledButton,
+      'Top up dummy Rp100.000',
     );
+    await tester.ensureVisible(topUpButton);
+    await tester.tap(topUpButton);
     await tester.pumpAndSettle();
 
     expect(find.text('INV-20260909-002'), findsOneWidget);

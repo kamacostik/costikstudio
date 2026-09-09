@@ -16,7 +16,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(TextButton, 'Billing'));
+    await tester.tap(find.byKey(const Key('header_nav_/billing')));
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(OutlinedButton, 'Renew Basic'), findsOneWidget);

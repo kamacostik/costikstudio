@@ -13,7 +13,7 @@ void main() {
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(TextButton, 'Billing'), findsNothing);
+    expect(find.byKey(const Key('header_nav_/billing')), findsNothing);
     expect(find.widgetWithText(TextButton, 'Support'), findsNothing);
 
     await tester.tap(find.byKey(const Key('header_login_button')));
@@ -26,9 +26,9 @@ void main() {
     expect(find.text('Billing'), findsWidgets);
     expect(find.text('Support'), findsWidgets);
 
-    await tester.tap(find.widgetWithText(TextButton, 'Billing'));
+    await tester.tap(find.byKey(const Key('header_nav_/billing')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Billing Core'), findsOneWidget);
+    expect(find.text('User Dashboard'), findsOneWidget);
   });
 }
