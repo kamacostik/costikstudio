@@ -9,7 +9,14 @@ void main() {
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Billing'));
+    await tester.tap(find.byKey(const Key('header_login_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fill Customer (user@costik.com)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Billing'));
     await tester.pumpAndSettle();
     final subscribeButton = find.widgetWithText(OutlinedButton, 'Renew Basic');
     await tester.ensureVisible(subscribeButton);
@@ -27,7 +34,14 @@ void main() {
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Billing'));
+    await tester.tap(find.byKey(const Key('header_login_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fill Customer (user@costik.com)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Billing'));
     await tester.pumpAndSettle();
     final subscribeButton = find.widgetWithText(
       OutlinedButton,

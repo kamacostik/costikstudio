@@ -9,7 +9,14 @@ void main() {
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Billing'));
+    await tester.tap(find.byKey(const Key('header_login_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fill Customer (user@costik.com)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Billing'));
     await tester.pumpAndSettle();
 
     expect(find.text('Invoices'), findsOneWidget);
@@ -22,7 +29,14 @@ void main() {
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Billing'));
+    await tester.tap(find.byKey(const Key('header_login_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fill Customer (user@costik.com)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextButton, 'Billing'));
     await tester.pumpAndSettle();
     await tester.tap(
       find.widgetWithText(FilledButton, 'Top up dummy Rp100.000'),

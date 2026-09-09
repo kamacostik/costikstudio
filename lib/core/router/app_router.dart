@@ -62,6 +62,13 @@ GoRouter createAppRouter(AppExperience experience) {
             GoRoute(
               path: AppRoutes.billing,
               name: AppRouteNames.billing,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAuthenticated) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
               builder: (context, state) => const BillingDashboardPage(),
             ),
             GoRoute(
@@ -72,6 +79,13 @@ GoRouter createAppRouter(AppExperience experience) {
             GoRoute(
               path: AppRoutes.support,
               name: AppRouteNames.support,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAuthenticated) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
               builder: (context, state) => const SupportPage(),
             ),
           ] else ...[
@@ -124,12 +138,14 @@ class CostikStudioShell extends StatelessWidget {
       builder: (context, authState) {
         final navItems = isAdminApp
             ? const [_NavItem('Admin Billing', AppRoutes.adminBilling)]
-            : const [
-                _NavItem('Home', AppRoutes.home),
-                _NavItem('Products', AppRoutes.products),
-                _NavItem('Apps', AppRoutes.apps),
-                _NavItem('Billing', AppRoutes.billing),
-                _NavItem('Support', AppRoutes.support),
+            : [
+                const _NavItem('Home', AppRoutes.home),
+                const _NavItem('Products', AppRoutes.products),
+                const _NavItem('Apps', AppRoutes.apps),
+                if (authState.isAuthenticated) ...[
+                  const _NavItem('Billing', AppRoutes.billing),
+                  const _NavItem('Support', AppRoutes.support),
+                ],
               ];
 
         return Scaffold(
@@ -149,17 +165,11 @@ class CostikStudioShell extends StatelessWidget {
                 ),
               const SizedBox(width: 8),
               if (authState.isAuthenticated) ...[
-                Chip(
-                  avatar: Icon(
-                    authState.isAdmin
-                        ? Icons.admin_panel_settings_rounded
-                        : Icons.person_rounded,
-                    size: 16,
-                  ),
-                  label: Text(
-                    authState.userEmail ?? '',
-                    style: const TextStyle(fontSize: 12),
-                  ),
+                Icon(
+                  authState.isAdmin
+                      ? Icons.admin_panel_settings_rounded
+                      : Icons.person_rounded,
+                  size: 20,
                 ),
                 const SizedBox(width: 6),
                 OutlinedButton(
