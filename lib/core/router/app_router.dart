@@ -161,6 +161,7 @@ class CostikStudioShell extends StatelessWidget {
                 _HeaderNavButton(
                   label: item.label,
                   path: item.path,
+                  location: location,
                   isSelected: location == item.path,
                 ),
               const SizedBox(width: 8),
@@ -375,11 +376,13 @@ class _HeaderNavButton extends StatelessWidget {
   const _HeaderNavButton({
     required this.label,
     required this.path,
+    required this.location,
     required this.isSelected,
   });
 
   final String label;
   final String path;
+  final String location;
   final bool isSelected;
 
   @override
@@ -389,7 +392,13 @@ class _HeaderNavButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8),
         minimumSize: const Size(40, 36),
       ),
-      onPressed: () => context.go(path),
+      onPressed: () {
+        if (path == AppRoutes.products && location == AppRoutes.home) {
+          HomePage.scrollToProducts();
+          return;
+        }
+        context.go(path);
+      },
       child: Text(
         label,
         style: TextStyle(

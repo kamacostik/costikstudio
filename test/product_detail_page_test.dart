@@ -4,10 +4,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('renders product detail page with product info and features', (
-    tester,
-  ) async {
-    final product = findProductById('cospos');
+  testWidgets(
+    'renders IPTV product detail page with product info and features',
+    (tester) async {
+      final product = findProductById('costik-iptv');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: ProductDetailPage(product: product)),
+        ),
+      );
+
+      expect(find.text('Costik IPTV'), findsOneWidget);
+      expect(find.text('Key features'), findsOneWidget);
+      expect(
+        find.text('Live TV and guest room entertainment flow'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('renders smart inventory detail page', (tester) async {
+    final product = findProductById('smart-inv');
 
     await tester.pumpWidget(
       MaterialApp(
@@ -15,27 +33,7 @@ void main() {
       ),
     );
 
-    expect(find.text('CosPOS Coffee Shop'), findsOneWidget);
-    expect(find.text('Key features'), findsOneWidget);
-    expect(
-      find.text('Built-in Chat Support for mobile & web admin'),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('renders scoreboard online detail page', (tester) async {
-    final product = findProductById('scoreboard-online');
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: ProductDetailPage(product: product)),
-      ),
-    );
-
-    expect(find.text('Scoreboard Online'), findsOneWidget);
-    expect(
-      find.text('Remove Ads Lifetime in-app purchase integration'),
-      findsOneWidget,
-    );
+    expect(find.text('Smart INV'), findsOneWidget);
+    expect(find.text('Product and stock movement tracking'), findsOneWidget);
   });
 }
