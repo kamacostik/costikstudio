@@ -53,7 +53,11 @@ class BillingCubit extends Cubit<BillingState> {
   }
 
   Future<void> topUpDummy() async {
-    await _runMutation(() => repository.topUp(amount: 100000));
+    await topUp(amount: 100000);
+  }
+
+  Future<void> topUp({required int amount}) async {
+    await _runMutation(() => repository.topUp(amount: amount));
   }
 
   void clearMessage() {

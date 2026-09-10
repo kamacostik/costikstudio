@@ -206,7 +206,8 @@ class _DashboardPage extends StatelessWidget {
           WalletCard(
             balance: snapshot.wallet.balance,
             paymentOrders: snapshot.paymentOrders,
-            onTopUp: context.read<BillingCubit>().topUpDummy,
+            onTopUp: (amount) =>
+                context.read<BillingCubit>().topUp(amount: amount),
           ),
           const SizedBox(height: 20),
           BillingHistoryTableCard(

@@ -46,9 +46,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('dashboard_nav_billing')));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.widgetWithText(FilledButton, 'Top up dummy Rp100.000'),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Top Up'));
+    await tester.pumpAndSettle();
+    expect(find.text('Top Up Wallet'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Buat Payment Order'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('dashboard_nav_invoices')));
     await tester.pumpAndSettle();

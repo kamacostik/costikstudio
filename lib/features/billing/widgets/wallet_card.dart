@@ -2,6 +2,7 @@ import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class WalletCard extends StatelessWidget {
   const WalletCard({
@@ -12,7 +13,7 @@ class WalletCard extends StatelessWidget {
   });
 
   final int balance;
-  final VoidCallback onTopUp;
+  final ValueChanged<int> onTopUp;
   final List<PaymentOrder> paymentOrders;
 
   List<PaymentOrder> get _pendingOrders =>
@@ -81,7 +82,7 @@ class WalletCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  onPressed: onTopUp,
+                  onPressed: () => _showTopUpDialog(context),
                   icon: const Icon(Icons.add_rounded, size: 16),
                   label: const Text('Top Up'),
                 ),
@@ -161,5 +162,77 @@ class WalletCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _showTopUpDialog(BuildContext context) async {
+    final controller = TextEditingController(text: '100000');
+    final formKey = GlobalKey<FormState>();
+    final amount = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Top Up Wallet'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Masukkan nominal top-up. Saldo akan masuk setelah payment gateway mengirim webhook sukses.',
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: controller,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: const InputDecoration(
+                  labelText: 'Nominal top-up',
+                  prefixText: 'Rp ',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  final amount = int.tryParse(value?.trim() ?? '');
+                  if (amount == null || amount < 10000) {
+                    return 'Minimal top-up Rp 10.000';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: [100000, 250000, 500000].map((preset) {
+                  return ChoiceChip(
+                    label: Text(formatRupiah(preset)),
+                    selected: controller.text == '$preset',
+                    onSelected: (_) {
+                      controller.text = '$preset';
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (!formKey.currentState!.validate()) return;
+              Navigator.of(dialogContext)
+                  .pop(int.parse(controller.text.trim()));
+            },
+            child: const Text('Buat Payment Order'),
+          ),
+        ],
+      ),
+    );
+    if (amount != null) {
+      onTopUp(amount);
+    }
   }
 }

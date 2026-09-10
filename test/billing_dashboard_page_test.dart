@@ -32,8 +32,8 @@ void main() {
     );
     expect(find.byKey(const Key('dashboard_nav_billing')), findsOneWidget);
     expect(find.byKey(const Key('dashboard_nav_invoices')), findsOneWidget);
-    expect(find.text('Aplikasi'), findsWidgets);
-    expect(find.text('Costik Signage'), findsWidgets);
+    expect(find.text('Produk'), findsWidgets);
+    expect(find.text('Costik IPTV'), findsWidgets);
     expect(find.text('Active subscriptions'), findsNothing);
 
     await tester.tap(find.byKey(const Key('dashboard_nav_subscriptions')));
@@ -62,9 +62,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('dashboard_nav_billing')));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.widgetWithText(FilledButton, 'Top up dummy Rp100.000'),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Top Up'));
+    await tester.pumpAndSettle();
+    expect(find.text('Top Up Wallet'), findsOneWidget);
+    expect(find.text('Buat Payment Order'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Buat Payment Order'));
     await tester.pumpAndSettle();
 
     expect(find.text('Billing Wallet'), findsWidgets);
