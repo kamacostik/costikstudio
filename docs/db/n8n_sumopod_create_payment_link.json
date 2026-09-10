@@ -74,7 +74,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"target_external_reference\": \"{{$json.order_id}}\",\n  \"target_gateway_payment_id\": \"{{$json.payment_id}}\",\n  \"target_payment_url\": \"{{$json.payment_link_url}}\",\n  \"raw_payload\": {{$json}}\n}",
+        "jsonBody": "={{ JSON.stringify({ target_external_reference: $json.order_id, target_gateway_payment_id: $json.payment_id, target_payment_url: $json.payment_link_url, raw_payload: $json }) }}",
         "options": {}
       },
       "id": "attach-payment-url",
