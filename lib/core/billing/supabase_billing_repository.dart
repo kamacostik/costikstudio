@@ -40,8 +40,8 @@ class SupabaseBillingRepository implements BillingRepository {
   @override
   Future<TopUpOrderResult?> topUp({required int amount}) async {
     final response = await _supabase.rpc(
-      'create_topup_order',
-      params: {'amount': amount, 'provider': 'manual'},
+      'create_sumopod_topup_order',
+      params: {'amount': amount, 'payment_method_type_code': 'QRIS'},
     );
 
     if (response is! List || response.isEmpty) return null;
@@ -192,7 +192,7 @@ class SupabaseBillingRepository implements BillingRepository {
     final rows = await _supabase
         .from('payment_orders')
         .select(
-          'id, external_reference, amount, status, payment_url, created_at',
+          'id, external_reference, amount, status, payment_url, provider, currency, payment_method_type_code, expires_at, created_at',
         )
         .eq('user_id', userId)
         .order('created_at', ascending: false);
@@ -204,6 +204,10 @@ class SupabaseBillingRepository implements BillingRepository {
         amount: _moneyToInt(row['amount']),
         status: row['status'] as String? ?? 'pending',
         paymentUrl: row['payment_url'] as String?,
+        provider: row['provider'] as String? ?? 'manual',
+        currency: row['currency'] as String? ?? 'IDR',
+        paymentMethodTypeCode: row['payment_method_type_code'] as String?,
+        expiresAt: _date(row['expires_at']),
         createdAt:
             _date(row['created_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
       );

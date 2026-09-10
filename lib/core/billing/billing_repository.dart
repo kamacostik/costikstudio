@@ -31,6 +31,10 @@ class PaymentOrder {
     required this.status,
     required this.createdAt,
     this.paymentUrl,
+    this.provider = 'manual',
+    this.currency = 'IDR',
+    this.paymentMethodTypeCode,
+    this.expiresAt,
   });
 
   final String id;
@@ -39,8 +43,13 @@ class PaymentOrder {
   final String status;
   final DateTime createdAt;
   final String? paymentUrl;
+  final String provider;
+  final String currency;
+  final String? paymentMethodTypeCode;
+  final DateTime? expiresAt;
 
   bool get isPending => status == 'pending';
+  bool get hasPaymentUrl => paymentUrl != null && paymentUrl!.isNotEmpty;
 }
 
 abstract class BillingRepository {

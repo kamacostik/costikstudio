@@ -2,6 +2,7 @@ import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/core/billing/topup_order_result.dart';
+import 'package:costikstudio/core/platform/external_url.dart';
 import 'package:costikstudio/features/billing/cubit/billing_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -147,14 +148,35 @@ class WalletCard extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            const Text(
-                              'Menunggu webhook',
-                              style: TextStyle(
-                                color: Colors.orange,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
+                            if (order.hasPaymentUrl)
+                              FilledButton.icon(
+                                onPressed: () =>
+                                    openExternalUrl(order.paymentUrl!),
+                                icon: const Icon(
+                                  Icons.open_in_new_rounded,
+                                  size: 14,
+                                ),
+                                label: const Text('Bayar Sekarang'),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 8,
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              )
+                            else
+                              const Text(
+                                'Menunggu link bayar',
+                                style: TextStyle(
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                       ),
@@ -268,7 +290,7 @@ class WalletCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Gunakan reference ini untuk proses payment gateway/n8n webhook.',
+              'Payment order Sumopod dibuat. Link bayar akan muncul setelah backend/n8n membuat QRIS di Sumopod.',
             ),
             const SizedBox(height: 16),
             _TopUpOrderRow(label: 'Reference', value: order.externalReference),
@@ -277,6 +299,18 @@ class WalletCard extends StatelessWidget {
             if (order.paymentUrl != null) ...[
               const SizedBox(height: 8),
               SelectableText(order.paymentUrl!),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: () => openExternalUrl(order.paymentUrl!),
+                icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                label: const Text('Bayar Sekarang'),
+              ),
+            ] else ...[
+              const SizedBox(height: 12),
+              const Text(
+                'Status: menunggu payment_url dari Sumopod backend/n8n.',
+                style: TextStyle(color: CostikStudioTheme.slate),
+              ),
             ],
           ],
         ),
