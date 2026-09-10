@@ -21,11 +21,11 @@ void main() {
 
     final result = await trigger.triggerTopUpOrder(_order());
 
-    expect(result, isFalse);
+    expect(result, isNull);
     expect(called, isFalse);
   });
 
-  test('posts top up order to configured create payment webhook', () async {
+  test('posts top up order and returns payment data from webhook', () async {
     SupabaseConfig.load(const {
       'SUMOPOD_CREATE_PAYMENT_WEBHOOK_URL':
           'https://n8n.example.com/webhook/costikstudio-sumopod-create-payment',
@@ -35,13 +35,26 @@ void main() {
     final trigger = PaymentLinkTrigger(
       client: MockClient((request) async {
         capturedRequest = request;
-        return http.Response('{"ok":true}', 200);
+        return http.Response(
+          jsonEncode({
+            'ok': true,
+            'payment_url': 'https://pay.example.com/pay/order-123',
+            'payment_code': 'qr-text',
+            'payment_code_type': 'QR_TEXT',
+            'payment_channel_used': 'QRIS',
+          }),
+          200,
+        );
       }),
     );
 
     final result = await trigger.triggerTopUpOrder(_order());
 
-    expect(result, isTrue);
+    expect(result?.paymentLinkRequested, isTrue);
+    expect(result?.paymentUrl, 'https://pay.example.com/pay/order-123');
+    expect(result?.paymentCode, 'qr-text');
+    expect(result?.paymentCodeType, 'QR_TEXT');
+    expect(result?.paymentChannelUsed, 'QRIS');
     expect(
       capturedRequest.url.toString(),
       'https://n8n.example.com/webhook/costikstudio-sumopod-create-payment',
@@ -55,7 +68,7 @@ void main() {
     expect(body['source'], 'costikstudio_flutter');
   });
 
-  test('returns false when create payment webhook fails', () async {
+  test('returns null when create payment webhook fails', () async {
     SupabaseConfig.load(const {
       'SUMOPOD_CREATE_PAYMENT_WEBHOOK_URL':
           'https://n8n.example.com/webhook/costikstudio-sumopod-create-payment',
@@ -67,7 +80,7 @@ void main() {
 
     final result = await trigger.triggerTopUpOrder(_order());
 
-    expect(result, isFalse);
+    expect(result, isNull);
   });
 }
 

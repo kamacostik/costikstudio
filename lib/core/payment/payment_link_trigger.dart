@@ -12,9 +12,9 @@ class PaymentLinkTrigger {
   bool get isConfigured =>
       SupabaseConfig.sumopodCreatePaymentWebhookUrl.isNotEmpty;
 
-  Future<bool> triggerTopUpOrder(TopUpOrderResult order) async {
+  Future<TopUpOrderResult?> triggerTopUpOrder(TopUpOrderResult order) async {
     final webhookUrl = SupabaseConfig.sumopodCreatePaymentWebhookUrl;
-    if (webhookUrl.isEmpty) return false;
+    if (webhookUrl.isEmpty) return null;
 
     final httpClient = client ?? http.Client();
     final shouldCloseClient = client == null;
@@ -31,7 +31,25 @@ class PaymentLinkTrigger {
         }),
       );
 
-      return response.statusCode >= 200 && response.statusCode < 300;
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return null;
+      }
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final paymentUrl = body['payment_url'] as String?;
+      if (paymentUrl == null || paymentUrl.isEmpty) {
+        return order.copyWith(paymentLinkRequested: true);
+      }
+
+      return order.copyWith(
+        paymentUrl: paymentUrl,
+        paymentCode: body['payment_code'] as String?,
+        paymentCodeType: body['payment_code_type'] as String?,
+        paymentChannelUsed: body['payment_channel_used'] as String?,
+        paymentLinkRequested: true,
+      );
+    } on FormatException {
+      return order.copyWith(paymentLinkRequested: true);
     } finally {
       if (shouldCloseClient) httpClient.close();
     }

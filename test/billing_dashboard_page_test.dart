@@ -67,6 +67,9 @@ void main() {
     expect(find.text('Top Up Wallet'), findsOneWidget);
     expect(find.text('Buat Payment Order'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Buat Payment Order'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Menunggu Link Pembayaran'), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Tutup'));
     await tester.pumpAndSettle();
 
     expect(find.text('Billing Wallet'), findsWidgets);

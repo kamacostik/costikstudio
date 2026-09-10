@@ -63,12 +63,11 @@ class SupabaseBillingRepository implements BillingRepository {
       paymentUrl: row['payment_url'] as String?,
     );
 
-    var paymentLinkRequested = false;
     if (requestPaymentLink) {
-      paymentLinkRequested = await paymentLinkTrigger.triggerTopUpOrder(order);
+      return await paymentLinkTrigger.triggerTopUpOrder(order) ?? order;
     }
 
-    return order.copyWith(paymentLinkRequested: paymentLinkRequested);
+    return order;
   }
 
   @override

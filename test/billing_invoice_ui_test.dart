@@ -50,8 +50,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Top Up Wallet'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Buat Payment Order'));
-    await tester.pumpAndSettle();
-    expect(find.text('Payment Order Dibuat'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Menunggu Link Pembayaran'), findsOneWidget);
     await tester.tap(find.widgetWithText(TextButton, 'Tutup'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('dashboard_nav_invoices')));

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
@@ -7,6 +9,7 @@ import 'package:costikstudio/features/billing/cubit/billing_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class WalletCard extends StatelessWidget {
   const WalletCard({
@@ -150,13 +153,18 @@ class WalletCard extends StatelessWidget {
                             ),
                             if (order.hasPaymentUrl)
                               FilledButton.icon(
-                                onPressed: () =>
-                                    openExternalUrl(order.paymentUrl!),
+                                onPressed: () => _showPaymentQrDialog(
+                                  context,
+                                  title: 'Bayar Top Up',
+                                  amount: order.amount,
+                                  reference: order.externalReference,
+                                  paymentUrl: order.paymentUrl!,
+                                ),
                                 icon: const Icon(
-                                  Icons.open_in_new_rounded,
+                                  Icons.qr_code_rounded,
                                   size: 14,
                                 ),
-                                label: const Text('Bayar Sekarang'),
+                                label: const Text('Lihat QR'),
                                 style: FilledButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 10,
@@ -169,13 +177,26 @@ class WalletCard extends StatelessWidget {
                                 ),
                               )
                             else
-                              const Text(
-                                'Menunggu link bayar',
-                                style: TextStyle(
-                                  color: Colors.orange,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                ),
+                              const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Menunggu link bayar',
+                                    style: TextStyle(
+                                      color: Colors.orange,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
                           ],
                         ),
@@ -257,12 +278,29 @@ class WalletCard extends StatelessWidget {
       ),
     );
     if (amount != null && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Memproses payment order...')),
-      );
+      var loadingDialogShown = false;
+      final loadingDelay =
+          Future<void>.delayed(const Duration(milliseconds: 250)).then((_) {
+            if (!context.mounted) return;
+            loadingDialogShown = true;
+            unawaited(_showPaymentLinkLoadingDialog(context, amount));
+          });
       final order = await onTopUp(amount);
-      if (order != null && context.mounted) {
-        await _showTopUpOrderDialog(context, order);
+      await loadingDelay;
+      if (!context.mounted) return;
+      if (loadingDialogShown) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      if (order != null && order.paymentUrl != null && context.mounted) {
+        await _showPaymentQrDialog(
+          context,
+          title: 'Scan QRIS untuk Top Up',
+          amount: order.amount,
+          reference: order.externalReference,
+          paymentUrl: order.paymentUrl!,
+        );
+      } else if (order != null && context.mounted) {
+        await _showWaitingPaymentLinkDialog(context, order);
       } else if (context.mounted) {
         final errorMsg = context.read<BillingCubit>().state.errorMessage;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -277,47 +315,143 @@ class WalletCard extends StatelessWidget {
     }
   }
 
-  Future<void> _showTopUpOrderDialog(
+  Future<void> _showPaymentLinkLoadingDialog(BuildContext context, int amount) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 18),
+            Text(
+              'Membuat link pembayaran',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: CostikStudioTheme.navy,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${formatRupiah(amount)} sedang diproses ke Sumopod QRIS.',
+              style: const TextStyle(color: CostikStudioTheme.slate),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showWaitingPaymentLinkDialog(
     BuildContext context,
     TopUpOrderResult order,
   ) {
     return showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Payment Order Dibuat'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Menunggu Link Pembayaran'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Payment order Sumopod dibuat. Link bayar akan muncul setelah backend/n8n membuat QRIS di Sumopod.',
+              'Payment order sudah dibuat. Link QRIS sedang dibuat oleh Sumopod. Refresh Billing beberapa saat lagi bila belum muncul.',
             ),
             const SizedBox(height: 16),
             _TopUpOrderRow(label: 'Reference', value: order.externalReference),
             _TopUpOrderRow(label: 'Nominal', value: formatRupiah(order.amount)),
-            _TopUpOrderRow(label: 'Status', value: order.status),
-            if (order.paymentUrl != null) ...[
-              const SizedBox(height: 8),
-              SelectableText(order.paymentUrl!),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: () => openExternalUrl(order.paymentUrl!),
-                icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                label: const Text('Bayar Sekarang'),
-              ),
-            ] else ...[
-              const SizedBox(height: 12),
-              const Text(
-                'Status: menunggu payment_url dari Sumopod backend/n8n.',
-                style: TextStyle(color: CostikStudioTheme.slate),
-              ),
-            ],
+            const SizedBox(height: 12),
+            const Row(
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 10),
+                Text('Menunggu link bayar'),
+              ],
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showPaymentQrDialog(
+    BuildContext context, {
+    required String title,
+    required int amount,
+    required String reference,
+    required String paymentUrl,
+  }) {
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: CostikStudioTheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: QrImageView(
+                  data: paymentUrl,
+                  version: QrVersions.auto,
+                  size: 220,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                formatRupiah(amount),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: CostikStudioTheme.navy,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Scan QRIS atau buka link pembayaran untuk menyelesaikan top up.',
+                style: const TextStyle(color: CostikStudioTheme.slate),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 14),
+              _TopUpOrderRow(label: 'Reference', value: reference),
+              _TopUpOrderRow(label: 'Payment URL', value: paymentUrl),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Tutup'),
+          ),
+          FilledButton.icon(
+            onPressed: () => openExternalUrl(paymentUrl),
+            icon: const Icon(Icons.open_in_new_rounded, size: 16),
+            label: const Text('Buka Link Bayar'),
           ),
         ],
       ),
