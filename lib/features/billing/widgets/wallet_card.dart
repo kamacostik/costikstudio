@@ -152,60 +152,109 @@ class WalletCard extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            if (order.hasPaymentUrl)
-                              FilledButton.icon(
-                                onPressed: () => _showPaymentQrDialog(
-                                  context,
-                                  title: 'Bayar Top Up',
-                                  amount: order.amount,
-                                  reference: order.externalReference,
-                                  paymentUrl: order.paymentUrl!,
-                                  order: TopUpOrderResult(
-                                    orderId: order.id,
-                                    externalReference: order.externalReference,
-                                    status: order.status,
-                                    amount: order.amount,
-                                    paymentUrl: order.paymentUrl,
-                                  ),
-                                ),
-                                icon: const Icon(
-                                  Icons.qr_code_rounded,
-                                  size: 14,
-                                ),
-                                label: const Text('Lihat QR'),
-                                style: FilledButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 8,
-                                  ),
-                                  textStyle: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              )
-                            else
-                              const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              alignment: WrapAlignment.end,
+                              children: [
+                                if (order.hasPaymentUrl)
+                                  FilledButton.icon(
+                                    onPressed: () => _showPaymentQrDialog(
+                                      context,
+                                      title: 'Bayar Top Up',
+                                      amount: order.amount,
+                                      reference: order.externalReference,
+                                      paymentUrl: order.paymentUrl!,
+                                      order: TopUpOrderResult(
+                                        orderId: order.id,
+                                        externalReference:
+                                            order.externalReference,
+                                        status: order.status,
+                                        amount: order.amount,
+                                        paymentUrl: order.paymentUrl,
+                                      ),
                                     ),
+                                    icon: const Icon(
+                                      Icons.qr_code_rounded,
+                                      size: 14,
+                                    ),
+                                    label: const Text('Lihat QR'),
+                                    style: FilledButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 8,
+                                      ),
+                                      textStyle: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  )
+                                else ...[
+                                  const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Menunggu link bayar',
+                                        style: TextStyle(
+                                          color: Colors.orange,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Menunggu link bayar',
-                                    style: TextStyle(
-                                      color: Colors.orange,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
+                                  OutlinedButton.icon(
+                                    onPressed: () =>
+                                        _showWaitingPaymentLinkDialog(
+                                          context,
+                                          TopUpOrderResult(
+                                            orderId: order.id,
+                                            externalReference:
+                                                order.externalReference,
+                                            status: order.status,
+                                            amount: order.amount,
+                                            paymentUrl: order.paymentUrl,
+                                          ),
+                                        ),
+                                    icon: const Icon(
+                                      Icons.tune_rounded,
+                                      size: 14,
+                                    ),
+                                    label: const Text('Kelola'),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 8,
+                                      ),
+                                      textStyle: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                     ),
                                   ),
                                 ],
-                              ),
+                                TextButton.icon(
+                                  onPressed: () => _cancelPendingOrder(
+                                    context,
+                                    order.externalReference,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.cancel_outlined,
+                                    size: 14,
+                                  ),
+                                  label: const Text('Batalkan'),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -222,6 +271,50 @@ class WalletCard extends StatelessWidget {
     final amount = await _askTopUpAmount(context);
     if (amount == null || !context.mounted) return;
     await _handleTopUpFlow(context, amount);
+  }
+
+  Future<void> _cancelPendingOrder(
+    BuildContext context,
+    String externalReference,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Batalkan Transaksi?'),
+        content: const Text(
+          'Payment order pending ini akan dibatalkan. Setelah itu user bisa membuat top up baru dengan nominal berbeda.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Tidak'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Ya, Batalkan'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    final cancelled = await const PaymentOrderCanceller()
+        .cancelByExternalReference(externalReference);
+    if (!context.mounted) return;
+    if (cancelled) {
+      await context.read<BillingCubit>().load();
+    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          cancelled
+              ? 'Transaksi dibatalkan. Silakan buat top up baru.'
+              : 'Belum bisa membatalkan transaksi ini.',
+        ),
+        backgroundColor: cancelled ? null : Colors.red,
+      ),
+    );
   }
 
   Future<int?> _askTopUpAmount(BuildContext context) async {
@@ -430,6 +523,10 @@ class WalletCard extends StatelessWidget {
                   .cancelByExternalReference(order.externalReference);
               if (!dialogContext.mounted) return;
               Navigator.of(dialogContext).pop(_TopUpDialogAction.cancelled);
+              if (cancelled && context.mounted) {
+                await context.read<BillingCubit>().load();
+              }
+              if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -525,6 +622,10 @@ class WalletCard extends StatelessWidget {
                   .cancelByExternalReference(order.externalReference);
               if (!dialogContext.mounted) return;
               Navigator.of(dialogContext).pop(_TopUpDialogAction.cancelled);
+              if (cancelled && context.mounted) {
+                await context.read<BillingCubit>().load();
+              }
+              if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
