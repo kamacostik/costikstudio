@@ -65,10 +65,27 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
 
   int get _totalPrice => _deviceCount * pricePerDevice * _billingCycleMonths;
 
+  Future<void> _goToTopUpBalance() async {
+    if (widget.isEmbedded) {
+      Navigator.of(context).maybePop();
+      return;
+    }
+    context.go(AppRoutes.billing);
+  }
+
   Future<void> _submitOrder() async {
     if (!_formKey.currentState!.validate()) return;
 
     final billingCubit = context.read<BillingCubit>();
+    final balance = billingCubit.state.snapshot?.wallet.balance ?? 0;
+    if (balance < _totalPrice) {
+      final shortfall = _totalPrice - balance;
+      await _showTopUpNeededDialog(
+        message: 'Saldo kurang ${formatRupiah(shortfall)}',
+      );
+      return;
+    }
+
     await billingCubit.checkoutIptvSubscription(
       deviceCount: _deviceCount,
       billingCycleMonths: _billingCycleMonths,
@@ -77,12 +94,9 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
     if (!mounted) return;
 
     if (billingCubit.state.status == BillingStatus.failure) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      await _showTopUpNeededDialog(
+        message:
             billingCubit.state.errorMessage ?? 'Langganan IPTV gagal diproses.',
-          ),
-        ),
       );
       return;
     }
@@ -128,6 +142,73 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
               context.go(AppRoutes.billing);
             },
             child: const Text('Ke Dashboard Billing'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showTopUpNeededDialog({required String message}) async {
+    final balance =
+        context.read<BillingCubit>().state.snapshot?.wallet.balance ?? 0;
+    final shortfall = (_totalPrice - balance).clamp(0, _totalPrice);
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: const [
+            Icon(
+              Icons.account_balance_wallet_rounded,
+              color: Colors.orange,
+              size: 28,
+            ),
+            SizedBox(width: 10),
+            Text('Saldo Belum Cukup'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Saldo wallet Anda belum cukup untuk melanjutkan langganan ini.',
+              style: TextStyle(color: CostikStudioTheme.slate),
+            ),
+            const SizedBox(height: 16),
+            _SummaryRow(label: 'Saldo Saat Ini', value: formatRupiah(balance)),
+            _SummaryRow(
+              label: 'Total Langganan',
+              value: formatRupiah(_totalPrice),
+            ),
+            _SummaryRow(
+              label: 'Perlu Top Up',
+              value: formatRupiah(shortfall),
+              isBold: true,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              style: const TextStyle(
+                color: CostikStudioTheme.slate,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Nanti Dulu'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _goToTopUpBalance();
+            },
+            icon: const Icon(Icons.add_card_rounded),
+            label: const Text('Top Up Balance'),
           ),
         ],
       ),
@@ -453,20 +534,26 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Total Estimasi',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
+                            const Expanded(
+                              child: Text(
+                                'Total Estimasi',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                            Text(
-                              formatRupiah(_totalPrice),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
+                            const SizedBox(width: 12),
+                            Flexible(
+                              child: Text(
+                                formatRupiah(_totalPrice),
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                ),
                               ),
                             ),
                           ],
@@ -548,16 +635,23 @@ class _OrderSummaryRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
+            ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
             ),
           ),
         ],
