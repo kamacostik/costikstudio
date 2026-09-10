@@ -102,6 +102,8 @@ class Subscription {
     required this.startedAt,
     required this.expiresAt,
     required this.autoRenew,
+    this.deviceCount = 1,
+    this.billingCycleMonths = 1,
   });
 
   final String id;
@@ -112,6 +114,8 @@ class Subscription {
   final DateTime startedAt;
   final DateTime expiresAt;
   final bool autoRenew;
+  final int deviceCount;
+  final int billingCycleMonths;
 
   Subscription copyWith({
     String? id,
@@ -122,6 +126,8 @@ class Subscription {
     DateTime? startedAt,
     DateTime? expiresAt,
     bool? autoRenew,
+    int? deviceCount,
+    int? billingCycleMonths,
   }) {
     return Subscription(
       id: id ?? this.id,
@@ -132,6 +138,8 @@ class Subscription {
       startedAt: startedAt ?? this.startedAt,
       expiresAt: expiresAt ?? this.expiresAt,
       autoRenew: autoRenew ?? this.autoRenew,
+      deviceCount: deviceCount ?? this.deviceCount,
+      billingCycleMonths: billingCycleMonths ?? this.billingCycleMonths,
     );
   }
 }

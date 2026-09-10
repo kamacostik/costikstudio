@@ -42,12 +42,18 @@ class SubscriptionsCard extends StatelessWidget {
                   ?.copyWith(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 16),
-            for (final subscription in subscriptions)
-              _SubscriptionRow(
-                subscription: subscription,
-                product: _productById(subscription.productId),
-                plan: _planById(subscription.planId),
-              ),
+            if (subscriptions.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text('Belum ada paket berlangganan aktif.'),
+              )
+            else
+              for (final subscription in subscriptions)
+                _SubscriptionRow(
+                  subscription: subscription,
+                  product: _productById(subscription.productId),
+                  plan: _planById(subscription.planId),
+                ),
           ],
         ),
       ),
@@ -66,30 +72,138 @@ class _SubscriptionRow extends StatelessWidget {
   final BillingProduct? product;
   final BillingPlan? plan;
 
+  void _showSubscriptionDetails(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.stars_rounded, color: CostikStudioTheme.primary),
+            const SizedBox(width: 8),
+            Text(product?.name ?? subscription.productId),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _DetailRow(label: 'Subscription ID', value: subscription.id),
+            _DetailRow(
+              label: 'Jumlah Device',
+              value: '${subscription.deviceCount} Device',
+            ),
+            _DetailRow(
+              label: 'Siklus Tagihan',
+              value: '${subscription.billingCycleMonths} Bulan',
+            ),
+            _DetailRow(
+              label: 'Status',
+              value: subscription.status.name.toUpperCase(),
+            ),
+            _DetailRow(
+              label: 'Tanggal Mulai',
+              value: _formatFullDate(subscription.startedAt),
+            ),
+            _DetailRow(
+              label: 'Berlaku Hingga',
+              value: _formatFullDate(subscription.expiresAt),
+            ),
+            _DetailRow(
+              label: 'Perpanjangan',
+              value: subscription.autoRenew ? 'Otomatis' : 'Manual',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(color: CostikStudioTheme.background),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.verified_rounded,
+              color: CostikStudioTheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product?.name ?? subscription.productId,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${subscription.deviceCount} Device • ${subscription.billingCycleMonths} Bulan • Expired ${_shortDate(subscription.expiresAt)}',
+                    style: const TextStyle(
+                      color: CostikStudioTheme.slate,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _showSubscriptionDetails(context),
+              icon: const Icon(Icons.info_outline_rounded, size: 16),
+              label: const Text('View Details'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.verified_rounded, color: CostikStudioTheme.primary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product?.name ?? subscription.productId,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                Text(
-                  '${plan?.name ?? subscription.planId} • expires ${_shortDate(subscription.expiresAt)}',
-                  style: const TextStyle(color: CostikStudioTheme.slate),
-                ),
-              ],
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: CostikStudioTheme.slate,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          Chip(label: Text(subscription.autoRenew ? 'Auto renew' : 'Manual')),
+          Expanded(
+            child: SelectableText(
+              value,
+              style: const TextStyle(
+                color: CostikStudioTheme.navy,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -98,4 +212,8 @@ class _SubscriptionRow extends StatelessWidget {
 
 String _shortDate(DateTime value) {
   return '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
+}
+
+String _formatFullDate(DateTime value) {
+  return '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year} ${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
 }

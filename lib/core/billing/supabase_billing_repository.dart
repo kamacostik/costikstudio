@@ -116,7 +116,9 @@ class SupabaseBillingRepository implements BillingRepository {
   Future<List<Subscription>> _loadSubscriptions(String userId) async {
     final rows = await _supabase
         .from('subscriptions')
-        .select('id, user_id, product_id, status, starts_at, expires_at')
+        .select(
+          'id, user_id, product_id, device_count, billing_cycle_months, status, starts_at, expires_at',
+        )
         .eq('user_id', userId)
         .order('created_at', ascending: false);
 
@@ -126,6 +128,8 @@ class SupabaseBillingRepository implements BillingRepository {
         userId: row['user_id'] as String,
         productId: row['product_id'] as String,
         planId: '${row['product_id']}:supabase',
+        deviceCount: (row['device_count'] as num?)?.toInt() ?? 1,
+        billingCycleMonths: (row['billing_cycle_months'] as num?)?.toInt() ?? 1,
         status: _subscriptionStatus(row['status'] as String?),
         startedAt:
             _date(row['starts_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
