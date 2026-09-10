@@ -233,9 +233,21 @@ class WalletCard extends StatelessWidget {
       ),
     );
     if (amount != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Memproses payment order...')),
+      );
       final order = await onTopUp(amount);
       if (order != null && context.mounted) {
         await _showTopUpOrderDialog(context, order);
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Gagal membuat payment order. Periksa koneksi/kredensial Supabase.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
