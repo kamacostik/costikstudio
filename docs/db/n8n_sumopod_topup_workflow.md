@@ -58,14 +58,32 @@ apikey: SUPABASE_SERVICE_ROLE_KEY
 Authorization: Bearer SUPABASE_SERVICE_ROLE_KEY
 ```
 
-Body mapping depends on Sumopod response field names. Use the actual payment id/url returned by Sumopod:
+Use the confirmed Sumopod create-payment response mapping:
 
 ```json
 {
-  "target_external_reference": "{{$node['Split In Batches'].json.external_reference}}",
-  "target_gateway_payment_id": "{{$json.id || $json.payment_id || $json.data.id}}",
-  "target_payment_url": "{{$json.payment_url || $json.checkout_url || $json.data.payment_url || $json.data.checkout_url}}",
+  "target_external_reference": "{{$json.order_id}}",
+  "target_gateway_payment_id": "{{$json.payment_id}}",
+  "target_payment_url": "{{$json.payment_link_url}}",
   "raw_payload": {{$json}}
+}
+```
+
+Confirmed Sumopod response fields:
+
+```json
+{
+  "payment_id": "uuid",
+  "order_id": "TOPUP-REFERENCE",
+  "amount": 50000,
+  "fee": 750,
+  "net_amount": 49250,
+  "payment_link_url": "https://pay.sumopod.com/pay/uuid",
+  "payment_code": "1308300301295957",
+  "payment_code_type": "ACCOUNT_NUMBER",
+  "payment_channel_used": "BRI.VA",
+  "status": "pending",
+  "expires_at": "2026-01-01T12:00:00Z"
 }
 ```
 
@@ -88,12 +106,22 @@ apikey: SUPABASE_SERVICE_ROLE_KEY
 Authorization: Bearer SUPABASE_SERVICE_ROLE_KEY
 ```
 
-Body:
+Body mapping for confirmed Sumopod-style payload:
 
 ```json
 {
-  "target_external_reference": "{{$json.order_id || $json.external_reference || $json.data.order_id}}",
-  "provider_order_id": "{{$json.payment_id || $json.id || $json.data.payment_id || $json.data.id}}",
+  "target_external_reference": "{{$json.order_id}}",
+  "provider_order_id": "{{$json.payment_id}}",
+  "raw_payload": {{$json}}
+}
+```
+
+If webhook payload is wrapped under `data`, use:
+
+```json
+{
+  "target_external_reference": "{{$json.data.order_id}}",
+  "provider_order_id": "{{$json.data.payment_id}}",
   "raw_payload": {{$json}}
 }
 ```
