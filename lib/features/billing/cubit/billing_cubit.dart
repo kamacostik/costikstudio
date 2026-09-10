@@ -57,7 +57,36 @@ class BillingCubit extends Cubit<BillingState> {
   }
 
   Future<void> topUp({required int amount}) async {
-    await _runMutation(() => repository.topUp(amount: amount));
+    emit(state.copyWith(status: BillingStatus.loading));
+    try {
+      final order = await repository.topUp(amount: amount);
+      final snapshot = await repository.loadSnapshot();
+      emit(
+        BillingState(
+          status: BillingStatus.success,
+          snapshot: BillingSnapshot(
+            wallet: snapshot.wallet,
+            products: snapshot.products,
+            plans: snapshot.plans,
+            subscriptions: snapshot.subscriptions,
+            transactions: snapshot.transactions,
+            invoices: snapshot.invoices,
+            paymentOrders: snapshot.paymentOrders,
+            message: order == null
+                ? 'Top up request dibuat. Saldo masuk setelah webhook sukses.'
+                : 'Payment order ${order.externalReference} dibuat untuk ${order.amount}.',
+          ),
+        ),
+      );
+    } catch (error) {
+      emit(
+        BillingState(
+          status: BillingStatus.failure,
+          snapshot: state.snapshot,
+          errorMessage: error.toString(),
+        ),
+      );
+    }
   }
 
   void clearMessage() {

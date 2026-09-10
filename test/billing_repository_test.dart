@@ -22,8 +22,10 @@ void main() {
     test('top up mutates wallet, transactions, and invoices', () async {
       final repository = DummyBillingRepository();
 
-      final snapshot = await repository.topUp(amount: 100000);
+      final order = await repository.topUp(amount: 100000);
+      final snapshot = await repository.loadSnapshot();
 
+      expect(order?.externalReference, 'dummy-topup-100000');
       expect(snapshot.wallet.balance, 450000);
       expect(snapshot.transactions.first.type.name, 'topup');
       expect(snapshot.invoices.first.number, 'INV-20260909-002');

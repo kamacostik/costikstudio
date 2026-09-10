@@ -1,5 +1,6 @@
 import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
+import 'package:costikstudio/core/billing/topup_order_result.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseBillingRepository implements BillingRepository {
@@ -37,22 +38,21 @@ class SupabaseBillingRepository implements BillingRepository {
   }
 
   @override
-  Future<BillingSnapshot> topUp({required int amount}) async {
-    await _supabase.rpc<void>(
+  Future<TopUpOrderResult?> topUp({required int amount}) async {
+    final rows = await _supabase.rpc<List<dynamic>>(
       'create_topup_order',
       params: {'amount': amount, 'provider': 'manual'},
     );
 
-    final snapshot = await loadSnapshot();
-    return BillingSnapshot(
-      wallet: snapshot.wallet,
-      products: snapshot.products,
-      plans: snapshot.plans,
-      subscriptions: snapshot.subscriptions,
-      transactions: snapshot.transactions,
-      invoices: snapshot.invoices,
-      paymentOrders: snapshot.paymentOrders,
-      message: 'Top up request dibuat. Saldo masuk setelah payment gateway mengirim webhook sukses.',
+    final row = rows.isEmpty ? null : rows.first as Map<String, dynamic>;
+    if (row == null) return null;
+
+    return TopUpOrderResult(
+      orderId: row['order_id'] as String,
+      externalReference: row['external_reference'] as String,
+      status: row['order_status'] as String? ?? 'pending',
+      amount: _moneyToInt(row['order_amount']),
+      paymentUrl: row['payment_url'] as String?,
     );
   }
 

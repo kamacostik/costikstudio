@@ -20,7 +20,10 @@ void main() {
       await cubit.topUpDummy();
 
       expect(cubit.state.snapshot?.wallet.balance, 450000);
-      expect(cubit.state.snapshot?.message, 'Dummy top up berhasil');
+      expect(
+        cubit.state.snapshot?.message,
+        'Payment order dummy-topup-100000 dibuat untuk 100000.',
+      );
     });
 
     test('checkout updates state snapshot and message', () async {

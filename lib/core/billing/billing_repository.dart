@@ -1,4 +1,5 @@
 import 'package:costikstudio/core/billing/billing_core.dart';
+import 'package:costikstudio/core/billing/topup_order_result.dart';
 
 class BillingSnapshot {
   const BillingSnapshot({
@@ -45,7 +46,7 @@ class PaymentOrder {
 abstract class BillingRepository {
   Future<BillingSnapshot> loadSnapshot();
 
-  Future<BillingSnapshot> topUp({required int amount});
+  Future<TopUpOrderResult?> topUp({required int amount});
 
   Future<BillingSnapshot> checkoutPlan({required String planId});
 

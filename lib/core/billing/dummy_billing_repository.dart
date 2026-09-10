@@ -1,6 +1,7 @@
 import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
+import 'package:costikstudio/core/billing/topup_order_result.dart';
 import 'package:costikstudio/core/billing/dummy_billing_data.dart';
 
 class DummyBillingRepository implements BillingRepository {
@@ -41,7 +42,7 @@ class DummyBillingRepository implements BillingRepository {
   Future<BillingSnapshot> loadSnapshot() async => _snapshot();
 
   @override
-  Future<BillingSnapshot> topUp({required int amount}) async {
+  Future<TopUpOrderResult?> topUp({required int amount}) async {
     final result = _wallet.applyTopUp(
       amount: amount,
       referenceId: 'dummy-topup-$amount',
@@ -49,7 +50,12 @@ class DummyBillingRepository implements BillingRepository {
     _wallet = result.wallet;
     _transactions.insert(0, result.transaction);
     _invoices.insert(0, _invoiceFrom(result.transaction));
-    return _snapshot(message: 'Dummy top up berhasil');
+    return TopUpOrderResult(
+      orderId: 'dummy-topup-$amount',
+      externalReference: 'dummy-topup-$amount',
+      status: 'paid',
+      amount: amount,
+    );
   }
 
   @override

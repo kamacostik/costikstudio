@@ -36,7 +36,8 @@ returns table (
   order_id uuid,
   external_reference text,
   order_status text,
-  order_amount numeric
+  order_amount numeric,
+  payment_url text
 )
 language plpgsql
 security definer
@@ -70,7 +71,7 @@ begin
   ) returning id, external_reference into inserted_order_id, inserted_external_reference;
 
   return query
-  select inserted_order_id, inserted_external_reference, 'pending'::text, amount;
+  select inserted_order_id, inserted_external_reference, 'pending'::text, amount, null::text;
 end;
 $$;
 
