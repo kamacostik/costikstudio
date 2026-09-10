@@ -29,6 +29,6 @@ void main() {
     await tester.tap(find.byKey(const Key('header_nav_/billing')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Aplikasi'), findsWidgets);
+    expect(find.text('Produk'), findsWidgets);
   });
 }

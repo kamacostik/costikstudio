@@ -1,6 +1,7 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
+import 'package:costikstudio/core/platform/web_print.dart';
 import 'package:flutter/material.dart';
 
 class InvoicesCard extends StatelessWidget {
@@ -58,16 +59,7 @@ class InvoicesCard extends StatelessWidget {
         ),
         actions: [
           OutlinedButton.icon(
-            onPressed: () {
-              // Trigger web print window
-              // html.window.print() or Web print dialog
-              Navigator.of(dialogCtx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Membuka dialog Cetak / Save to PDF...'),
-                ),
-              );
-            },
+            onPressed: printCurrentPage,
             icon: const Icon(Icons.print_rounded, size: 16),
             label: const Text('Cetak / PDF'),
           ),

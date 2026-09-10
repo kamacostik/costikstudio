@@ -18,7 +18,7 @@ void main() {
         find.text('Launch business apps from one clean studio.'),
         findsOneWidget,
       );
-      expect(find.text('Open Billing'), findsOneWidget);
+      expect(find.text('Login'), findsWidgets);
       expect(find.text('View Products'), findsOneWidget);
       expect(
         find.text('FOCUSED PRODUCTS', skipOffstage: false),

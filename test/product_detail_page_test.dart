@@ -1,6 +1,8 @@
 import 'package:costikstudio/core/data/dummy_products.dart';
+import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:costikstudio/features/product_detail/view/product_detail_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -10,8 +12,11 @@ void main() {
       final product = findProductById('costik-iptv');
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: ProductDetailPage(product: product)),
+        BlocProvider<AuthCubit>(
+          create: (_) => AuthCubit(),
+          child: MaterialApp(
+            home: Scaffold(body: ProductDetailPage(product: product)),
+          ),
         ),
       );
 
@@ -21,7 +26,9 @@ void main() {
         find.text('Live TV and guest room entertainment flow'),
         findsOneWidget,
       );
-      expect(find.text('Berlangganan sekarang'), findsOneWidget);
+      expect(find.text('Tampilan Aplikasi'), findsOneWidget);
+      expect(find.text('Dokumentasi & Tutorial Video'), findsOneWidget);
+      expect(find.text('Login untuk berlangganan'), findsOneWidget);
     },
   );
 
@@ -29,8 +36,11 @@ void main() {
     final product = findProductById('smart-inv');
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: ProductDetailPage(product: product)),
+      BlocProvider<AuthCubit>(
+        create: (_) => AuthCubit(),
+        child: MaterialApp(
+          home: Scaffold(body: ProductDetailPage(product: product)),
+        ),
       ),
     );
 

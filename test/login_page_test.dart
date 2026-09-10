@@ -29,7 +29,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // redirected to billing & header shows authenticated navigation.
-    expect(find.text('Aplikasi'), findsWidgets);
+    expect(find.text('Produk'), findsWidgets);
     expect(find.text('Billing'), findsWidgets);
     expect(find.text('Support'), findsWidgets);
     expect(find.text('Keluar'), findsOneWidget);

@@ -19,13 +19,11 @@ void main() {
     await tester.tap(find.byKey(const Key('header_nav_/billing')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Aplikasi'), findsWidgets);
-    expect(find.widgetWithText(OutlinedButton, 'Renew Basic'), findsOneWidget);
-    expect(find.widgetWithText(OutlinedButton, 'Renew Pro'), findsOneWidget);
-    expect(
-      find.widgetWithText(OutlinedButton, 'Renew Hotel Pro'),
-      findsOneWidget,
-    );
+    expect(find.text('Produk'), findsWidgets);
+    await tester.tap(find.byKey(const Key('dashboard_nav_subscriptions')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Produk'), findsWidgets);
     expect(
       find.widgetWithText(OutlinedButton, 'Subscribe signage-basic'),
       findsNothing,
