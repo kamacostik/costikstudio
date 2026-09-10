@@ -20,9 +20,8 @@
         "conditions": {
           "options": {"caseSensitive": false, "leftValue": "", "typeValidation": "strict"},
           "conditions": [
-            {"leftValue": "={{$json.body.status || $json.status || $json.data?.status}}", "rightValue": "paid", "operator": {"type": "string", "operation": "equals"}},
-            {"leftValue": "={{$json.body.status || $json.status || $json.data?.status}}", "rightValue": "success", "operator": {"type": "string", "operation": "equals"}},
-            {"leftValue": "={{$json.body.status || $json.status || $json.data?.status}}", "rightValue": "settlement", "operator": {"type": "string", "operation": "equals"}}
+            {"leftValue": "={{$json.body.event_type}}", "rightValue": "payment.completed", "operator": {"type": "string", "operation": "equals"}},
+            {"leftValue": "={{$json.body.data?.status}}", "rightValue": "completed", "operator": {"type": "string", "operation": "equals"}}
           ],
           "combinator": "or"
         },
@@ -48,7 +47,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"target_external_reference\": \"{{$json.body?.order_id || $json.order_id || $json.data?.order_id}}\",\n  \"provider_order_id\": \"{{$json.body?.payment_id || $json.payment_id || $json.data?.payment_id}}\",\n  \"raw_payload\": {{$json.body || $json}}\n}",
+        "jsonBody": "={\n  \"target_external_reference\": \"{{$json.body.data.order_id}}\",\n  \"provider_order_id\": \"{{$json.body.data.payment_id}}\",\n  \"raw_payload\": {\n    \"event_type\": \"{{$json.body.event_type}}\",\n    \"payment_id\": \"{{$json.body.data.payment_id}}\",\n    \"order_id\": \"{{$json.body.data.order_id}}\",\n    \"amount\": {{$json.body.data.amount}},\n    \"fee\": {{$json.body.data.fee}},\n    \"net_amount\": {{$json.body.data.net_amount}},\n    \"status\": \"{{$json.body.data.status}}\",\n    \"payment_method\": \"{{$json.body.data.payment_method}}\",\n    \"completed_at\": \"{{$json.body.data.completed_at}}\"\n  }\n}",
         "options": {}
       },
       "id": "apply-paid-topup",
