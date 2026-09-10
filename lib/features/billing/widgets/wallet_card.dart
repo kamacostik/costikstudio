@@ -629,45 +629,48 @@ class WalletCard extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(title),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: CostikStudioTheme.primary.withValues(alpha: 0.2),
+        content: SizedBox(
+          width: 400,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: CostikStudioTheme.primary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: QrImageView(
+                    data: paymentUrl,
+                    version: QrVersions.auto,
+                    size: 220,
+                    backgroundColor: Colors.white,
                   ),
                 ),
-                child: QrImageView(
-                  data: paymentUrl,
-                  version: QrVersions.auto,
-                  size: 220,
-                  backgroundColor: Colors.white,
+                const SizedBox(height: 16),
+                Text(
+                  formatRupiah(amount),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: CostikStudioTheme.navy,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                formatRupiah(amount),
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: CostikStudioTheme.navy,
+                const SizedBox(height: 6),
+                Text(
+                  'Scan QRIS atau buka link pembayaran untuk menyelesaikan top up.',
+                  style: const TextStyle(color: CostikStudioTheme.slate),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Scan QRIS atau buka link pembayaran untuk menyelesaikan top up.',
-                style: const TextStyle(color: CostikStudioTheme.slate),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 14),
-              _TopUpOrderRow(label: 'Reference', value: reference),
-              _TopUpOrderRow(label: 'Payment URL', value: paymentUrl),
-            ],
+                const SizedBox(height: 14),
+                _TopUpOrderRow(label: 'Reference', value: reference),
+                _TopUpOrderRow(label: 'Payment URL', value: paymentUrl),
+              ],
+            ),
           ),
         ),
         actions: [
