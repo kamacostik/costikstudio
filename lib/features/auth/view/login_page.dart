@@ -25,12 +25,14 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     final authCubit = context.read<AuthCubit>();
-    final success = authCubit.login(
+    final success = await authCubit.login(
       _emailController.text,
       _passwordController.text,
     );
+
+    if (!mounted) return;
 
     if (success) {
       if (authCubit.state.isAdmin) {
@@ -40,7 +42,8 @@ class _LoginPageState extends State<LoginPage> {
       }
     } else {
       setState(() {
-        _errorMessage = 'Email atau password salah. Password dummy: 123456';
+        _errorMessage =
+            authCubit.state.errorMessage ?? 'Email atau password salah.';
       });
     }
   }
@@ -55,131 +58,153 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: ResponsiveSection(
-        padding: const EdgeInsets.fromLTRB(24, 60, 24, 80),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 440),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, authState) {
+        return SingleChildScrollView(
+          child: ResponsiveSection(
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 80),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: CostikStudioTheme.navy.withValues(
-                              alpha: 0.1,
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: CostikStudioTheme.navy.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.lock_outline_rounded,
+                                color: CostikStudioTheme.navy,
+                              ),
                             ),
-                            borderRadius: BorderRadius.circular(12),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Masuk ke CostikStudio',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    'Gunakan akun Supabase atau dummy saat env belum aktif',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: CostikStudioTheme.slate,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        if (_errorMessage != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                color: Colors.red.shade700,
+                                fontSize: 13,
+                              ),
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.lock_outline_rounded,
-                            color: CostikStudioTheme.navy,
+                          const SizedBox(height: 16),
+                        ],
+                        TextField(
+                          controller: _emailController,
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            prefixIcon: Icon(Icons.email_outlined),
+                            border: OutlineInputBorder(),
                           ),
                         ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Masuk ke CostikStudio',
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                'Gunakan akun dummy untuk testing',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(color: CostikStudioTheme.slate),
-                              ),
-                            ],
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Password',
+                            prefixIcon: Icon(Icons.lock_clock_outlined),
+                            border: OutlineInputBorder(),
                           ),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 46,
+                          child: FilledButton(
+                            onPressed: authState.isLoading
+                                ? null
+                                : _handleLogin,
+                            child: authState.isLoading
+                                ? const SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Masuk'),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const Divider(),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Quick Presets Dummy:',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: CostikStudioTheme.slate,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            OutlinedButton(
+                              onPressed: () => _fillPreset('user@costik.com'),
+                              child: const Text(
+                                'Fill Customer (user@costik.com)',
+                              ),
+                            ),
+                            OutlinedButton(
+                              onPressed: () => _fillPreset('admin@costik.com'),
+                              child: const Text(
+                                'Fill Admin (admin@costik.com)',
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    if (_errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(
-                            color: Colors.red.shade700,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: Icon(Icons.lock_clock_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 46,
-                      child: FilledButton(
-                        onPressed: _handleLogin,
-                        child: const Text('Masuk'),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Divider(),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Quick Presets Dummy:',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: CostikStudioTheme.slate,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        OutlinedButton(
-                          onPressed: () => _fillPreset('user@costik.com'),
-                          child: const Text('Fill Customer (user@costik.com)'),
-                        ),
-                        OutlinedButton(
-                          onPressed: () => _fillPreset('admin@costik.com'),
-                          child: const Text('Fill Admin (admin@costik.com)'),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

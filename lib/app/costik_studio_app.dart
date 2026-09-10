@@ -13,7 +13,7 @@ class CostikStudioApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => AuthCubit(),
+      create: (_) => AuthCubit()..restoreSession(),
       child: MaterialApp.router(
         title: experience == AppExperience.admin
             ? 'CostikStudio Admin'
