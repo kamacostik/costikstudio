@@ -75,7 +75,7 @@ class DummyBillingRepository implements BillingRepository {
     required int deviceCount,
     required int billingCycleMonths,
   }) async {
-    final amount = deviceCount * 20000 * billingCycleMonths;
+    final amount = deviceCount * 15000 * billingCycleMonths;
     final plan = BillingPlan(
       id: 'costik-iptv:custom',
       productId: 'costik-iptv',
