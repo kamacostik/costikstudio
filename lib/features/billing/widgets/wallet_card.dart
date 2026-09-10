@@ -2,8 +2,10 @@ import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/core/billing/topup_order_result.dart';
+import 'package:costikstudio/features/billing/cubit/billing_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class WalletCard extends StatelessWidget {
   const WalletCard({
@@ -240,10 +242,11 @@ class WalletCard extends StatelessWidget {
       if (order != null && context.mounted) {
         await _showTopUpOrderDialog(context, order);
       } else if (context.mounted) {
+        final errorMsg = context.read<BillingCubit>().state.errorMessage;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Gagal membuat payment order. Periksa koneksi/kredensial Supabase.',
+              errorMsg != null && errorMsg.isNotEmpty ? 'Gagal: $errorMsg' : 'Gagal membuat payment order. Periksa koneksi/kredensial Supabase.',
             ),
             backgroundColor: Colors.red,
           ),

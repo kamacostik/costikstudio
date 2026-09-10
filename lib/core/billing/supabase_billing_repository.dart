@@ -39,13 +39,13 @@ class SupabaseBillingRepository implements BillingRepository {
 
   @override
   Future<TopUpOrderResult?> topUp({required int amount}) async {
-    final rows = await _supabase.rpc<List<dynamic>>(
+    final response = await _supabase.rpc(
       'create_topup_order',
       params: {'amount': amount, 'provider': 'manual'},
     );
 
-    final row = rows.isEmpty ? null : rows.first as Map<String, dynamic>;
-    if (row == null) return null;
+    if (response is! List || response.isEmpty) return null;
+    final row = Map<String, dynamic>.from(response.first as Map);
 
     return TopUpOrderResult(
       orderId: row['order_id'] as String,
