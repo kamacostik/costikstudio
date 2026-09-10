@@ -1,3 +1,3 @@
-void printCurrentPage() {
-  // Printing is only available on Flutter web.
+void printHtmlDocument({required String title, required String htmlContent}) {
+  // Printing custom HTML is only available on Flutter web.
 }
