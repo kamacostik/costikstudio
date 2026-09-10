@@ -54,9 +54,21 @@ class SupabaseBillingRepository implements BillingRepository {
   }
 
   @override
-  Future<BillingSnapshot> checkoutPlan({required String planId}) {
-    throw UnsupportedError(
-      'Checkout must be created through a trusted RPC or Edge Function.',
+  Future<BillingSnapshot> checkoutPlan({required String planId}) async {
+    await _supabase.rpc<void>(
+      'checkout_iptv_subscription',
+      params: {'device_count': 1, 'billing_cycle_months': 1},
+    );
+
+    final snapshot = await loadSnapshot();
+    return BillingSnapshot(
+      wallet: snapshot.wallet,
+      products: snapshot.products,
+      plans: snapshot.plans,
+      subscriptions: snapshot.subscriptions,
+      transactions: snapshot.transactions,
+      invoices: snapshot.invoices,
+      message: 'Langganan Costik IPTV berhasil aktif.',
     );
   }
 
