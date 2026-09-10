@@ -426,14 +426,8 @@ class WalletCard extends StatelessWidget {
       return _showPaymentErrorDialog(context, order);
     }
     if (order != null && order.paymentUrl != null && context.mounted) {
-      return _showPaymentQrDialog(
-        context,
-        title: 'Scan QRIS untuk Top Up',
-        amount: order.amount,
-        reference: order.externalReference,
-        paymentUrl: order.paymentUrl!,
-        order: order,
-      );
+      _redirectToPaymentLink(context, order.paymentUrl!);
+      return null;
     } else if (order != null && context.mounted) {
       return _showWaitingPaymentLinkDialog(context, order);
     } else if (context.mounted) {
@@ -448,6 +442,13 @@ class WalletCard extends StatelessWidget {
       );
     }
     return null;
+  }
+
+  void _redirectToPaymentLink(BuildContext context, String paymentUrl) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Mengarahkan ke halaman pembayaran...')),
+    );
+    navigateToExternalUrl(paymentUrl);
   }
 
   Future<void> _showPaymentLinkLoadingDialog(BuildContext context, int amount) {
@@ -703,9 +704,9 @@ class WalletCard extends StatelessWidget {
             label: const Text('Batalkan'),
           ),
           FilledButton.icon(
-            onPressed: () => openExternalUrl(paymentUrl),
+            onPressed: () => navigateToExternalUrl(paymentUrl),
             icon: const Icon(Icons.open_in_new_rounded, size: 16),
-            label: const Text('Buka Link Bayar'),
+            label: const Text('Lanjut Bayar'),
           ),
         ],
       ),
