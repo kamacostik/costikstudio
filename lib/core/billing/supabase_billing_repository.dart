@@ -37,8 +37,8 @@ class SupabaseBillingRepository implements BillingRepository {
   @override
   Future<BillingSnapshot> topUp({required int amount}) async {
     await _supabase.rpc<void>(
-      'request_wallet_topup',
-      params: {'amount': amount, 'description': 'Top up saldo IPTV'},
+      'create_topup_order',
+      params: {'amount': amount, 'provider': 'manual'},
     );
 
     final snapshot = await loadSnapshot();
@@ -49,7 +49,7 @@ class SupabaseBillingRepository implements BillingRepository {
       subscriptions: snapshot.subscriptions,
       transactions: snapshot.transactions,
       invoices: snapshot.invoices,
-      message: 'Top up saldo berhasil diproses.',
+      message: 'Top up request dibuat. Saldo masuk setelah payment gateway mengirim webhook sukses.',
     );
   }
 
