@@ -9,6 +9,7 @@ void main() {
 
     expect(SupabaseConfig.url, isEmpty);
     expect(SupabaseConfig.anonKey, isEmpty);
+    expect(SupabaseConfig.sumopodCreatePaymentWebhookUrl, isEmpty);
     expect(SupabaseConfig.isConfigured, isFalse);
   });
 
@@ -16,10 +17,16 @@ void main() {
     SupabaseConfig.load(const {
       'SUPABASE_URL': 'https://example.supabase.co',
       'SUPABASE_ANON_KEY': 'public-anon-key',
+      'SUMOPOD_CREATE_PAYMENT_WEBHOOK_URL':
+          'https://n8n.example.com/webhook/create-payment',
     });
 
     expect(SupabaseConfig.url, 'https://example.supabase.co');
     expect(SupabaseConfig.anonKey, 'public-anon-key');
+    expect(
+      SupabaseConfig.sumopodCreatePaymentWebhookUrl,
+      'https://n8n.example.com/webhook/create-payment',
+    );
     expect(SupabaseConfig.isConfigured, isTrue);
   });
 }

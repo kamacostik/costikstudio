@@ -55,7 +55,10 @@ class PaymentOrder {
 abstract class BillingRepository {
   Future<BillingSnapshot> loadSnapshot();
 
-  Future<TopUpOrderResult?> topUp({required int amount});
+  Future<TopUpOrderResult?> topUp({
+    required int amount,
+    bool requestPaymentLink = true,
+  });
 
   Future<BillingSnapshot> checkoutPlan({required String planId});
 
