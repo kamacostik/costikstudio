@@ -115,3 +115,40 @@ grant execute on function public.create_sumopod_topup_order(numeric, text) to au
 
 revoke all on function public.attach_sumopod_payment_url(text, text, text, jsonb) from public;
 -- Intentionally no authenticated grant. Use only from trusted n8n/backend/service role.
+
+create or replace function public.cancel_pending_topup_order(
+  target_external_reference text
+)
+returns public.payment_orders
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  updated_order public.payment_orders%rowtype;
+begin
+  if current_user_id is null then
+    raise exception 'Authentication required';
+  end if;
+
+  update public.payment_orders
+  set
+    status = 'cancelled',
+    updated_at = now()
+  where external_reference = target_external_reference
+    and user_id = current_user_id
+    and provider = 'sumopod'
+    and status = 'pending'
+  returning * into updated_order;
+
+  if updated_order.id is null then
+    raise exception 'Pending top-up order not found';
+  end if;
+
+  return updated_order;
+end;
+$$;
+
+revoke all on function public.cancel_pending_topup_order(text) from public;
+grant execute on function public.cancel_pending_topup_order(text) to authenticated;

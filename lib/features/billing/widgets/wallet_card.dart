@@ -4,6 +4,7 @@ import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/core/billing/topup_order_result.dart';
+import 'package:costikstudio/core/payment/payment_order_canceller.dart';
 import 'package:costikstudio/core/platform/external_url.dart';
 import 'package:costikstudio/features/billing/cubit/billing_cubit.dart';
 import 'package:flutter/material.dart';
@@ -159,6 +160,13 @@ class WalletCard extends StatelessWidget {
                                   amount: order.amount,
                                   reference: order.externalReference,
                                   paymentUrl: order.paymentUrl!,
+                                  order: TopUpOrderResult(
+                                    orderId: order.id,
+                                    externalReference: order.externalReference,
+                                    status: order.status,
+                                    amount: order.amount,
+                                    paymentUrl: order.paymentUrl,
+                                  ),
                                 ),
                                 icon: const Icon(
                                   Icons.qr_code_rounded,
@@ -211,6 +219,12 @@ class WalletCard extends StatelessWidget {
   }
 
   Future<void> _showTopUpDialog(BuildContext context) async {
+    final amount = await _askTopUpAmount(context);
+    if (amount == null || !context.mounted) return;
+    await _handleTopUpFlow(context, amount);
+  }
+
+  Future<int?> _askTopUpAmount(BuildContext context) async {
     final controller = TextEditingController(text: '100000');
     final formKey = GlobalKey<FormState>();
     final amount = await showDialog<int>(
@@ -277,42 +291,67 @@ class WalletCard extends StatelessWidget {
         ],
       ),
     );
-    if (amount != null && context.mounted) {
-      var loadingDialogShown = false;
-      final loadingDelay =
-          Future<void>.delayed(const Duration(milliseconds: 250)).then((_) {
-            if (!context.mounted) return;
-            loadingDialogShown = true;
-            unawaited(_showPaymentLinkLoadingDialog(context, amount));
-          });
-      final order = await onTopUp(amount);
-      await loadingDelay;
-      if (!context.mounted) return;
-      if (loadingDialogShown) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-      if (order != null && order.paymentUrl != null && context.mounted) {
-        await _showPaymentQrDialog(
-          context,
-          title: 'Scan QRIS untuk Top Up',
-          amount: order.amount,
-          reference: order.externalReference,
-          paymentUrl: order.paymentUrl!,
-        );
-      } else if (order != null && context.mounted) {
-        await _showWaitingPaymentLinkDialog(context, order);
-      } else if (context.mounted) {
-        final errorMsg = context.read<BillingCubit>().state.errorMessage;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              errorMsg != null && errorMsg.isNotEmpty ? 'Gagal: $errorMsg' : 'Gagal membuat payment order. Periksa koneksi/kredensial Supabase.',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
+    return amount;
+  }
+
+  Future<void> _handleTopUpFlow(BuildContext context, int amount) async {
+    // ignore: use_build_context_synchronously
+    var currentAmount = amount;
+    var retryTopUp = true;
+    while (retryTopUp && context.mounted) {
+      retryTopUp = false;
+      // ignore: use_build_context_synchronously
+      final result = await _createPaymentOrder(context, currentAmount);
+      if (result == _TopUpDialogAction.retry) {
+        if (!context.mounted) return;
+        final nextAmount = await _askTopUpAmount(context);
+        if (nextAmount == null) return;
+        currentAmount = nextAmount;
+        retryTopUp = true;
       }
     }
+  }
+
+  Future<_TopUpDialogAction?> _createPaymentOrder(
+    BuildContext context,
+    int amount,
+  ) async {
+    var loadingDialogShown = false;
+    final loadingDelay = Future<void>.delayed(const Duration(milliseconds: 250))
+        .then((_) {
+          if (!context.mounted) return;
+          loadingDialogShown = true;
+          unawaited(_showPaymentLinkLoadingDialog(context, amount));
+        });
+    final order = await onTopUp(amount);
+    await loadingDelay;
+    if (!context.mounted) return null;
+    if (loadingDialogShown) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+    if (order != null && order.paymentUrl != null && context.mounted) {
+      return _showPaymentQrDialog(
+        context,
+        title: 'Scan QRIS untuk Top Up',
+        amount: order.amount,
+        reference: order.externalReference,
+        paymentUrl: order.paymentUrl!,
+        order: order,
+      );
+    } else if (order != null && context.mounted) {
+      return _showWaitingPaymentLinkDialog(context, order);
+    } else if (context.mounted) {
+      final errorMsg = context.read<BillingCubit>().state.errorMessage;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            errorMsg != null && errorMsg.isNotEmpty ? 'Gagal: $errorMsg' : 'Gagal membuat payment order. Periksa koneksi/kredensial Supabase.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    return null;
   }
 
   Future<void> _showPaymentLinkLoadingDialog(BuildContext context, int amount) {
@@ -347,11 +386,11 @@ class WalletCard extends StatelessWidget {
     );
   }
 
-  Future<void> _showWaitingPaymentLinkDialog(
+  Future<_TopUpDialogAction?> _showWaitingPaymentLinkDialog(
     BuildContext context,
     TopUpOrderResult order,
   ) {
-    return showDialog<void>(
+    return showDialog<_TopUpDialogAction>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -385,19 +424,51 @@ class WalletCard extends StatelessWidget {
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Tutup'),
           ),
+          TextButton.icon(
+            onPressed: () async {
+              final cancelled = await const PaymentOrderCanceller()
+                  .cancelByExternalReference(order.externalReference);
+              if (!dialogContext.mounted) return;
+              Navigator.of(dialogContext).pop(_TopUpDialogAction.cancelled);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    cancelled
+                        ? 'Transaksi dibatalkan. Silakan buat top up baru.'
+                        : 'Belum bisa membatalkan transaksi ini.',
+                  ),
+                  backgroundColor: cancelled ? null : Colors.red,
+                ),
+              );
+            },
+            icon: const Icon(Icons.cancel_outlined, size: 16),
+            label: const Text('Batalkan Transaksi'),
+          ),
+          FilledButton.icon(
+            onPressed: () async {
+              await const PaymentOrderCanceller().cancelByExternalReference(
+                order.externalReference,
+              );
+              if (!dialogContext.mounted) return;
+              Navigator.of(dialogContext).pop(_TopUpDialogAction.retry);
+            },
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Buat Link Baru'),
+          ),
         ],
       ),
     );
   }
 
-  Future<void> _showPaymentQrDialog(
+  Future<_TopUpDialogAction?> _showPaymentQrDialog(
     BuildContext context, {
     required String title,
     required int amount,
     required String reference,
     required String paymentUrl,
+    required TopUpOrderResult order,
   }) {
-    return showDialog<void>(
+    return showDialog<_TopUpDialogAction>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -448,6 +519,26 @@ class WalletCard extends StatelessWidget {
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Tutup'),
           ),
+          TextButton.icon(
+            onPressed: () async {
+              final cancelled = await const PaymentOrderCanceller()
+                  .cancelByExternalReference(order.externalReference);
+              if (!dialogContext.mounted) return;
+              Navigator.of(dialogContext).pop(_TopUpDialogAction.cancelled);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    cancelled
+                        ? 'Transaksi dibatalkan. Silakan buat top up baru.'
+                        : 'Belum bisa membatalkan transaksi ini.',
+                  ),
+                  backgroundColor: cancelled ? null : Colors.red,
+                ),
+              );
+            },
+            icon: const Icon(Icons.cancel_outlined, size: 16),
+            label: const Text('Batalkan'),
+          ),
           FilledButton.icon(
             onPressed: () => openExternalUrl(paymentUrl),
             icon: const Icon(Icons.open_in_new_rounded, size: 16),
@@ -458,6 +549,8 @@ class WalletCard extends StatelessWidget {
     );
   }
 }
+
+enum _TopUpDialogAction { retry, cancelled }
 
 class _TopUpOrderRow extends StatelessWidget {
   const _TopUpOrderRow({required this.label, required this.value});
