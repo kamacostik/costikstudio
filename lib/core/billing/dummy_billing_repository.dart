@@ -58,6 +58,27 @@ class DummyBillingRepository implements BillingRepository {
     if (plan == null) {
       throw ArgumentError.value(planId, 'planId', 'Unknown billing plan.');
     }
+    return _checkout(plan: plan);
+  }
+
+  @override
+  Future<BillingSnapshot> checkoutIptvSubscription({
+    required int deviceCount,
+    required int billingCycleMonths,
+  }) async {
+    final amount = deviceCount * 20000 * billingCycleMonths;
+    final plan = BillingPlan(
+      id: 'costik-iptv:custom',
+      productId: 'costik-iptv',
+      name: '$deviceCount Device / $billingCycleMonths Bulan',
+      price: amount,
+      durationDays: 30 * billingCycleMonths,
+      features: const ['Custom IPTV device licence'],
+    );
+    return _checkout(plan: plan);
+  }
+
+  Future<BillingSnapshot> _checkout({required BillingPlan plan}) async {
     final product = dummyBillingProductById(plan.productId);
     if (product == null) {
       throw ArgumentError.value(

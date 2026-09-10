@@ -55,9 +55,20 @@ class SupabaseBillingRepository implements BillingRepository {
 
   @override
   Future<BillingSnapshot> checkoutPlan({required String planId}) async {
+    return checkoutIptvSubscription(deviceCount: 1, billingCycleMonths: 1);
+  }
+
+  @override
+  Future<BillingSnapshot> checkoutIptvSubscription({
+    required int deviceCount,
+    required int billingCycleMonths,
+  }) async {
     await _supabase.rpc<void>(
       'checkout_iptv_subscription',
-      params: {'device_count': 1, 'billing_cycle_months': 1},
+      params: {
+        'device_count': deviceCount,
+        'billing_cycle_months': billingCycleMonths,
+      },
     );
 
     final snapshot = await loadSnapshot();

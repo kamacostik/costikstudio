@@ -78,6 +78,18 @@ class BillingCubit extends Cubit<BillingState> {
     await _runMutation(() => repository.checkoutPlan(planId: planId));
   }
 
+  Future<void> checkoutIptvSubscription({
+    required int deviceCount,
+    required int billingCycleMonths,
+  }) async {
+    await _runMutation(
+      () => repository.checkoutIptvSubscription(
+        deviceCount: deviceCount,
+        billingCycleMonths: billingCycleMonths,
+      ),
+    );
+  }
+
   Future<void> _runMutation(Future<BillingSnapshot> Function() action) async {
     emit(state.copyWith(status: BillingStatus.loading));
     try {

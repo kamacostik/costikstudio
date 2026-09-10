@@ -26,4 +26,9 @@ abstract class BillingRepository {
   Future<BillingSnapshot> topUp({required int amount});
 
   Future<BillingSnapshot> checkoutPlan({required String planId});
+
+  Future<BillingSnapshot> checkoutIptvSubscription({
+    required int deviceCount,
+    required int billingCycleMonths,
+  });
 }
