@@ -29,7 +29,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
 
-  static const int pricePerDevice = 20000;
+  static const int pricePerDevice = 15000;
   int _deviceCount = 10;
   int _billingCycleMonths = 1; // 1, 3, 6, 12 bulan
 
