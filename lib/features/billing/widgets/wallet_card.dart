@@ -1,6 +1,7 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
+import 'package:costikstudio/core/billing/topup_order_result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,7 +14,7 @@ class WalletCard extends StatelessWidget {
   });
 
   final int balance;
-  final ValueChanged<int> onTopUp;
+  final Future<TopUpOrderResult?> Function(int amount) onTopUp;
   final List<PaymentOrder> paymentOrders;
 
   List<PaymentOrder> get _pendingOrders =>
@@ -231,8 +232,84 @@ class WalletCard extends StatelessWidget {
         ],
       ),
     );
-    if (amount != null) {
-      onTopUp(amount);
+    if (amount != null && context.mounted) {
+      final order = await onTopUp(amount);
+      if (order != null && context.mounted) {
+        await _showTopUpOrderDialog(context, order);
+      }
     }
+  }
+
+  Future<void> _showTopUpOrderDialog(
+    BuildContext context,
+    TopUpOrderResult order,
+  ) {
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Payment Order Dibuat'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Gunakan reference ini untuk proses payment gateway/n8n webhook.',
+            ),
+            const SizedBox(height: 16),
+            _TopUpOrderRow(label: 'Reference', value: order.externalReference),
+            _TopUpOrderRow(label: 'Nominal', value: formatRupiah(order.amount)),
+            _TopUpOrderRow(label: 'Status', value: order.status),
+            if (order.paymentUrl != null) ...[
+              const SizedBox(height: 8),
+              SelectableText(order.paymentUrl!),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TopUpOrderRow extends StatelessWidget {
+  const _TopUpOrderRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 92,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: CostikStudioTheme.slate,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Expanded(
+            child: SelectableText(
+              value,
+              style: const TextStyle(
+                color: CostikStudioTheme.navy,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

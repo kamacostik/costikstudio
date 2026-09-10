@@ -1,4 +1,5 @@
 import 'package:costikstudio/core/billing/billing_repository.dart';
+import 'package:costikstudio/core/billing/topup_order_result.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -56,7 +57,7 @@ class BillingCubit extends Cubit<BillingState> {
     await topUp(amount: 100000);
   }
 
-  Future<void> topUp({required int amount}) async {
+  Future<TopUpOrderResult?> topUp({required int amount}) async {
     emit(state.copyWith(status: BillingStatus.loading));
     try {
       final order = await repository.topUp(amount: amount);
@@ -78,6 +79,7 @@ class BillingCubit extends Cubit<BillingState> {
           ),
         ),
       );
+      return order;
     } catch (error) {
       emit(
         BillingState(
@@ -86,6 +88,7 @@ class BillingCubit extends Cubit<BillingState> {
           errorMessage: error.toString(),
         ),
       );
+      return null;
     }
   }
 
