@@ -42,7 +42,10 @@ class DummyBillingRepository implements BillingRepository {
   Future<BillingSnapshot> loadSnapshot() async => _snapshot();
 
   @override
-  Future<TopUpOrderResult?> topUp({required int amount}) async {
+  Future<TopUpOrderResult?> topUp({
+    required int amount,
+    bool requestPaymentLink = true,
+  }) async {
     final result = _wallet.applyTopUp(
       amount: amount,
       referenceId: 'dummy-topup-$amount',

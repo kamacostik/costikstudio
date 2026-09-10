@@ -1,12 +1,17 @@
 import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/core/billing/topup_order_result.dart';
+import 'package:costikstudio/core/payment/payment_link_trigger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseBillingRepository implements BillingRepository {
-  const SupabaseBillingRepository({this.client});
+  const SupabaseBillingRepository({
+    this.client,
+    this.paymentLinkTrigger = const PaymentLinkTrigger(),
+  });
 
   final SupabaseClient? client;
+  final PaymentLinkTrigger paymentLinkTrigger;
 
   SupabaseClient get _supabase => client ?? Supabase.instance.client;
 
@@ -38,7 +43,10 @@ class SupabaseBillingRepository implements BillingRepository {
   }
 
   @override
-  Future<TopUpOrderResult?> topUp({required int amount}) async {
+  Future<TopUpOrderResult?> topUp({
+    required int amount,
+    bool requestPaymentLink = true,
+  }) async {
     final response = await _supabase.rpc(
       'create_sumopod_topup_order',
       params: {'amount': amount, 'payment_method_type_code': 'QRIS'},
@@ -47,13 +55,20 @@ class SupabaseBillingRepository implements BillingRepository {
     if (response is! List || response.isEmpty) return null;
     final row = Map<String, dynamic>.from(response.first as Map);
 
-    return TopUpOrderResult(
+    final order = TopUpOrderResult(
       orderId: row['order_id'] as String,
       externalReference: row['external_reference'] as String,
       status: row['order_status'] as String? ?? 'pending',
       amount: _moneyToInt(row['order_amount']),
       paymentUrl: row['payment_url'] as String?,
     );
+
+    var paymentLinkRequested = false;
+    if (requestPaymentLink) {
+      paymentLinkRequested = await paymentLinkTrigger.triggerTopUpOrder(order);
+    }
+
+    return order.copyWith(paymentLinkRequested: paymentLinkRequested);
   }
 
   @override

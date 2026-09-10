@@ -1,0 +1,82 @@
+{
+  "name": "CostikStudio - Sumopod Create Payment Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "costikstudio-sumopod-create-payment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Create Payment Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "costikstudio-sumopod-create-payment"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-pay-sandbox.sumopod.com/api/v1/payments",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Content-Type", "value": "application/json"},
+            {"name": "X-Api-Key", "value": "={{$env.SUMOPOD_API_KEY}}"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"order_id\": \"{{$json.body.order_id}}\",\n  \"amount\": {{$json.body.amount}},\n  \"currency\": \"IDR\",\n  \"expires_in_hours\": 24,\n  \"success_return_url\": \"{{$env.APP_SUCCESS_RETURN_URL || 'https://yourdomain.com/billing'}}\",\n  \"cancel_return_url\": \"{{$env.APP_CANCEL_RETURN_URL || 'https://yourdomain.com/billing'}}\",\n  \"payment_method_type_code\": \"{{$json.body.payment_method_type_code || 'QRIS'}}\"\n}",
+        "options": {}
+      },
+      "id": "create-sumopod-payment",
+      "name": "Create Sumopod Payment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SUPABASE_URL}}/rest/v1/rpc/attach_sumopod_payment_url",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Content-Type", "value": "application/json"},
+            {"name": "apikey", "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"target_external_reference\": \"{{$json.order_id}}\",\n  \"target_gateway_payment_id\": \"{{$json.payment_id}}\",\n  \"target_payment_url\": \"{{$json.payment_link_url}}\",\n  \"raw_payload\": {\n    \"payment_id\": \"{{$json.payment_id}}\",\n    \"order_id\": \"{{$json.order_id}}\",\n    \"amount\": {{$json.amount}},\n    \"fee\": {{$json.fee}},\n    \"net_amount\": {{$json.net_amount}},\n    \"currency\": \"{{$json.currency}}\",\n    \"payment_link_url\": \"{{$json.payment_link_url}}\",\n    \"payment_code\": \"{{$json.payment_code}}\",\n    \"payment_code_type\": \"{{$json.payment_code_type}}\",\n    \"payment_channel_used\": \"{{$json.payment_channel_used}}\",\n    \"status\": \"{{$json.status}}\",\n    \"expires_at\": \"{{$json.expires_at}}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "attach-payment-url",
+      "name": "Attach Payment URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\": true, \"payment_url\": \"{{$json.payment_url}}\", \"external_reference\": \"{{$json.external_reference}}\"}",
+        "options": {}
+      },
+      "id": "respond-ok",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [780, 0]
+    }
+  ],
+  "connections": {
+    "Create Payment Webhook": {"main": [[{"node": "Create Sumopod Payment", "type": "main", "index": 0}]]},
+    "Create Sumopod Payment": {"main": [[{"node": "Attach Payment URL", "type": "main", "index": 0}]]},
+    "Attach Payment URL": {"main": [[{"node": "Respond OK", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}
