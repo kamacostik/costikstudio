@@ -90,4 +90,22 @@ Expected result:
 
 ## Security note
 
-For staging, filtering on `event_type = payment.completed` is enough to verify the flow. For production, verify the Sumopod webhook token or Svix signature before applying wallet credit.
+For staging, filtering on `event_type = payment.completed` is enough to verify the flow. For production, use the token-protected import file:
+
+```text
+docs/db/n8n_sumopod_paid_webhook_with_token.json
+```
+
+Set this n8n environment variable before activating the workflow:
+
+```text
+SUMOPOD_WEBHOOK_TOKEN=whtok_...
+```
+
+The token-protected workflow checks:
+
+```js
+$json.headers['x-webhook-token'] === $env.SUMOPOD_WEBHOOK_TOKEN
+```
+
+Invalid tokens return HTTP 401 and do not apply wallet credit.
