@@ -149,7 +149,6 @@ class CostikStudioShell extends StatelessWidget {
                 const _NavItem('Products', AppRoutes.products),
                 if (authState.isAuthenticated) ...[
                   const _NavItem('Dashboard', AppRoutes.billing),
-                  const _NavItem('Support', AppRoutes.support),
                 ],
               ];
 

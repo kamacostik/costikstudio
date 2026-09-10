@@ -14,6 +14,7 @@ import 'package:costikstudio/features/billing/widgets/transactions_card.dart';
 import 'package:costikstudio/features/billing/widgets/wallet_card.dart';
 import 'package:costikstudio/features/shared/widgets/product_card.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
+import 'package:costikstudio/features/support/view/support_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -31,7 +32,7 @@ class BillingDashboardPage extends StatelessWidget {
   }
 }
 
-enum _DashboardTab { apps, subscriptions, billing, activity, invoices }
+enum _DashboardTab { apps, subscriptions, billing, activity, invoices, support }
 
 class _BillingDashboardView extends StatefulWidget {
   const _BillingDashboardView();
@@ -217,6 +218,7 @@ class _DashboardPage extends StatelessWidget {
         transactions: snapshot.transactions,
       ),
       _DashboardTab.invoices => InvoicesCard(invoices: snapshot.invoices),
+      _DashboardTab.support => const SupportPage(isEmbedded: true),
     };
   }
 
@@ -272,6 +274,7 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.billing => 'Billing Wallet',
       _DashboardTab.activity => 'Aktivitas Wallet',
       _DashboardTab.invoices => 'Invoice',
+      _DashboardTab.support => 'Support',
     };
   }
 
@@ -295,6 +298,8 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.activity =>
         'Riwayat transaksi terakhir dari top-up dan pembelian paket.',
       _DashboardTab.invoices => 'Daftar invoice dummy dari aktivitas billing.',
+      _DashboardTab.support =>
+        'Bantuan produk, dokumentasi, integrasi, dan saluran kontak resmi.',
     };
   }
 }
@@ -466,6 +471,13 @@ class _DashboardNavBar extends StatelessWidget {
           _DashboardTab.activity,
           'Activity',
           Icons.timeline_rounded,
+        ),
+      ]),
+      _DashboardNavSection('HELP & SUPPORT', [
+        _DashboardNavItem(
+          _DashboardTab.support,
+          'Support',
+          Icons.help_outline_rounded,
         ),
       ]),
     ];
