@@ -36,12 +36,40 @@ class SubscriptionsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Active subscriptions',
-              style: Theme.of(context).textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w900),
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: CostikStudioTheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.workspace_premium_rounded,
+                    color: CostikStudioTheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Active subscriptions',
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w900),
+                      ),
+                      const Text(
+                        'Paket aktif, jumlah device, masa berlaku, dan status layanan.',
+                        style: TextStyle(color: CostikStudioTheme.slate),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             if (subscriptions.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
@@ -72,54 +100,164 @@ class _SubscriptionRow extends StatelessWidget {
   final BillingProduct? product;
   final BillingPlan? plan;
 
+  String get _productName => product?.name ?? subscription.productId;
+  int get _remainingDays =>
+      subscription.expiresAt.difference(DateTime.now()).inDays;
+
   void _showSubscriptionDetails(BuildContext context) {
+    final remainingText = _remainingDays < 0
+        ? 'Expired'
+        : _remainingDays == 0
+        ? 'Berakhir hari ini'
+        : '$_remainingDays hari lagi';
+
     showDialog<void>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.stars_rounded, color: CostikStudioTheme.primary),
-            const SizedBox(width: 8),
-            Text(product?.name ?? subscription.productId),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _DetailRow(label: 'Subscription ID', value: subscription.id),
-            _DetailRow(
-              label: 'Jumlah Device',
-              value: '${subscription.deviceCount} Device',
+      builder: (dialogCtx) => Dialog(
+        insetPadding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: CostikStudioTheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Icon(
+                        Icons.tv_rounded,
+                        color: CostikStudioTheme.primary,
+                        size: 30,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _productName,
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w900),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Subscription aktif untuk ${subscription.deviceCount} device selama ${subscription.billingCycleMonths} bulan.',
+                            style: const TextStyle(
+                              color: CostikStudioTheme.slate,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _StatusPill(status: subscription.status),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SummaryTile(
+                        icon: Icons.devices_rounded,
+                        label: 'Jumlah Device',
+                        value: '${subscription.deviceCount}',
+                        helper: 'Device aktif',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _SummaryTile(
+                        icon: Icons.calendar_month_rounded,
+                        label: 'Siklus',
+                        value: '${subscription.billingCycleMonths} Bulan',
+                        helper: 'Periode tagihan',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _SummaryTile(
+                        icon: Icons.timelapse_rounded,
+                        label: 'Sisa Masa',
+                        value: remainingText,
+                        helper: 'Sampai expired',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Informasi Paket',
+                        style: TextStyle(
+                          color: CostikStudioTheme.navy,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _DetailRow(
+                        label: 'Subscription ID',
+                        value: subscription.id,
+                      ),
+                      _DetailRow(
+                        label: 'Product ID',
+                        value: subscription.productId,
+                      ),
+                      _DetailRow(
+                        label: 'Plan',
+                        value: plan?.name ?? 'IPTV Wallet Checkout',
+                      ),
+                      _DetailRow(
+                        label: 'Tanggal Mulai',
+                        value: _formatFullDate(subscription.startedAt),
+                      ),
+                      _DetailRow(
+                        label: 'Berlaku Hingga',
+                        value: _formatFullDate(subscription.expiresAt),
+                      ),
+                      _DetailRow(
+                        label: 'Perpanjangan',
+                        value: subscription.autoRenew ? 'Otomatis' : 'Manual',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    FilledButton(
+                      onPressed: () => Navigator.of(dialogCtx).pop(),
+                      child: const Text('Tutup'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            _DetailRow(
-              label: 'Siklus Tagihan',
-              value: '${subscription.billingCycleMonths} Bulan',
-            ),
-            _DetailRow(
-              label: 'Status',
-              value: subscription.status.name.toUpperCase(),
-            ),
-            _DetailRow(
-              label: 'Tanggal Mulai',
-              value: _formatFullDate(subscription.startedAt),
-            ),
-            _DetailRow(
-              label: 'Berlaku Hingga',
-              value: _formatFullDate(subscription.expiresAt),
-            ),
-            _DetailRow(
-              label: 'Perpanjangan',
-              value: subscription.autoRenew ? 'Otomatis' : 'Manual',
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: const Text('Tutup'),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -129,33 +267,68 @@ class _SubscriptionRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: CostikStudioTheme.background),
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.verified_rounded,
-              color: CostikStudioTheme.primary,
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: CostikStudioTheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                Icons.verified_rounded,
+                color: CostikStudioTheme.primary,
+              ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    product?.name ?? subscription.productId,
-                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          _productName,
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _StatusPill(status: subscription.status, compact: true),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${subscription.deviceCount} Device • ${subscription.billingCycleMonths} Bulan • Expired ${_shortDate(subscription.expiresAt)}',
-                    style: const TextStyle(
-                      color: CostikStudioTheme.slate,
-                      fontSize: 13,
-                    ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      _MiniMeta(
+                        icon: Icons.devices_rounded,
+                        text: '${subscription.deviceCount} Device',
+                      ),
+                      _MiniMeta(
+                        icon: Icons.calendar_month_rounded,
+                        text: '${subscription.billingCycleMonths} Bulan',
+                      ),
+                      _MiniMeta(
+                        icon: Icons.event_available_rounded,
+                        text: 'Expired ${_shortDate(subscription.expiresAt)}',
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -172,6 +345,130 @@ class _SubscriptionRow extends StatelessWidget {
   }
 }
 
+class _SummaryTile extends StatelessWidget {
+  const _SummaryTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.helper,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final String helper;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CostikStudioTheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: CostikStudioTheme.primary.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: CostikStudioTheme.primary),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: const TextStyle(
+              color: CostikStudioTheme.slate,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: CostikStudioTheme.navy,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            helper,
+            style: const TextStyle(
+              color: CostikStudioTheme.slate,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniMeta extends StatelessWidget {
+  const _MiniMeta({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: CostikStudioTheme.slate),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: const TextStyle(
+              color: CostikStudioTheme.slate,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status, this.compact = false});
+
+  final SubscriptionStatus status;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = status == SubscriptionStatus.active;
+    final color = isActive ? Colors.green : CostikStudioTheme.amber;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 8 : 10,
+        vertical: compact ? 4 : 6,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        status.name.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w900,
+          fontSize: compact ? 10 : 12,
+        ),
+      ),
+    );
+  }
+}
+
 class _DetailRow extends StatelessWidget {
   const _DetailRow({required this.label, required this.value});
 
@@ -181,17 +478,17 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: 130,
             child: Text(
               label,
               style: const TextStyle(
                 color: CostikStudioTheme.slate,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
