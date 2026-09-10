@@ -7,6 +7,7 @@ import 'package:costikstudio/features/auth/view/login_page.dart';
 import 'package:costikstudio/features/billing/view/admin_billing_page.dart';
 import 'package:costikstudio/features/billing/view/billing_dashboard_page.dart';
 import 'package:costikstudio/features/home/view/home_page.dart';
+import 'package:costikstudio/features/payment_return/view/payment_return_page.dart';
 import 'package:costikstudio/features/product_detail/view/product_detail_page.dart';
 import 'package:costikstudio/features/products/view/products_page.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
@@ -76,6 +77,16 @@ GoRouter createAppRouter(AppExperience experience) {
                 return null;
               },
               builder: (context, state) => const BillingDashboardPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.paymentSuccess,
+              name: AppRouteNames.paymentSuccess,
+              builder: (context, state) => const PaymentReturnPage.success(),
+            ),
+            GoRoute(
+              path: AppRoutes.paymentCancel,
+              name: AppRouteNames.paymentCancel,
+              builder: (context, state) => const PaymentReturnPage.cancelled(),
             ),
             GoRoute(
               path: AppRoutes.adminBilling,

@@ -27,7 +27,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"order_id\": \"{{$json.body.order_id}}\",\n  \"amount\": {{$json.body.amount}},\n  \"currency\": \"IDR\",\n  \"expires_in_hours\": 24,\n  \"success_return_url\": \"https://yourdomain.com/billing\",\n  \"cancel_return_url\": \"https://yourdomain.com/billing\",\n  \"payment_method_type_code\": \"{{$json.body.payment_method_type_code || 'QRIS'}}\"\n}",
+        "jsonBody": "={\n  \"order_id\": \"{{$json.body.order_id}}\",\n  \"amount\": {{$json.body.amount}},\n  \"currency\": \"IDR\",\n  \"expires_in_hours\": 24,\n  \"success_return_url\": \"https://yourdomain.com/payment/success\",\n  \"cancel_return_url\": \"https://yourdomain.com/payment/cancel\",\n  \"payment_method_type_code\": \"{{$json.body.payment_method_type_code || 'QRIS'}}\"\n}",
         "options": {}
       },
       "id": "create-sumopod-payment",
