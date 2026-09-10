@@ -35,9 +35,21 @@ class SupabaseBillingRepository implements BillingRepository {
   }
 
   @override
-  Future<BillingSnapshot> topUp({required int amount}) {
-    throw UnsupportedError(
-      'Top up must be created through a trusted RPC or Edge Function.',
+  Future<BillingSnapshot> topUp({required int amount}) async {
+    await _supabase.rpc<void>(
+      'request_wallet_topup',
+      params: {'amount': amount, 'description': 'Top up saldo IPTV'},
+    );
+
+    final snapshot = await loadSnapshot();
+    return BillingSnapshot(
+      wallet: snapshot.wallet,
+      products: snapshot.products,
+      plans: snapshot.plans,
+      subscriptions: snapshot.subscriptions,
+      transactions: snapshot.transactions,
+      invoices: snapshot.invoices,
+      message: 'Top up saldo berhasil diproses.',
     );
   }
 
