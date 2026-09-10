@@ -8,6 +8,7 @@ class TopUpOrderResult {
     this.paymentCode,
     this.paymentCodeType,
     this.paymentChannelUsed,
+    this.paymentErrorMessage,
     this.paymentLinkRequested = false,
   });
 
@@ -19,13 +20,18 @@ class TopUpOrderResult {
   final String? paymentCode;
   final String? paymentCodeType;
   final String? paymentChannelUsed;
+  final String? paymentErrorMessage;
   final bool paymentLinkRequested;
+
+  bool get hasPaymentError =>
+      paymentErrorMessage != null && paymentErrorMessage!.isNotEmpty;
 
   TopUpOrderResult copyWith({
     String? paymentUrl,
     String? paymentCode,
     String? paymentCodeType,
     String? paymentChannelUsed,
+    String? paymentErrorMessage,
     bool? paymentLinkRequested,
   }) {
     return TopUpOrderResult(
@@ -37,6 +43,7 @@ class TopUpOrderResult {
       paymentCode: paymentCode ?? this.paymentCode,
       paymentCodeType: paymentCodeType ?? this.paymentCodeType,
       paymentChannelUsed: paymentChannelUsed ?? this.paymentChannelUsed,
+      paymentErrorMessage: paymentErrorMessage ?? this.paymentErrorMessage,
       paymentLinkRequested: paymentLinkRequested ?? this.paymentLinkRequested,
     );
   }

@@ -22,31 +22,56 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {"name": "Content-Type", "value": "application/json"},
-            {"name": "X-Api-Key", "value": "={{$env.SUMOPOD_API_KEY}}"}
+            {"name": "Content-Type", "value": "application/json"}
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"order_id\": \"{{$json.body.order_id}}\",\n  \"amount\": {{$json.body.amount}},\n  \"currency\": \"IDR\",\n  \"expires_in_hours\": 24,\n  \"success_return_url\": \"{{$env.APP_SUCCESS_RETURN_URL || 'https://yourdomain.com/billing'}}\",\n  \"cancel_return_url\": \"{{$env.APP_CANCEL_RETURN_URL || 'https://yourdomain.com/billing'}}\",\n  \"payment_method_type_code\": \"{{$json.body.payment_method_type_code || 'QRIS'}}\"\n}",
+        "jsonBody": "={\n  \"order_id\": \"{{$json.body.order_id}}\",\n  \"amount\": {{$json.body.amount}},\n  \"currency\": \"IDR\",\n  \"expires_in_hours\": 24,\n  \"success_return_url\": \"https://yourdomain.com/billing\",\n  \"cancel_return_url\": \"https://yourdomain.com/billing\",\n  \"payment_method_type_code\": \"{{$json.body.payment_method_type_code || 'QRIS'}}\"\n}",
         "options": {}
       },
       "id": "create-sumopod-payment",
       "name": "Create Sumopod Payment",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [260, 0]
+      "position": [260, 0],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.error || $json.errorMessage || $json.message}}",
+              "rightValue": "",
+              "operator": {"type": "string", "operation": "empty"}
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "sumopod-success",
+      "name": "Sumopod Success?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [500, 0]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.SUPABASE_URL}}/rest/v1/rpc/attach_sumopod_payment_url",
+        "url": "https://PROJECT-REF.supabase.co/rest/v1/rpc/attach_sumopod_payment_url",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {"name": "Content-Type", "value": "application/json"},
-            {"name": "apikey", "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"},
-            {"name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"}
+            {"name": "apikey", "value": "SUPABASE_SERVICE_ROLE_KEY"},
+            {"name": "Authorization", "value": "Bearer SUPABASE_SERVICE_ROLE_KEY"}
           ]
         },
         "sendBody": true,
@@ -58,24 +83,37 @@
       "name": "Attach Payment URL",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [520, 0]
+      "position": [760, -120]
     },
     {
       "parameters": {
         "respondWith": "json",
         "responseBody": "={\"ok\": true, \"payment_url\": \"{{$json.payment_url}}\", \"external_reference\": \"{{$json.external_reference}}\", \"payment_code\": \"{{$json.raw_payload.payment_code}}\", \"payment_code_type\": \"{{$json.raw_payload.payment_code_type}}\", \"payment_channel_used\": \"{{$json.raw_payload.payment_channel_used}}\"}",
-        "options": {}
+        "options": {"responseCode": 200}
       },
       "id": "respond-ok",
       "name": "Respond OK",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [780, 0]
+      "position": [1020, -120]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\": false, \"message\": \"{{$json.error?.message || $json.errorMessage || $json.message || 'Gagal membuat payment link Sumopod'}}\"}",
+        "options": {"responseCode": 502}
+      },
+      "id": "respond-error",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [760, 120]
     }
   ],
   "connections": {
     "Create Payment Webhook": {"main": [[{"node": "Create Sumopod Payment", "type": "main", "index": 0}]]},
-    "Create Sumopod Payment": {"main": [[{"node": "Attach Payment URL", "type": "main", "index": 0}]]},
+    "Create Sumopod Payment": {"main": [[{"node": "Sumopod Success?", "type": "main", "index": 0}]]},
+    "Sumopod Success?": {"main": [[{"node": "Attach Payment URL", "type": "main", "index": 0}], [{"node": "Respond Error", "type": "main", "index": 0}]]},
     "Attach Payment URL": {"main": [[{"node": "Respond OK", "type": "main", "index": 0}]]}
   },
   "settings": {"executionOrder": "v1"}

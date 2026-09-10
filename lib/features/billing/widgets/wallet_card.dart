@@ -422,6 +422,9 @@ class WalletCard extends StatelessWidget {
     if (loadingDialogShown) {
       Navigator.of(context, rootNavigator: true).pop();
     }
+    if (order != null && order.hasPaymentError && context.mounted) {
+      return _showPaymentErrorDialog(context, order);
+    }
     if (order != null && order.paymentUrl != null && context.mounted) {
       return _showPaymentQrDialog(
         context,
@@ -475,6 +478,62 @@ class WalletCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<_TopUpDialogAction?> _showPaymentErrorDialog(
+    BuildContext context,
+    TopUpOrderResult order,
+  ) {
+    return showDialog<_TopUpDialogAction>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Link Pembayaran Gagal'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              order.paymentErrorMessage ??
+                  'n8n belum berhasil membuat link pembayaran.',
+            ),
+            const SizedBox(height: 16),
+            _TopUpOrderRow(label: 'Reference', value: order.externalReference),
+            _TopUpOrderRow(label: 'Nominal', value: formatRupiah(order.amount)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Tutup'),
+          ),
+          TextButton.icon(
+            onPressed: () async {
+              final cancelled = await const PaymentOrderCanceller()
+                  .cancelByExternalReference(order.externalReference);
+              if (!dialogContext.mounted) return;
+              Navigator.of(dialogContext).pop(_TopUpDialogAction.cancelled);
+              if (cancelled && context.mounted) {
+                await context.read<BillingCubit>().load();
+              }
+            },
+            icon: const Icon(Icons.cancel_outlined, size: 16),
+            label: const Text('Batalkan'),
+          ),
+          FilledButton.icon(
+            onPressed: () async {
+              await const PaymentOrderCanceller().cancelByExternalReference(
+                order.externalReference,
+              );
+              if (!dialogContext.mounted) return;
+              Navigator.of(dialogContext).pop(_TopUpDialogAction.retry);
+            },
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Coba Lagi'),
+          ),
+        ],
       ),
     );
   }

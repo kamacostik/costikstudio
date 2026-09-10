@@ -68,19 +68,26 @@ void main() {
     expect(body['source'], 'costikstudio_flutter');
   });
 
-  test('returns null when create payment webhook fails', () async {
+  test('returns payment error when create payment webhook fails', () async {
     SupabaseConfig.load(const {
       'SUMOPOD_CREATE_PAYMENT_WEBHOOK_URL':
           'https://n8n.example.com/webhook/costikstudio-sumopod-create-payment',
     });
 
     final trigger = PaymentLinkTrigger(
-      client: MockClient((request) async => http.Response('failed', 500)),
+      client: MockClient(
+        (request) async => http.Response(
+          jsonEncode({'message': 'No API key found in request'}),
+          502,
+        ),
+      ),
     );
 
     final result = await trigger.triggerTopUpOrder(_order());
 
-    expect(result, isNull);
+    expect(result?.hasPaymentError, isTrue);
+    expect(result?.paymentErrorMessage, 'No API key found in request');
+    expect(result?.paymentLinkRequested, isTrue);
   });
 }
 
