@@ -1,0 +1,91 @@
+{
+  "name": "CostikStudio - Sumopod Paid Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "costikstudio-sumopod-paid",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Sumopod Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "costikstudio-sumopod-paid"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": false, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {"leftValue": "={{$json.body.status || $json.status || $json.data?.status}}", "rightValue": "paid", "operator": {"type": "string", "operation": "equals"}},
+            {"leftValue": "={{$json.body.status || $json.status || $json.data?.status}}", "rightValue": "success", "operator": {"type": "string", "operation": "equals"}},
+            {"leftValue": "={{$json.body.status || $json.status || $json.data?.status}}", "rightValue": "settlement", "operator": {"type": "string", "operation": "equals"}}
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "is-paid",
+      "name": "Is Paid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SUPABASE_URL}}/rest/v1/rpc/apply_paid_topup_order",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Content-Type", "value": "application/json"},
+            {"name": "apikey", "value": "={{$env.SUPABASE_SERVICE_ROLE_KEY}}"},
+            {"name": "Authorization", "value": "=Bearer {{$env.SUPABASE_SERVICE_ROLE_KEY}}"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"target_external_reference\": \"{{$json.body?.order_id || $json.order_id || $json.data?.order_id}}\",\n  \"provider_order_id\": \"{{$json.body?.payment_id || $json.payment_id || $json.data?.payment_id}}\",\n  \"raw_payload\": {{$json.body || $json}}\n}",
+        "options": {}
+      },
+      "id": "apply-paid-topup",
+      "name": "Apply Paid Top Up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, -80]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\": true, \"message\": \"processed\"}",
+        "options": {}
+      },
+      "id": "respond-ok",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [760, -80]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\": true, \"message\": \"ignored - not paid\"}",
+        "options": {}
+      },
+      "id": "respond-ignored",
+      "name": "Respond Ignored",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [500, 120]
+    }
+  ],
+  "connections": {
+    "Sumopod Webhook": {"main": [[{"node": "Is Paid?", "type": "main", "index": 0}]]},
+    "Is Paid?": {"main": [[{"node": "Apply Paid Top Up", "type": "main", "index": 0}], [{"node": "Respond Ignored", "type": "main", "index": 0}]]},
+    "Apply Paid Top Up": {"main": [[{"node": "Respond OK", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}
