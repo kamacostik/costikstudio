@@ -2,6 +2,8 @@ import 'package:costikstudio/app/costik_studio_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'test_login_helper.dart';
+
 void main() {
   testWidgets('billing dashboard shows invoices from dummy transactions', (
     tester,
@@ -9,12 +11,7 @@ void main() {
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('header_login_button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Fill Customer (user@costik.com)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
-    await tester.pumpAndSettle();
+    await loginAsCustomer(tester);
 
     await tester.tap(find.byKey(const Key('header_nav_/billing')));
     await tester.pumpAndSettle();
@@ -35,12 +32,7 @@ void main() {
     await tester.pumpWidget(const CostikStudioApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('header_login_button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Fill Customer (user@costik.com)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
-    await tester.pumpAndSettle();
+    await loginAsCustomer(tester);
 
     await tester.tap(find.byKey(const Key('header_nav_/billing')));
     await tester.pumpAndSettle();

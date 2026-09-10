@@ -3,6 +3,8 @@ import 'package:costikstudio/app/costik_studio_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'test_login_helper.dart';
+
 void main() {
   testWidgets('renders dummy admin billing dashboard', (tester) async {
     tester.view.physicalSize = const Size(1280, 800);
@@ -14,12 +16,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('header_login_button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Fill Admin (admin@costik.com)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
-    await tester.pumpAndSettle();
+    await loginAsAdmin(tester);
 
     expect(find.text('Admin Billing'), findsWidgets);
     expect(find.text('Pending top ups'), findsOneWidget);
@@ -41,12 +38,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('header_login_button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Fill Admin (admin@costik.com)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
-    await tester.pumpAndSettle();
+    await loginAsAdmin(tester);
     await tester.tap(find.text('Approve Rp 250.000'));
     await tester.pumpAndSettle();
 

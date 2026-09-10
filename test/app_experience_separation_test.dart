@@ -3,6 +3,8 @@ import 'package:costikstudio/app/costik_studio_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'test_login_helper.dart';
+
 void main() {
   testWidgets('user app does not include admin navigation or dashboard', (
     tester,
@@ -19,12 +21,7 @@ void main() {
     expect(find.text('CostikStudio Admin'), findsNothing);
     expect(find.text('Admin Billing'), findsNothing);
 
-    await tester.tap(find.byKey(const Key('header_login_button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Fill Admin (admin@costik.com)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
-    await tester.pumpAndSettle();
+    await loginAsAdmin(tester);
 
     expect(find.text('Admin Billing'), findsNothing);
     expect(find.text('Pending top ups'), findsNothing);
@@ -48,11 +45,20 @@ void main() {
     expect(find.text('Apps'), findsNothing);
     expect(find.text('Billing'), findsNothing);
     expect(find.text('Support'), findsNothing);
-    expect(find.text('Masuk ke CostikStudio'), findsOneWidget);
+    expect(find.text('Masuk ke Costik Studio'), findsOneWidget);
 
-    await tester.tap(find.text('Fill Admin (admin@costik.com)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Email'),
+      'admin@costik.com',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Password'),
+      '123456',
+    );
+    await tester.ensureVisible(
+      find.widgetWithText(FilledButton, 'Masuk ke Dashboard'),
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Masuk ke Dashboard'));
     await tester.pumpAndSettle();
 
     expect(find.text('Pending top ups'), findsOneWidget);

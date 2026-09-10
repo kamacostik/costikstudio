@@ -17,16 +17,23 @@ void main() {
     expect(find.text('Admin Billing'), findsNothing);
     expect(find.widgetWithText(ElevatedButton, 'Login'), findsOneWidget);
 
-    // Tap Login to go to login page
     await tester.tap(find.byKey(const Key('header_login_button')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Masuk ke CostikStudio'), findsOneWidget);
+    expect(find.text('Masuk ke Costik Studio'), findsOneWidget);
 
-    // Login as admin
-    await tester.tap(find.text('Fill Admin (admin@costik.com)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Email'),
+      'admin@costik.com',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Password'),
+      '123456',
+    );
+    await tester.ensureVisible(
+      find.widgetWithText(FilledButton, 'Masuk ke Dashboard'),
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Masuk ke Dashboard'));
     await tester.pumpAndSettle();
 
     // User build stays separated: admin dashboard nav never appears here.

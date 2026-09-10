@@ -2,6 +2,8 @@ import 'package:costikstudio/app/costik_studio_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'test_login_helper.dart';
+
 void main() {
   testWidgets('billing and support menu show only after user login', (
     tester,
@@ -16,12 +18,7 @@ void main() {
     expect(find.byKey(const Key('header_nav_/billing')), findsNothing);
     expect(find.widgetWithText(TextButton, 'Support'), findsNothing);
 
-    await tester.tap(find.byKey(const Key('header_login_button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Fill Customer (user@costik.com)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
-    await tester.pumpAndSettle();
+    await loginAsCustomer(tester);
 
     expect(find.text('Billing'), findsWidgets);
     expect(find.text('Support'), findsWidgets);
