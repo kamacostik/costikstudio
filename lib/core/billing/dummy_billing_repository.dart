@@ -133,6 +133,7 @@ class DummyBillingRepository implements BillingRepository {
       subscriptions: List.unmodifiable(_subscriptions),
       transactions: List.unmodifiable(_transactions),
       invoices: List.unmodifiable(_invoices),
+      paymentOrders: const [],
       message: message,
     );
   }

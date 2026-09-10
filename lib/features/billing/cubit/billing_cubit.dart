@@ -67,6 +67,7 @@ class BillingCubit extends Cubit<BillingState> {
             subscriptions: state.snapshot!.subscriptions,
             transactions: state.snapshot!.transactions,
             invoices: state.snapshot!.invoices,
+            paymentOrders: state.snapshot!.paymentOrders,
             message: null,
           ),
         ),

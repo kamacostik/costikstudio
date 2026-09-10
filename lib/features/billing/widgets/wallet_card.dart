@@ -1,15 +1,26 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
+import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:flutter/material.dart';
 
 class WalletCard extends StatelessWidget {
-  const WalletCard({super.key, required this.balance, required this.onTopUp});
+  const WalletCard({
+    super.key,
+    required this.balance,
+    required this.onTopUp,
+    this.paymentOrders = const [],
+  });
 
   final int balance;
   final VoidCallback onTopUp;
+  final List<PaymentOrder> paymentOrders;
+
+  List<PaymentOrder> get _pendingOrders =>
+      paymentOrders.where((order) => order.isPending).toList(growable: false);
 
   @override
   Widget build(BuildContext context) {
+    final pendingOrders = _pendingOrders;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -76,6 +87,76 @@ class WalletCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (pendingOrders.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              const Divider(),
+              const SizedBox(height: 12),
+              Text(
+                'Payment pending',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: CostikStudioTheme.navy,
+                ),
+              ),
+              const SizedBox(height: 10),
+              ...pendingOrders
+                  .take(3)
+                  .map(
+                    (order) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.orange.withValues(alpha: 0.22),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.pending_actions_rounded,
+                              color: Colors.orange,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    formatRupiah(order.amount),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      color: CostikStudioTheme.navy,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Ref: ${order.externalReference}',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: CostikStudioTheme.slate,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Text(
+                              'Menunggu webhook',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+            ],
           ],
         ),
       ),

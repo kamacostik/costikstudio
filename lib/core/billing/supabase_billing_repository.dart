@@ -22,6 +22,7 @@ class SupabaseBillingRepository implements BillingRepository {
       _loadSubscriptions(user.id),
       _loadTransactions(user.id),
       _loadInvoices(user.id),
+      _loadPaymentOrders(user.id),
     ]);
 
     return BillingSnapshot(
@@ -31,6 +32,7 @@ class SupabaseBillingRepository implements BillingRepository {
       subscriptions: results[2] as List<Subscription>,
       transactions: results[3] as List<WalletTransaction>,
       invoices: results[4] as List<BillingInvoice>,
+      paymentOrders: results[5] as List<PaymentOrder>,
     );
   }
 
@@ -49,6 +51,7 @@ class SupabaseBillingRepository implements BillingRepository {
       subscriptions: snapshot.subscriptions,
       transactions: snapshot.transactions,
       invoices: snapshot.invoices,
+      paymentOrders: snapshot.paymentOrders,
       message: 'Top up request dibuat. Saldo masuk setelah payment gateway mengirim webhook sukses.',
     );
   }
@@ -79,6 +82,7 @@ class SupabaseBillingRepository implements BillingRepository {
       subscriptions: snapshot.subscriptions,
       transactions: snapshot.transactions,
       invoices: snapshot.invoices,
+      paymentOrders: snapshot.paymentOrders,
       message: 'Langganan Costik IPTV berhasil aktif.',
     );
   }
@@ -176,6 +180,28 @@ class SupabaseBillingRepository implements BillingRepository {
         paidAt: status == BillingInvoiceStatus.paid ? issuedAt : null,
         referenceId:
             row['transaction_id'] as String? ?? row['invoice_number'] as String,
+      );
+    }).toList();
+  }
+
+  Future<List<PaymentOrder>> _loadPaymentOrders(String userId) async {
+    final rows = await _supabase
+        .from('payment_orders')
+        .select(
+          'id, external_reference, amount, status, payment_url, created_at',
+        )
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+
+    return rows.map<PaymentOrder>((row) {
+      return PaymentOrder(
+        id: row['id'] as String,
+        externalReference: row['external_reference'] as String,
+        amount: _moneyToInt(row['amount']),
+        status: row['status'] as String? ?? 'pending',
+        paymentUrl: row['payment_url'] as String?,
+        createdAt:
+            _date(row['created_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
       );
     }).toList();
   }

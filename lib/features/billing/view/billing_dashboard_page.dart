@@ -205,6 +205,7 @@ class _DashboardPage extends StatelessWidget {
         children: [
           WalletCard(
             balance: snapshot.wallet.balance,
+            paymentOrders: snapshot.paymentOrders,
             onTopUp: context.read<BillingCubit>().topUpDummy,
           ),
           const SizedBox(height: 20),
@@ -256,6 +257,7 @@ class _DashboardPage extends StatelessWidget {
         final product = dummyProducts[index];
         return ProductCard(
           product: product,
+          compact: true,
           onTap: () => onSelectProduct(product),
         );
       },
@@ -326,9 +328,7 @@ class _EmbeddedProductDetail extends StatelessWidget {
           onPressed: onBack,
           icon: const Icon(Icons.arrow_back_rounded, size: 18),
           label: const Text('Kembali ke Katalog Produk'),
-          style: TextButton.styleFrom(
-            foregroundColor: CostikStudioTheme.slate,
-          ),
+          style: TextButton.styleFrom(foregroundColor: CostikStudioTheme.slate),
         ),
         const SizedBox(height: 16),
         Container(
@@ -375,10 +375,8 @@ class _EmbeddedProductDetail extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 product.description,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: CostikStudioTheme.slate,
-                  height: 1.6,
-                ),
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(color: CostikStudioTheme.slate, height: 1.6),
               ),
               const SizedBox(height: 24),
               Wrap(
@@ -447,7 +445,11 @@ class _DashboardNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     const items = [
       _DashboardNavSection('SERVICES', [
-        _DashboardNavItem(_DashboardTab.apps, 'Produk', Icons.inventory_2_rounded),
+        _DashboardNavItem(
+          _DashboardTab.apps,
+          'Produk',
+          Icons.inventory_2_rounded,
+        ),
         _DashboardNavItem(
           _DashboardTab.subscriptions,
           'Subscription',
