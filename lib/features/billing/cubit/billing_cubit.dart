@@ -127,6 +127,18 @@ class BillingCubit extends Cubit<BillingState> {
     );
   }
 
+  Future<void> renewIptvSubscription({
+    required String subscriptionId,
+    required int billingCycleMonths,
+  }) async {
+    await _runMutation(
+      () => repository.renewIptvSubscription(
+        subscriptionId: subscriptionId,
+        billingCycleMonths: billingCycleMonths,
+      ),
+    );
+  }
+
   Future<void> _runMutation(Future<BillingSnapshot> Function() action) async {
     emit(state.copyWith(status: BillingStatus.loading));
     try {

@@ -1,5 +1,6 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_core.dart';
+import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:flutter/material.dart';
 
 class SubscriptionsCard extends StatelessWidget {
@@ -8,11 +9,17 @@ class SubscriptionsCard extends StatelessWidget {
     required this.products,
     required this.plans,
     required this.subscriptions,
+    required this.onRenew,
   });
 
   final List<BillingProduct> products;
   final List<BillingPlan> plans;
   final List<Subscription> subscriptions;
+  final Future<void> Function({
+    required String subscriptionId,
+    required int billingCycleMonths,
+  })
+  onRenew;
 
   BillingProduct? _productById(String id) {
     for (final product in products) {
@@ -81,6 +88,7 @@ class SubscriptionsCard extends StatelessWidget {
                   subscription: subscription,
                   product: _productById(subscription.productId),
                   plan: _planById(subscription.planId),
+                  onRenew: onRenew,
                 ),
           ],
         ),
@@ -94,15 +102,66 @@ class _SubscriptionRow extends StatelessWidget {
     required this.subscription,
     required this.product,
     required this.plan,
+    required this.onRenew,
   });
 
   final Subscription subscription;
   final BillingProduct? product;
   final BillingPlan? plan;
+  final Future<void> Function({
+    required String subscriptionId,
+    required int billingCycleMonths,
+  })
+  onRenew;
 
   String get _productName => product?.name ?? subscription.productId;
   int get _remainingDays =>
       subscription.expiresAt.difference(DateTime.now()).inDays;
+  int get _monthlyRenewalAmount => subscription.deviceCount * 15000;
+
+  Future<void> _showRenewDialog(BuildContext context) async {
+    final months = await showDialog<int>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Perpanjang Subscription'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_productName),
+            const SizedBox(height: 8),
+            Text(
+              '${subscription.deviceCount} device x ${formatRupiah(15000)} / bulan',
+              style: const TextStyle(color: CostikStudioTheme.slate),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final option in const [1, 3, 6, 12])
+                  FilledButton.tonal(
+                    onPressed: () => Navigator.of(dialogCtx).pop(option),
+                    child: Text(
+                      '$option Bulan • ${formatRupiah(_monthlyRenewalAmount * option)}',
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Batal'),
+          ),
+        ],
+      ),
+    );
+
+    if (months == null || !context.mounted) return;
+    await onRenew(subscriptionId: subscription.id, billingCycleMonths: months);
+  }
 
   void _showSubscriptionDetails(BuildContext context) {
     final remainingText = _remainingDays < 0
@@ -238,8 +297,8 @@ class _SubscriptionRow extends StatelessWidget {
                         value: _formatFullDate(subscription.expiresAt),
                       ),
                       _DetailRow(
-                        label: 'Perpanjangan',
-                        value: subscription.autoRenew ? 'Otomatis' : 'Manual',
+                        label: 'Renewal 1 Bulan',
+                        value: formatRupiah(_monthlyRenewalAmount),
                       ),
                     ],
                   ),
@@ -248,9 +307,18 @@ class _SubscriptionRow extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    FilledButton(
+                    TextButton(
                       onPressed: () => Navigator.of(dialogCtx).pop(),
                       child: const Text('Tutup'),
+                    ),
+                    const SizedBox(width: 10),
+                    FilledButton.icon(
+                      onPressed: () {
+                        Navigator.of(dialogCtx).pop();
+                        _showRenewDialog(context);
+                      },
+                      icon: const Icon(Icons.update_rounded, size: 16),
+                      label: const Text('Renew / Extend'),
                     ),
                   ],
                 ),
@@ -333,10 +401,21 @@ class _SubscriptionRow extends StatelessWidget {
                 ],
               ),
             ),
-            OutlinedButton.icon(
-              onPressed: () => _showSubscriptionDetails(context),
-              icon: const Icon(Icons.info_outline_rounded, size: 16),
-              label: const Text('View Details'),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => _showSubscriptionDetails(context),
+                  icon: const Icon(Icons.info_outline_rounded, size: 16),
+                  label: const Text('View Details'),
+                ),
+                FilledButton.icon(
+                  onPressed: () => _showRenewDialog(context),
+                  icon: const Icon(Icons.update_rounded, size: 16),
+                  label: const Text('Renew'),
+                ),
+              ],
             ),
           ],
         ),
@@ -424,12 +503,16 @@ class _MiniMeta extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: CostikStudioTheme.slate),
           const SizedBox(width: 5),
-          Text(
-            text,
-            style: const TextStyle(
-              color: CostikStudioTheme.slate,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: CostikStudioTheme.slate,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

@@ -73,6 +73,8 @@ final dummySubscriptions = <Subscription>[
     startedAt: DateTime(2026, 9, 5),
     expiresAt: DateTime(2026, 10, 5),
     autoRenew: false,
+    deviceCount: 5,
+    billingCycleMonths: 1,
   ),
 ];
 

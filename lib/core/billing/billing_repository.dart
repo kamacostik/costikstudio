@@ -66,4 +66,9 @@ abstract class BillingRepository {
     required int deviceCount,
     required int billingCycleMonths,
   });
+
+  Future<BillingSnapshot> renewIptvSubscription({
+    required String subscriptionId,
+    required int billingCycleMonths,
+  });
 }

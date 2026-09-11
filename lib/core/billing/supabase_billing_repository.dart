@@ -101,6 +101,32 @@ class SupabaseBillingRepository implements BillingRepository {
     );
   }
 
+  @override
+  Future<BillingSnapshot> renewIptvSubscription({
+    required String subscriptionId,
+    required int billingCycleMonths,
+  }) async {
+    await _supabase.rpc<void>(
+      'renew_iptv_subscription',
+      params: {
+        'target_subscription_id': subscriptionId,
+        'billing_cycle_months': billingCycleMonths,
+      },
+    );
+
+    final snapshot = await loadSnapshot();
+    return BillingSnapshot(
+      wallet: snapshot.wallet,
+      products: snapshot.products,
+      plans: snapshot.plans,
+      subscriptions: snapshot.subscriptions,
+      transactions: snapshot.transactions,
+      invoices: snapshot.invoices,
+      paymentOrders: snapshot.paymentOrders,
+      message: 'Langganan Costik IPTV berhasil diperpanjang.',
+    );
+  }
+
   Future<Wallet> _loadWallet(String userId) async {
     final row = await _supabase
         .from('wallets')

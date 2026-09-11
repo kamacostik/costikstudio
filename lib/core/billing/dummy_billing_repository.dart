@@ -87,6 +87,71 @@ class DummyBillingRepository implements BillingRepository {
     return _checkout(plan: plan);
   }
 
+  @override
+  Future<BillingSnapshot> renewIptvSubscription({
+    required String subscriptionId,
+    required int billingCycleMonths,
+  }) async {
+    if (billingCycleMonths <= 0) {
+      throw ArgumentError.value(
+        billingCycleMonths,
+        'billingCycleMonths',
+        'Billing cycle must be greater than zero.',
+      );
+    }
+
+    final index = _subscriptions.indexWhere(
+      (subscription) => subscription.id == subscriptionId,
+    );
+    if (index == -1) {
+      throw ArgumentError.value(
+        subscriptionId,
+        'subscriptionId',
+        'Unknown subscription.',
+      );
+    }
+
+    final subscription = _subscriptions[index];
+    final product = dummyBillingProductById(subscription.productId);
+    if (product == null || product.id != 'costik-iptv') {
+      throw ArgumentError.value(
+        subscription.productId,
+        'productId',
+        'Only IPTV subscription renewal is supported.',
+      );
+    }
+
+    final amount = subscription.deviceCount * 15000 * billingCycleMonths;
+    if (_wallet.balance < amount) {
+      return _snapshot(
+        message: 'Saldo kurang ${formatRupiah(amount - _wallet.balance)}',
+      );
+    }
+
+    final transaction = WalletTransaction(
+      userId: _wallet.userId,
+      type: WalletTransactionType.purchase,
+      amount: amount,
+      balanceBefore: _wallet.balance,
+      balanceAfter: _wallet.balance - amount,
+      referenceId: 'renew:$subscriptionId:$billingCycleMonths',
+    );
+    _wallet = Wallet(userId: _wallet.userId, balance: transaction.balanceAfter);
+    _transactions.insert(0, transaction);
+    _invoices.insert(0, _invoiceFrom(transaction));
+    _subscriptions[index] = subscription.copyWith(
+      status: SubscriptionStatus.active,
+      billingCycleMonths: billingCycleMonths,
+      expiresAt: subscription.expiresAt.add(
+        Duration(days: 30 * billingCycleMonths),
+      ),
+    );
+
+    return _snapshot(
+      message: '${product.name} diperpanjang $billingCycleMonths bulan.',
+    );
+  }
+
   Future<BillingSnapshot> _checkout({required BillingPlan plan}) async {
     final product = dummyBillingProductById(plan.productId);
     if (product == null) {

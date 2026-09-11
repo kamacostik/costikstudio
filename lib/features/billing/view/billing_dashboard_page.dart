@@ -204,6 +204,11 @@ class _DashboardPage extends StatelessWidget {
         products: snapshot.products,
         plans: snapshot.plans,
         subscriptions: snapshot.subscriptions,
+        onRenew: ({required subscriptionId, required billingCycleMonths}) =>
+            context.read<BillingCubit>().renewIptvSubscription(
+              subscriptionId: subscriptionId,
+              billingCycleMonths: billingCycleMonths,
+            ),
       ),
       _DashboardTab.billing => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
