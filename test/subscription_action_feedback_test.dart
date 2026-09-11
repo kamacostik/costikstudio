@@ -54,6 +54,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      expect(find.text('Simulasi Upgrade Device IPTV'), findsOneWidget);
+      expect(find.text('Simulasi prorata'), findsOneWidget);
+      expect(find.textContaining('Device tambahan akan aktif'), findsOneWidget);
+      expect(find.textContaining('+1 Device •'), findsOneWidget);
+
       await tester.tap(find.byType(FilledButton).last);
       await tester.pump();
 

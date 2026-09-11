@@ -205,37 +205,47 @@ class _SubscriptionRow extends StatelessWidget {
     final additionalDevices = await showDialog<int>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Upgrade Device IPTV'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_productName),
-            const SizedBox(height: 8),
-            Text(
-              'Device aktif sekarang: ${subscription.deviceCount}',
-              style: const TextStyle(color: CostikStudioTheme.slate),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Sisa masa aktif: $_remainingDaysForBilling hari. Biaya upgrade dihitung prorata sampai tanggal expired existing.',
-              style: const TextStyle(color: CostikStudioTheme.slate),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (final option in const [1, 2, 5, 10])
-                  FilledButton.tonal(
-                    onPressed: () => Navigator.of(dialogCtx).pop(option),
-                    child: Text(
-                      '+$option Device • ${formatRupiah(_proratedUpgradeAmount(option))}',
+        title: const Text('Simulasi Upgrade Device IPTV'),
+        content: SizedBox(
+          width: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _productName,
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 12),
+              _UpgradeSimulationPanel(
+                currentDeviceCount: subscription.deviceCount,
+                remainingDays: _remainingDaysForBilling,
+                expiresAt: subscription.expiresAt,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Pilih jumlah device tambahan:',
+                style: TextStyle(
+                  color: CostikStudioTheme.navy,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final option in const [1, 2, 5, 10])
+                    FilledButton.tonal(
+                      onPressed: () => Navigator.of(dialogCtx).pop(option),
+                      child: Text(
+                        '+$option Device • ${formatRupiah(_proratedUpgradeAmount(option))}',
+                      ),
                     ),
-                  ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -734,9 +744,106 @@ class _SubscriptionRow extends StatelessWidget {
   }
 }
 
-@visibleForTesting
+class _UpgradeSimulationPanel extends StatelessWidget {
+  const _UpgradeSimulationPanel({
+    required this.currentDeviceCount,
+    required this.remainingDays,
+    required this.expiresAt,
+  });
+
+  final int currentDeviceCount;
+  final int remainingDays;
+  final DateTime expiresAt;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CostikStudioTheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: CostikStudioTheme.primary.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Simulasi prorata',
+            style: TextStyle(
+              color: CostikStudioTheme.navy,
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _SimulationRow(
+            label: 'Device aktif sekarang',
+            value: '$currentDeviceCount device',
+          ),
+          _SimulationRow(
+            label: 'Sisa masa aktif',
+            value: '$remainingDays hari',
+          ),
+          _SimulationRow(
+            label: 'Harga normal',
+            value: '${formatRupiah(15000)} / device / bulan',
+          ),
+          _SimulationRow(
+            label: 'Tanggal expired tetap',
+            value: _formatFullDate(expiresAt),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Device tambahan akan aktif sampai tanggal expired yang sama. Biaya dihitung prorata: device tambahan x Rp15.000 x sisa hari / 30.',
+            style: TextStyle(color: CostikStudioTheme.slate, height: 1.45),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SimulationRow extends StatelessWidget {
+  const _SimulationRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: CostikStudioTheme.slate,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            value,
+            style: const TextStyle(
+              color: CostikStudioTheme.navy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class InactiveSubscriptionNotice extends StatelessWidget {
-  const InactiveSubscriptionNotice();
+  const InactiveSubscriptionNotice({super.key});
 
   @override
   Widget build(BuildContext context) {
