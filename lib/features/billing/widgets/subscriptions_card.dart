@@ -12,6 +12,7 @@ class SubscriptionsCard extends StatelessWidget {
     required this.onRenew,
     required this.onUpgradeDevice,
     required this.onCancel,
+    required this.onReactivate,
   });
 
   final List<BillingProduct> products;
@@ -28,6 +29,7 @@ class SubscriptionsCard extends StatelessWidget {
   })
   onUpgradeDevice;
   final Future<void> Function({required String subscriptionId}) onCancel;
+  final Future<void> Function({required String subscriptionId}) onReactivate;
 
   BillingProduct? _productById(String id) {
     for (final product in products) {
@@ -99,6 +101,7 @@ class SubscriptionsCard extends StatelessWidget {
                   onRenew: onRenew,
                   onUpgradeDevice: onUpgradeDevice,
                   onCancel: onCancel,
+                  onReactivate: onReactivate,
                 ),
           ],
         ),
@@ -115,6 +118,7 @@ class _SubscriptionRow extends StatelessWidget {
     required this.onRenew,
     required this.onUpgradeDevice,
     required this.onCancel,
+    required this.onReactivate,
   });
 
   final Subscription subscription;
@@ -131,11 +135,22 @@ class _SubscriptionRow extends StatelessWidget {
   })
   onUpgradeDevice;
   final Future<void> Function({required String subscriptionId}) onCancel;
+  final Future<void> Function({required String subscriptionId}) onReactivate;
 
   String get _productName => product?.name ?? subscription.productId;
   int get _remainingDays =>
       subscription.expiresAt.difference(DateTime.now()).inDays;
   int get _monthlyRenewalAmount => subscription.deviceCount * 15000;
+  bool get _isActive => subscription.status == SubscriptionStatus.active;
+  bool get _isCancelled => subscription.status == SubscriptionStatus.cancelled;
+
+  Future<void> _reactivate(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Memproses aktivasi ulang subscription...')),
+    );
+    await onReactivate(subscriptionId: subscription.id);
+  }
 
   Future<void> _showCancelDialog(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -173,6 +188,11 @@ class _SubscriptionRow extends StatelessWidget {
   }
 
   Future<void> _showUpgradeDeviceDialog(BuildContext context) async {
+    if (!_isActive) {
+      _showInactiveInfo(context, actionName: 'upgrade device');
+      return;
+    }
+
     final additionalDevices = await showDialog<int>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
@@ -229,6 +249,11 @@ class _SubscriptionRow extends StatelessWidget {
   }
 
   Future<void> _showRenewDialog(BuildContext context) async {
+    if (!_isActive) {
+      _showInactiveInfo(context, actionName: 'renew/extend');
+      return;
+    }
+
     final months = await showDialog<int>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
@@ -274,6 +299,32 @@ class _SubscriptionRow extends StatelessWidget {
       const SnackBar(content: Text('Memproses renewal subscription...')),
     );
     await onRenew(subscriptionId: subscription.id, billingCycleMonths: months);
+  }
+
+  void _showInactiveInfo(BuildContext context, {required String actionName}) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Subscription belum aktif'),
+        content: Text(
+          'Status subscription saat ini ${subscription.status.name}. $actionName hanya bisa dilakukan untuk subscription aktif. Aktifkan kembali subscription ini terlebih dahulu.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Tutup'),
+          ),
+          if (_isCancelled)
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogCtx).pop();
+                _reactivate(context);
+              },
+              child: const Text('Aktifkan Kembali'),
+            ),
+        ],
+      ),
+    );
   }
 
   void _showSubscriptionDetails(BuildContext context) {
@@ -420,37 +471,55 @@ class _SubscriptionRow extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(
-                      style: TextButton.styleFrom(foregroundColor: Colors.red),
-                      onPressed: () {
-                        Navigator.of(dialogCtx).pop();
-                        _showCancelDialog(context);
-                      },
-                      child: const Text('Batalkan Langganan'),
-                    ),
+                    if (_isActive)
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
+                        onPressed: () {
+                          Navigator.of(dialogCtx).pop();
+                          _showCancelDialog(context);
+                        },
+                        child: const Text('Batalkan Langganan'),
+                      ),
                     const Spacer(),
                     TextButton(
                       onPressed: () => Navigator.of(dialogCtx).pop(),
                       child: const Text('Tutup'),
                     ),
                     const SizedBox(width: 10),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.of(dialogCtx).pop();
-                        _showUpgradeDeviceDialog(context);
-                      },
-                      icon: const Icon(Icons.add_to_queue_rounded, size: 16),
-                      label: const Text('Upgrade Device'),
-                    ),
-                    const SizedBox(width: 10),
-                    FilledButton.icon(
-                      onPressed: () {
-                        Navigator.of(dialogCtx).pop();
-                        _showRenewDialog(context);
-                      },
-                      icon: const Icon(Icons.update_rounded, size: 16),
-                      label: const Text('Renew / Extend'),
-                    ),
+                    if (_isCancelled)
+                      FilledButton.icon(
+                        onPressed: () {
+                          Navigator.of(dialogCtx).pop();
+                          _reactivate(context);
+                        },
+                        icon: const Icon(Icons.play_circle_rounded, size: 16),
+                        label: const Text('Aktifkan Kembali'),
+                      )
+                    else ...[
+                      OutlinedButton.icon(
+                        onPressed: _isActive
+                            ? () {
+                                Navigator.of(dialogCtx).pop();
+                                _showUpgradeDeviceDialog(context);
+                              }
+                            : null,
+                        icon: const Icon(Icons.add_to_queue_rounded, size: 16),
+                        label: const Text('Upgrade Device'),
+                      ),
+                      const SizedBox(width: 10),
+                      FilledButton.icon(
+                        onPressed: _isActive
+                            ? () {
+                                Navigator.of(dialogCtx).pop();
+                                _showRenewDialog(context);
+                              }
+                            : null,
+                        icon: const Icon(Icons.update_rounded, size: 16),
+                        label: const Text('Renew / Extend'),
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -488,16 +557,26 @@ class _SubscriptionRow extends StatelessWidget {
                 icon: const Icon(Icons.info_outline_rounded, size: 16),
                 label: const Text('View Details'),
               ),
-              OutlinedButton.icon(
-                onPressed: () => _showUpgradeDeviceDialog(context),
-                icon: const Icon(Icons.add_to_queue_rounded, size: 16),
-                label: const Text('Upgrade Device'),
-              ),
-              FilledButton.icon(
-                onPressed: () => _showRenewDialog(context),
-                icon: const Icon(Icons.update_rounded, size: 16),
-                label: const Text('Renew'),
-              ),
+              if (_isCancelled)
+                FilledButton.icon(
+                  onPressed: () => _reactivate(context),
+                  icon: const Icon(Icons.play_circle_rounded, size: 16),
+                  label: const Text('Aktifkan Kembali'),
+                )
+              else ...[
+                OutlinedButton.icon(
+                  onPressed: _isActive
+                      ? () => _showUpgradeDeviceDialog(context)
+                      : null,
+                  icon: const Icon(Icons.add_to_queue_rounded, size: 16),
+                  label: const Text('Upgrade Device'),
+                ),
+                FilledButton.icon(
+                  onPressed: _isActive ? () => _showRenewDialog(context) : null,
+                  icon: const Icon(Icons.update_rounded, size: 16),
+                  label: const Text('Renew'),
+                ),
+              ],
             ];
 
             if (isCompact) {
@@ -568,6 +647,10 @@ class _SubscriptionRow extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (_isCancelled) ...[
+                    const SizedBox(height: 14),
+                    const InactiveSubscriptionNotice(),
+                  ],
                   const SizedBox(height: 14),
                   Wrap(spacing: 8, runSpacing: 8, children: actions),
                 ],
@@ -593,17 +676,15 @@ class _SubscriptionRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Flexible(
-                            child: Text(
-                              _productName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
+                          Text(
+                            _productName,
+                            style: const TextStyle(fontWeight: FontWeight.w900),
                           ),
-                          const SizedBox(width: 8),
                           _StatusPill(
                             status: subscription.status,
                             compact: true,
@@ -639,6 +720,46 @@ class _SubscriptionRow extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+@visibleForTesting
+class InactiveSubscriptionNotice extends StatelessWidget {
+  const InactiveSubscriptionNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: CostikStudioTheme.amber.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: CostikStudioTheme.amber.withValues(alpha: 0.22),
+        ),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            size: 16,
+            color: CostikStudioTheme.amber,
+          ),
+          SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              'Status cancelled: renew dan upgrade dinonaktifkan sampai subscription diaktifkan kembali.',
+              style: TextStyle(
+                color: CostikStudioTheme.navy,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

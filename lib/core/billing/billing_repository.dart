@@ -77,6 +77,10 @@ abstract class BillingRepository {
     required int additionalDeviceCount,
   });
 
+  Future<BillingSnapshot> reactivateIptvSubscription({
+    required String subscriptionId,
+  });
+
   Future<BillingSnapshot> cancelIptvSubscription({
     required String subscriptionId,
   });

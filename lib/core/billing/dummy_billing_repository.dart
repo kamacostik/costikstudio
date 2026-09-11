@@ -217,6 +217,40 @@ class DummyBillingRepository implements BillingRepository {
   }
 
   @override
+  Future<BillingSnapshot> reactivateIptvSubscription({
+    required String subscriptionId,
+  }) async {
+    final index = _subscriptions.indexWhere(
+      (subscription) => subscription.id == subscriptionId,
+    );
+    if (index == -1) {
+      throw ArgumentError.value(
+        subscriptionId,
+        'subscriptionId',
+        'Unknown subscription.',
+      );
+    }
+
+    final subscription = _subscriptions[index];
+    final product = dummyBillingProductById(subscription.productId);
+    if (product == null || product.id != 'costik-iptv') {
+      throw ArgumentError.value(
+        subscription.productId,
+        'productId',
+        'Only IPTV subscription reactivation is supported.',
+      );
+    }
+
+    _subscriptions[index] = subscription.copyWith(
+      status: SubscriptionStatus.active,
+    );
+
+    return _snapshot(
+      message: 'Langganan Costik IPTV berhasil diaktifkan kembali.',
+    );
+  }
+
+  @override
   Future<BillingSnapshot> cancelIptvSubscription({
     required String subscriptionId,
   }) async {

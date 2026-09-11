@@ -151,6 +151,15 @@ class BillingCubit extends Cubit<BillingState> {
     );
   }
 
+  Future<void> reactivateIptvSubscription({
+    required String subscriptionId,
+  }) async {
+    await _runMutation(
+      () =>
+          repository.reactivateIptvSubscription(subscriptionId: subscriptionId),
+    );
+  }
+
   Future<void> cancelIptvSubscription({required String subscriptionId}) async {
     await _runMutation(
       () => repository.cancelIptvSubscription(subscriptionId: subscriptionId),

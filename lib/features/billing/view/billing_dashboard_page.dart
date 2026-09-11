@@ -234,6 +234,9 @@ class _DashboardPage extends StatelessWidget {
         onCancel: ({required subscriptionId}) => context
             .read<BillingCubit>()
             .cancelIptvSubscription(subscriptionId: subscriptionId),
+        onReactivate: ({required subscriptionId}) => context
+            .read<BillingCubit>()
+            .reactivateIptvSubscription(subscriptionId: subscriptionId),
       ),
       _DashboardTab.billing => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
