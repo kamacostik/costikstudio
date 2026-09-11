@@ -78,4 +78,58 @@ class AdminBillingCubit extends Cubit<AdminBillingState> {
       );
     }
   }
+
+  Future<void> adminExtendSubscription({
+    required String subscriptionId,
+    required int additionalMonths,
+  }) async {
+    emit(state.copyWith(status: AdminBillingStatus.loading));
+    try {
+      final snapshot = await repository.adminExtendSubscription(
+        subscriptionId: subscriptionId,
+        additionalMonths: additionalMonths,
+      );
+      emit(
+        AdminBillingState(
+          status: AdminBillingStatus.success,
+          snapshot: snapshot,
+        ),
+      );
+    } catch (error) {
+      emit(
+        AdminBillingState(
+          status: AdminBillingStatus.failure,
+          snapshot: state.snapshot,
+          errorMessage: error.toString(),
+        ),
+      );
+    }
+  }
+
+  Future<void> adminUpdateDevices({
+    required String subscriptionId,
+    required int newDeviceCount,
+  }) async {
+    emit(state.copyWith(status: AdminBillingStatus.loading));
+    try {
+      final snapshot = await repository.adminUpdateDevices(
+        subscriptionId: subscriptionId,
+        newDeviceCount: newDeviceCount,
+      );
+      emit(
+        AdminBillingState(
+          status: AdminBillingStatus.success,
+          snapshot: snapshot,
+        ),
+      );
+    } catch (error) {
+      emit(
+        AdminBillingState(
+          status: AdminBillingStatus.failure,
+          snapshot: state.snapshot,
+          errorMessage: error.toString(),
+        ),
+      );
+    }
+  }
 }
