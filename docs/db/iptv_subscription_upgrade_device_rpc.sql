@@ -2,7 +2,7 @@
 -- Charges customer wallet based on additional devices x Rp15.000 x current billing cycle months.
 -- Updates subscription.device_count, inserts wallet_transactions and invoices atomically.
 
-create or replace function upgrade_iptv_subscription_devices(
+create or replace function public.upgrade_iptv_subscription_devices(
   target_subscription_id uuid,
   additional_device_count int
 )
@@ -33,7 +33,7 @@ begin
 
   select device_count, billing_cycle_months
   into v_device_count, v_billing_cycle_months
-  from subscriptions
+  from public.subscriptions
   where id = target_subscription_id
     and user_id = v_user_id;
 
@@ -43,7 +43,7 @@ begin
 
   if not exists (
     select 1
-    from subscriptions
+    from public.subscriptions
     where id = target_subscription_id
       and user_id = v_user_id
       and product_id = 'costik-iptv'
@@ -53,7 +53,7 @@ begin
 
   if not exists (
     select 1
-    from subscriptions
+    from public.subscriptions
     where id = target_subscription_id
       and user_id = v_user_id
       and status = 'active'
@@ -64,7 +64,7 @@ begin
   v_total_amount := additional_device_count * v_unit_price * v_billing_cycle_months;
 
   select balance into v_wallet_balance
-  from wallets
+  from public.wallets
   where user_id = v_user_id
   for update;
 
@@ -78,62 +78,52 @@ begin
 
   v_new_balance := v_wallet_balance - v_total_amount;
 
-  update wallets
+  update public.wallets
   set balance = v_new_balance,
       updated_at = now()
   where user_id = v_user_id;
 
-  insert into wallet_transactions (
+  insert into public.wallet_transactions (
     user_id,
     type,
     amount,
-    balance_before,
-    balance_after,
-    reference_id,
-    created_at
-  )
-  values (
+    description,
+    status
+  ) values (
     v_user_id,
     'purchase',
     v_total_amount,
-    v_wallet_balance,
-    v_new_balance,
-    'upgrade-device:' || target_subscription_id::text || ':' || additional_device_count::text,
-    now()
-  )
-  returning id into v_transaction_id;
+    'Costik IPTV device upgrade: +' || additional_device_count::text || ' device',
+    'completed'
+  ) returning id into v_transaction_id;
 
-  v_invoice_number := 'INV-' || to_char(now(), 'YYYYMMDD') || '-' || lpad(floor(random() * 10000)::text, 4, '0');
+  v_invoice_number := 'IPTV-UPGRADE-' || to_char(now(), 'YYYYMMDDHH24MISS') || '-' || left(target_subscription_id::text, 8);
 
-  insert into invoices (
-    invoice_number,
+  insert into public.invoices (
     user_id,
-    subscription_id,
     transaction_id,
+    invoice_number,
     amount,
     status,
-    issued_at,
-    paid_at,
-    created_at
-  )
-  values (
-    v_invoice_number,
+    issued_at
+  ) values (
     v_user_id,
-    target_subscription_id,
     v_transaction_id,
+    v_invoice_number,
     v_total_amount,
     'paid',
-    now(),
-    now(),
     now()
   );
 
-  update subscriptions
-  set device_count = device_count + additional_device_count,
-      updated_at = now()
+  update public.subscriptions
+  set
+    device_count = v_device_count + additional_device_count,
+    total_amount = v_total_amount,
+    updated_at = now()
   where id = target_subscription_id
     and user_id = v_user_id;
 end;
 $$;
 
-grant execute on function upgrade_iptv_subscription_devices(uuid, int) to authenticated;
+revoke all on function public.upgrade_iptv_subscription_devices(uuid, int) from public;
+grant execute on function public.upgrade_iptv_subscription_devices(uuid, int) to authenticated;
