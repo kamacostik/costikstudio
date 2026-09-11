@@ -1,5 +1,6 @@
 import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
+import 'package:costikstudio/core/billing/billing_pricing.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/core/billing/topup_order_result.dart';
 import 'package:costikstudio/core/billing/dummy_billing_data.dart';
@@ -75,7 +76,7 @@ class DummyBillingRepository implements BillingRepository {
     required int deviceCount,
     required int billingCycleMonths,
   }) async {
-    final amount = deviceCount * 15000 * billingCycleMonths;
+    final amount = deviceCount * iptvPricePerDevice * billingCycleMonths;
     final plan = BillingPlan(
       id: 'costik-iptv:custom',
       productId: 'costik-iptv',
@@ -88,9 +89,50 @@ class DummyBillingRepository implements BillingRepository {
   }
 
   @override
+  Future<BillingSnapshot> checkoutSignageSubscription({
+    required int deviceCount,
+    required int billingCycleMonths,
+  }) async {
+    final amount = deviceCount * signagePricePerDevice * billingCycleMonths;
+    final plan = BillingPlan(
+      id: 'costik-signage:custom',
+      productId: 'costik-signage',
+      name: '$deviceCount Screen / $billingCycleMonths Bulan',
+      price: amount,
+      durationDays: 30 * billingCycleMonths,
+      features: const ['Custom Signage screen licence'],
+    );
+    return _checkout(plan: plan);
+  }
+
+  @override
   Future<BillingSnapshot> renewIptvSubscription({
     required String subscriptionId,
     required int billingCycleMonths,
+  }) async {
+    return _renewSubscription(
+      subscriptionId: subscriptionId,
+      billingCycleMonths: billingCycleMonths,
+      productId: 'costik-iptv',
+    );
+  }
+
+  @override
+  Future<BillingSnapshot> renewSignageSubscription({
+    required String subscriptionId,
+    required int billingCycleMonths,
+  }) async {
+    return _renewSubscription(
+      subscriptionId: subscriptionId,
+      billingCycleMonths: billingCycleMonths,
+      productId: 'costik-signage',
+    );
+  }
+
+  Future<BillingSnapshot> _renewSubscription({
+    required String subscriptionId,
+    required int billingCycleMonths,
+    required String productId,
   }) async {
     if (billingCycleMonths <= 0) {
       throw ArgumentError.value(
@@ -113,15 +155,16 @@ class DummyBillingRepository implements BillingRepository {
 
     final subscription = _subscriptions[index];
     final product = dummyBillingProductById(subscription.productId);
-    if (product == null || product.id != 'costik-iptv') {
+    if (product == null || product.id != productId) {
       throw ArgumentError.value(
         subscription.productId,
         'productId',
-        'Only IPTV subscription renewal is supported.',
+        'Only $productId subscription renewal is supported.',
       );
     }
 
-    final amount = subscription.deviceCount * 15000 * billingCycleMonths;
+    final unitPrice = unitPriceForProductId(product.id);
+    final amount = subscription.deviceCount * unitPrice * billingCycleMonths;
     if (_wallet.balance < amount) {
       return _snapshot(
         message: 'Saldo kurang ${formatRupiah(amount - _wallet.balance)}',
@@ -157,6 +200,30 @@ class DummyBillingRepository implements BillingRepository {
     required String subscriptionId,
     required int additionalDeviceCount,
   }) async {
+    return _upgradeSubscriptionDevices(
+      subscriptionId: subscriptionId,
+      additionalDeviceCount: additionalDeviceCount,
+      productId: 'costik-iptv',
+    );
+  }
+
+  @override
+  Future<BillingSnapshot> upgradeSignageSubscriptionDevices({
+    required String subscriptionId,
+    required int additionalDeviceCount,
+  }) async {
+    return _upgradeSubscriptionDevices(
+      subscriptionId: subscriptionId,
+      additionalDeviceCount: additionalDeviceCount,
+      productId: 'costik-signage',
+    );
+  }
+
+  Future<BillingSnapshot> _upgradeSubscriptionDevices({
+    required String subscriptionId,
+    required int additionalDeviceCount,
+    required String productId,
+  }) async {
     if (additionalDeviceCount <= 0) {
       throw ArgumentError.value(
         additionalDeviceCount,
@@ -178,16 +245,17 @@ class DummyBillingRepository implements BillingRepository {
 
     final subscription = _subscriptions[index];
     final product = dummyBillingProductById(subscription.productId);
-    if (product == null || product.id != 'costik-iptv') {
+    if (product == null || product.id != productId) {
       throw ArgumentError.value(
         subscription.productId,
         'productId',
-        'Only IPTV subscription is supported.',
+        'Only $productId subscription is supported.',
       );
     }
 
     final remainingDays = _remainingSubscriptionDays(subscription);
     final amount = _proratedUpgradeAmount(
+      productId: product.id,
       additionalDeviceCount: additionalDeviceCount,
       remainingDays: remainingDays,
     );
@@ -225,39 +293,25 @@ class DummyBillingRepository implements BillingRepository {
   Future<BillingSnapshot> reactivateIptvSubscription({
     required String subscriptionId,
   }) async {
-    final index = _subscriptions.indexWhere(
-      (subscription) => subscription.id == subscriptionId,
-    );
-    if (index == -1) {
-      throw ArgumentError.value(
-        subscriptionId,
-        'subscriptionId',
-        'Unknown subscription.',
-      );
-    }
-
-    final subscription = _subscriptions[index];
-    final product = dummyBillingProductById(subscription.productId);
-    if (product == null || product.id != 'costik-iptv') {
-      throw ArgumentError.value(
-        subscription.productId,
-        'productId',
-        'Only IPTV subscription reactivation is supported.',
-      );
-    }
-
-    _subscriptions[index] = subscription.copyWith(
-      status: SubscriptionStatus.active,
-    );
-
-    return _snapshot(
-      message: 'Langganan Costik IPTV berhasil diaktifkan kembali.',
+    return _reactivateSubscription(
+      subscriptionId: subscriptionId,
+      productId: 'costik-iptv',
     );
   }
 
   @override
-  Future<BillingSnapshot> cancelIptvSubscription({
+  Future<BillingSnapshot> reactivateSignageSubscription({
     required String subscriptionId,
+  }) async {
+    return _reactivateSubscription(
+      subscriptionId: subscriptionId,
+      productId: 'costik-signage',
+    );
+  }
+
+  Future<BillingSnapshot> _reactivateSubscription({
+    required String subscriptionId,
+    required String productId,
   }) async {
     final index = _subscriptions.indexWhere(
       (subscription) => subscription.id == subscriptionId,
@@ -271,11 +325,67 @@ class DummyBillingRepository implements BillingRepository {
     }
 
     final subscription = _subscriptions[index];
+    final product = dummyBillingProductById(subscription.productId);
+    if (product == null || product.id != productId) {
+      throw ArgumentError.value(
+        subscription.productId,
+        'productId',
+        'Only $productId subscription reactivation is supported.',
+      );
+    }
+
+    _subscriptions[index] = subscription.copyWith(
+      status: SubscriptionStatus.active,
+    );
+
+    return _snapshot(
+      message: 'Langganan ${product.name} berhasil diaktifkan kembali.',
+    );
+  }
+
+  @override
+  Future<BillingSnapshot> cancelIptvSubscription({
+    required String subscriptionId,
+  }) async {
+    return _cancelSubscription(
+      subscriptionId: subscriptionId,
+      productId: 'costik-iptv',
+    );
+  }
+
+  @override
+  Future<BillingSnapshot> cancelSignageSubscription({
+    required String subscriptionId,
+  }) async {
+    return _cancelSubscription(
+      subscriptionId: subscriptionId,
+      productId: 'costik-signage',
+    );
+  }
+
+  Future<BillingSnapshot> _cancelSubscription({
+    required String subscriptionId,
+    required String productId,
+  }) async {
+    final index = _subscriptions.indexWhere(
+      (subscription) => subscription.id == subscriptionId,
+    );
+    if (index == -1) {
+      throw ArgumentError.value(
+        subscriptionId,
+        'subscriptionId',
+        'Unknown subscription.',
+      );
+    }
+
+    final subscription = _subscriptions[index];
+    final product = dummyBillingProductById(subscription.productId);
+    final productName = product?.name ?? shortNameForProductId(productId);
     _subscriptions[index] = subscription.copyWith(
       status: SubscriptionStatus.cancelled,
     );
 
-    return _snapshot(message: 'Langganan Costik IPTV berhasil dibatalkan.');
+    return _snapshot(message: 'Langganan $productName berhasil dibatalkan.');
   }
 
   Future<BillingSnapshot> _checkout({required BillingPlan plan}) async {
@@ -324,10 +434,12 @@ class DummyBillingRepository implements BillingRepository {
   }
 
   int _proratedUpgradeAmount({
+    required String productId,
     required int additionalDeviceCount,
     required int remainingDays,
   }) {
-    final amount = additionalDeviceCount * 15000 * remainingDays / 30;
+    final unitPrice = unitPriceForProductId(productId);
+    final amount = additionalDeviceCount * unitPrice * remainingDays / 30;
     return amount.ceil();
   }
 

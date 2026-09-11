@@ -12,17 +12,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class IptvSubscriptionPage extends StatefulWidget {
-  const IptvSubscriptionPage({super.key, this.onBack, this.isEmbedded = false});
+class SignageSubscriptionPage extends StatefulWidget {
+  const SignageSubscriptionPage({
+    super.key,
+    this.onBack,
+    this.isEmbedded = false,
+  });
 
   final VoidCallback? onBack;
   final bool isEmbedded;
 
   @override
-  State<IptvSubscriptionPage> createState() => _IptvSubscriptionPageState();
+  State<SignageSubscriptionPage> createState() =>
+      _SignageSubscriptionPageState();
 }
 
-class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
+class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
   final _formKey = GlobalKey<FormState>();
   final _deviceCountController = TextEditingController(text: '10');
   final _organizationController = TextEditingController();
@@ -30,12 +35,12 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
 
-  static const int pricePerDevice = iptvPricePerDevice;
+  static const int pricePerDevice = signagePricePerDevice;
   int _deviceCount = 10;
   int _billingCycleMonths = 1; // 1, 3, 6, 12 bulan
 
   ProductItem get _product => dummyProducts.firstWhere(
-    (p) => p.id == 'costik-iptv',
+    (p) => p.id == 'digital-signage',
     orElse: () => dummyProducts.first,
   );
 
@@ -87,7 +92,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
       return;
     }
 
-    await billingCubit.checkoutIptvSubscription(
+    await billingCubit.checkoutSignageSubscription(
       deviceCount: _deviceCount,
       billingCycleMonths: _billingCycleMonths,
     );
@@ -97,7 +102,8 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
     if (billingCubit.state.status == BillingStatus.failure) {
       await _showTopUpNeededDialog(
         message:
-            billingCubit.state.errorMessage ?? 'Langganan IPTV gagal diproses.',
+            billingCubit.state.errorMessage ??
+            'Langganan Signage gagal diproses.',
       );
       return;
     }
@@ -118,11 +124,11 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Terima kasih! Pesanan langganan Costik IPTV Anda telah dicatat:',
+              'Terima kasih! Pesanan langganan Costik Signage Anda telah dicatat:',
               style: TextStyle(color: CostikStudioTheme.slate),
             ),
             const SizedBox(height: 16),
-            _SummaryRow(label: 'Produk', value: 'Costik IPTV'),
+            _SummaryRow(label: 'Produk', value: 'Costik Signage'),
             _SummaryRow(label: 'Jumlah Device', value: '$_deviceCount Device'),
             _SummaryRow(label: 'Durasi', value: '$_billingCycleMonths Bulan'),
             _SummaryRow(
@@ -232,7 +238,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
             TextButton.icon(
               onPressed:
                   widget.onBack ??
-                  () => context.go('${AppRoutes.products}/costik-iptv'),
+                  () => context.go('${AppRoutes.products}/digital-signage'),
               icon: const Icon(Icons.arrow_back_rounded, size: 18),
               label: const Text('Kembali ke Katalog Produk'),
               style: TextButton.styleFrom(
@@ -251,7 +257,11 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                     color: accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(Icons.tv_rounded, color: accent, size: 32),
+                  child: Icon(
+                    Icons.connected_tv_rounded,
+                    color: accent,
+                    size: 32,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -259,7 +269,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Formulir Berlangganan Costik IPTV',
+                        'Formulir Berlangganan Costik Signage',
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
                               fontWeight: FontWeight.w900,
@@ -268,7 +278,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Hitung kebutuhan lisensi device IPTV untuk hotel atau bisnis Anda dan lakukan aktivasi.',
+                        'Hitung kebutuhan lisensi layar signage untuk hotel, outlet, atau bisnis Anda.',
                         style: Theme.of(context).textTheme.bodyLarge
                             ?.copyWith(color: CostikStudioTheme.slate),
                       ),
@@ -310,7 +320,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Harga lisensi Costik IPTV adalah ${formatRupiah(pricePerDevice)} / device / bulan.',
+                              'Harga lisensi Costik Signage adalah ${formatRupiah(pricePerDevice)} / device / bulan.',
                               style: const TextStyle(
                                 color: CostikStudioTheme.slate,
                               ),
@@ -325,11 +335,13 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                                 FilteringTextInputFormatter.digitsOnly,
                               ],
                               decoration: InputDecoration(
-                                labelText: 'Jumlah Device (Kamar / Layar)',
+                                labelText: 'Jumlah Device (Layar / Layar)',
                                 hintText: 'Contoh: 25',
                                 helperText:
                                     'Minimal 1 device (${formatRupiah(pricePerDevice)}/device/bulan)',
-                                prefixIcon: const Icon(Icons.tv_rounded),
+                                prefixIcon: const Icon(
+                                  Icons.connected_tv_rounded,
+                                ),
                                 suffixText: 'Device',
                               ),
                               validator: (val) {
@@ -518,7 +530,10 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _OrderSummaryRow(label: 'Produk', value: 'Costik IPTV'),
+                        _OrderSummaryRow(
+                          label: 'Produk',
+                          value: 'Costik Signage',
+                        ),
                         _OrderSummaryRow(
                           label: 'Tarif per Device',
                           value: '${formatRupiah(pricePerDevice)} / bln',
@@ -578,7 +593,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                         const SizedBox(height: 12),
                         Center(
                           child: Text(
-                            'Aktivasi instan & dukungan setup server cloud',
+                            'Aktivasi instan & dashboard signage tenant',
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.6),
                               fontSize: 12,

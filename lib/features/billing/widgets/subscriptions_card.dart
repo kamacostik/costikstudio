@@ -1,6 +1,7 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
+import 'package:costikstudio/core/billing/billing_pricing.dart';
 import 'package:flutter/material.dart';
 
 class SubscriptionsCard extends StatelessWidget {
@@ -138,16 +139,19 @@ class _SubscriptionRow extends StatelessWidget {
   final Future<void> Function({required String subscriptionId}) onReactivate;
 
   String get _productName => product?.name ?? subscription.productId;
+  int get _unitPrice => unitPriceForProductId(subscription.productId);
+  String get _shortName => shortNameForProductId(subscription.productId);
   int get _remainingDays =>
       subscription.expiresAt.difference(DateTime.now()).inDays;
-  int get _monthlyRenewalAmount => subscription.deviceCount * 15000;
+  int get _monthlyRenewalAmount => subscription.deviceCount * _unitPrice;
   int get _remainingDaysForBilling {
     final remaining = subscription.expiresAt.difference(DateTime.now()).inDays;
     return remaining <= 0 ? 1 : remaining;
   }
 
   int _proratedUpgradeAmount(int additionalDevices) {
-    return (additionalDevices * 15000 * _remainingDaysForBilling / 30).ceil();
+    return (additionalDevices * _unitPrice * _remainingDaysForBilling / 30)
+        .ceil();
   }
 
   bool get _isActive => subscription.status == SubscriptionStatus.active;
@@ -173,7 +177,7 @@ class _SubscriptionRow extends StatelessWidget {
             Text(_productName),
             const SizedBox(height: 8),
             const Text(
-              'Apakah Anda yakin ingin membatalkan langganan IPTV ini? Status akan menjadi dibatalkan.',
+              'Apakah Anda yakin ingin membatalkan langganan ini? Status akan menjadi dibatalkan.',
               style: TextStyle(color: CostikStudioTheme.slate),
             ),
           ],
@@ -206,6 +210,8 @@ class _SubscriptionRow extends StatelessWidget {
       context: context,
       builder: (dialogCtx) => _UpgradeDeviceDialog(
         productName: _productName,
+        shortName: _shortName,
+        unitPrice: _unitPrice,
         currentDeviceCount: subscription.deviceCount,
         remainingDays: _remainingDaysForBilling,
         expiresAt: subscription.expiresAt,
@@ -241,7 +247,7 @@ class _SubscriptionRow extends StatelessWidget {
             Text(_productName),
             const SizedBox(height: 8),
             Text(
-              '${subscription.deviceCount} device x ${formatRupiah(15000)} / bulan',
+              '${subscription.deviceCount} device x ${formatRupiah(_unitPrice)} / bulan',
               style: const TextStyle(color: CostikStudioTheme.slate),
             ),
             const SizedBox(height: 16),
@@ -704,6 +710,8 @@ class _SubscriptionRow extends StatelessWidget {
 class _UpgradeDeviceDialog extends StatefulWidget {
   const _UpgradeDeviceDialog({
     required this.productName,
+    required this.shortName,
+    required this.unitPrice,
     required this.currentDeviceCount,
     required this.remainingDays,
     required this.expiresAt,
@@ -711,6 +719,8 @@ class _UpgradeDeviceDialog extends StatefulWidget {
   });
 
   final String productName;
+  final String shortName;
+  final int unitPrice;
   final int currentDeviceCount;
   final int remainingDays;
   final DateTime expiresAt;
@@ -728,7 +738,7 @@ class _UpgradeDeviceDialogState extends State<_UpgradeDeviceDialog> {
     final selectedDevices = _selectedDevices;
 
     return AlertDialog(
-      title: const Text('Simulasi Upgrade Device IPTV'),
+      title: Text('Simulasi Upgrade Device ${widget.shortName}'),
       content: SizedBox(
         width: 520,
         child: Column(
@@ -744,6 +754,7 @@ class _UpgradeDeviceDialogState extends State<_UpgradeDeviceDialog> {
               currentDeviceCount: widget.currentDeviceCount,
               remainingDays: widget.remainingDays,
               expiresAt: widget.expiresAt,
+              unitPrice: widget.unitPrice,
             ),
             const SizedBox(height: 16),
             const Text(
@@ -812,11 +823,13 @@ class _UpgradeSimulationPanel extends StatelessWidget {
     required this.currentDeviceCount,
     required this.remainingDays,
     required this.expiresAt,
+    required this.unitPrice,
   });
 
   final int currentDeviceCount;
   final int remainingDays;
   final DateTime expiresAt;
+  final int unitPrice;
 
   @override
   Widget build(BuildContext context) {
@@ -852,15 +865,15 @@ class _UpgradeSimulationPanel extends StatelessWidget {
           ),
           _SimulationRow(
             label: 'Harga normal',
-            value: '${formatRupiah(15000)} / device / bulan',
+            value: '${formatRupiah(unitPrice)} / device / bulan',
           ),
           _SimulationRow(
             label: 'Tanggal expired tetap',
             value: _formatFullDate(expiresAt),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Device tambahan akan aktif sampai tanggal expired yang sama. Biaya dihitung prorata: device tambahan x Rp15.000 x sisa hari / 30.',
+          Text(
+            'Device tambahan akan aktif sampai tanggal expired yang sama. Biaya dihitung prorata: device tambahan x ${formatRupiah(unitPrice)} x sisa hari / 30.',
             style: TextStyle(color: CostikStudioTheme.slate, height: 1.45),
           ),
         ],

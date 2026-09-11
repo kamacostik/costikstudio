@@ -13,6 +13,7 @@ import 'package:costikstudio/features/product_detail/view/product_detail_page.da
 import 'package:costikstudio/features/products/view/products_page.dart';
 import 'package:costikstudio/features/signage/view/signage_admin_page.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
+import 'package:costikstudio/features/subscription/view/signage_subscription_page.dart';
 import 'package:costikstudio/features/support/view/support_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,6 +44,11 @@ GoRouter createAppRouter(AppExperience experience) {
               path: AppRoutes.subscribeIptv,
               name: AppRouteNames.subscribeIptv,
               builder: (context, state) => const IptvSubscriptionPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.subscribeSignage,
+              name: AppRouteNames.subscribeSignage,
+              builder: (context, state) => const SignageSubscriptionPage(),
             ),
             GoRoute(
               path: '${AppRoutes.products}/:id',

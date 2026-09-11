@@ -10,7 +10,7 @@ insert into public.products (
   'costik-signage',
   'Costik Signage',
   'Digital signage and screen content management for hotels and businesses.',
-  15000
+  20000
 )
 on conflict (id) do update set
   name = excluded.name,

@@ -117,6 +117,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           onPressed: () {
                             if (item.id == 'costik-iptv') {
                               context.go(AppRoutes.subscribeIptv);
+                            } else if (item.id == 'digital-signage') {
+                              context.go(AppRoutes.subscribeSignage);
                             } else {
                               context.go(AppRoutes.billing);
                             }

@@ -67,7 +67,17 @@ abstract class BillingRepository {
     required int billingCycleMonths,
   });
 
+  Future<BillingSnapshot> checkoutSignageSubscription({
+    required int deviceCount,
+    required int billingCycleMonths,
+  });
+
   Future<BillingSnapshot> renewIptvSubscription({
+    required String subscriptionId,
+    required int billingCycleMonths,
+  });
+
+  Future<BillingSnapshot> renewSignageSubscription({
     required String subscriptionId,
     required int billingCycleMonths,
   });
@@ -77,11 +87,24 @@ abstract class BillingRepository {
     required int additionalDeviceCount,
   });
 
+  Future<BillingSnapshot> upgradeSignageSubscriptionDevices({
+    required String subscriptionId,
+    required int additionalDeviceCount,
+  });
+
   Future<BillingSnapshot> reactivateIptvSubscription({
     required String subscriptionId,
   });
 
+  Future<BillingSnapshot> reactivateSignageSubscription({
+    required String subscriptionId,
+  });
+
   Future<BillingSnapshot> cancelIptvSubscription({
+    required String subscriptionId,
+  });
+
+  Future<BillingSnapshot> cancelSignageSubscription({
     required String subscriptionId,
   });
 }

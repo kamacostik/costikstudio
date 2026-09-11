@@ -102,6 +102,24 @@ class SupabaseBillingRepository implements BillingRepository {
   }
 
   @override
+  Future<BillingSnapshot> checkoutSignageSubscription({
+    required int deviceCount,
+    required int billingCycleMonths,
+  }) async {
+    await _supabase.rpc<void>(
+      'checkout_signage_subscription',
+      params: {
+        'device_count': deviceCount,
+        'billing_cycle_months': billingCycleMonths,
+      },
+    );
+
+    return _loadMutationSnapshot(
+      message: 'Langganan Costik Signage berhasil aktif.',
+    );
+  }
+
+  @override
   Future<BillingSnapshot> renewIptvSubscription({
     required String subscriptionId,
     required int billingCycleMonths,
@@ -116,6 +134,24 @@ class SupabaseBillingRepository implements BillingRepository {
 
     return _loadMutationSnapshot(
       message: 'Langganan Costik IPTV berhasil diperpanjang.',
+    );
+  }
+
+  @override
+  Future<BillingSnapshot> renewSignageSubscription({
+    required String subscriptionId,
+    required int billingCycleMonths,
+  }) async {
+    await _supabase.rpc<void>(
+      'renew_signage_subscription',
+      params: {
+        'target_subscription_id': subscriptionId,
+        'billing_cycle_months': billingCycleMonths,
+      },
+    );
+
+    return _loadMutationSnapshot(
+      message: 'Langganan Costik Signage berhasil diperpanjang.',
     );
   }
 
@@ -138,6 +174,24 @@ class SupabaseBillingRepository implements BillingRepository {
   }
 
   @override
+  Future<BillingSnapshot> upgradeSignageSubscriptionDevices({
+    required String subscriptionId,
+    required int additionalDeviceCount,
+  }) async {
+    await _supabase.rpc<void>(
+      'upgrade_signage_subscription_devices',
+      params: {
+        'target_subscription_id': subscriptionId,
+        'additional_device_count': additionalDeviceCount,
+      },
+    );
+
+    return _loadMutationSnapshot(
+      message: 'Layar Costik Signage berhasil ditambahkan.',
+    );
+  }
+
+  @override
   Future<BillingSnapshot> reactivateIptvSubscription({
     required String subscriptionId,
   }) async {
@@ -152,6 +206,20 @@ class SupabaseBillingRepository implements BillingRepository {
   }
 
   @override
+  Future<BillingSnapshot> reactivateSignageSubscription({
+    required String subscriptionId,
+  }) async {
+    await _supabase.rpc<void>(
+      'reactivate_signage_subscription',
+      params: {'target_subscription_id': subscriptionId},
+    );
+
+    return _loadMutationSnapshot(
+      message: 'Langganan Costik Signage berhasil diaktifkan kembali.',
+    );
+  }
+
+  @override
   Future<BillingSnapshot> cancelIptvSubscription({
     required String subscriptionId,
   }) async {
@@ -162,6 +230,20 @@ class SupabaseBillingRepository implements BillingRepository {
 
     return _loadMutationSnapshot(
       message: 'Langganan Costik IPTV berhasil dibatalkan.',
+    );
+  }
+
+  @override
+  Future<BillingSnapshot> cancelSignageSubscription({
+    required String subscriptionId,
+  }) async {
+    await _supabase.rpc<void>(
+      'cancel_signage_subscription',
+      params: {'target_subscription_id': subscriptionId},
+    );
+
+    return _loadMutationSnapshot(
+      message: 'Langganan Costik Signage berhasil dibatalkan.',
     );
   }
 

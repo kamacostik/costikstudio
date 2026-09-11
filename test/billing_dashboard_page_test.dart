@@ -63,7 +63,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.textContaining('Subscription IPTV Sudah Aktif'),
+        find.textContaining('Subscription Costik IPTV sudah aktif'),
         findsOneWidget,
       );
       expect(find.text('Berlangganan Sekarang'), findsNothing);

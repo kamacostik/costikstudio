@@ -127,12 +127,36 @@ class BillingCubit extends Cubit<BillingState> {
     );
   }
 
+  Future<void> checkoutSignageSubscription({
+    required int deviceCount,
+    required int billingCycleMonths,
+  }) async {
+    await _runMutation(
+      () => repository.checkoutSignageSubscription(
+        deviceCount: deviceCount,
+        billingCycleMonths: billingCycleMonths,
+      ),
+    );
+  }
+
   Future<void> renewIptvSubscription({
     required String subscriptionId,
     required int billingCycleMonths,
   }) async {
     await _runMutation(
       () => repository.renewIptvSubscription(
+        subscriptionId: subscriptionId,
+        billingCycleMonths: billingCycleMonths,
+      ),
+    );
+  }
+
+  Future<void> renewSignageSubscription({
+    required String subscriptionId,
+    required int billingCycleMonths,
+  }) async {
+    await _runMutation(
+      () => repository.renewSignageSubscription(
         subscriptionId: subscriptionId,
         billingCycleMonths: billingCycleMonths,
       ),
@@ -151,6 +175,18 @@ class BillingCubit extends Cubit<BillingState> {
     );
   }
 
+  Future<void> upgradeSignageSubscriptionDevices({
+    required String subscriptionId,
+    required int additionalDeviceCount,
+  }) async {
+    await _runMutation(
+      () => repository.upgradeSignageSubscriptionDevices(
+        subscriptionId: subscriptionId,
+        additionalDeviceCount: additionalDeviceCount,
+      ),
+    );
+  }
+
   Future<void> reactivateIptvSubscription({
     required String subscriptionId,
   }) async {
@@ -160,9 +196,28 @@ class BillingCubit extends Cubit<BillingState> {
     );
   }
 
+  Future<void> reactivateSignageSubscription({
+    required String subscriptionId,
+  }) async {
+    await _runMutation(
+      () => repository.reactivateSignageSubscription(
+        subscriptionId: subscriptionId,
+      ),
+    );
+  }
+
   Future<void> cancelIptvSubscription({required String subscriptionId}) async {
     await _runMutation(
       () => repository.cancelIptvSubscription(subscriptionId: subscriptionId),
+    );
+  }
+
+  Future<void> cancelSignageSubscription({
+    required String subscriptionId,
+  }) async {
+    await _runMutation(
+      () =>
+          repository.cancelSignageSubscription(subscriptionId: subscriptionId),
     );
   }
 

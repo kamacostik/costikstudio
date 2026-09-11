@@ -15,6 +15,7 @@ import 'package:costikstudio/features/billing/widgets/transactions_card.dart';
 import 'package:costikstudio/features/billing/widgets/wallet_card.dart';
 import 'package:costikstudio/features/shared/widgets/product_card.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
+import 'package:costikstudio/features/subscription/view/signage_subscription_page.dart';
 import 'package:costikstudio/features/support/view/support_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,6 +47,7 @@ class _BillingDashboardViewState extends State<_BillingDashboardView> {
   _DashboardTab _selectedTab = _DashboardTab.apps;
   ProductItem? _selectedProduct;
   bool _isOrderingIptv = false;
+  bool _isOrderingSignage = false;
 
   @override
   Widget build(BuildContext context) {
@@ -76,21 +78,31 @@ class _BillingDashboardViewState extends State<_BillingDashboardView> {
               selectedTab: _selectedTab,
               selectedProduct: _selectedProduct,
               isOrderingIptv: _isOrderingIptv,
+              isOrderingSignage: _isOrderingSignage,
               onSelectProduct: (product) {
                 setState(() {
                   _selectedProduct = product;
                   _isOrderingIptv = false;
+                  _isOrderingSignage = false;
                 });
               },
               onStartOrderIptv: () {
                 setState(() {
                   _isOrderingIptv = true;
+                  _isOrderingSignage = false;
+                });
+              },
+              onStartOrderSignage: () {
+                setState(() {
+                  _isOrderingSignage = true;
+                  _isOrderingIptv = false;
                 });
               },
               onBackToProductCatalog: () {
                 setState(() {
                   _selectedProduct = null;
                   _isOrderingIptv = false;
+                  _isOrderingSignage = false;
                 });
               },
               onOpenSubscriptions: () =>
@@ -141,6 +153,7 @@ class _BillingDashboardViewState extends State<_BillingDashboardView> {
       _selectedTab = tab;
       _selectedProduct = null;
       _isOrderingIptv = false;
+      _isOrderingSignage = false;
     });
   }
 
@@ -155,8 +168,10 @@ class _DashboardPage extends StatelessWidget {
     required this.selectedTab,
     required this.selectedProduct,
     required this.isOrderingIptv,
+    required this.isOrderingSignage,
     required this.onSelectProduct,
     required this.onStartOrderIptv,
+    required this.onStartOrderSignage,
     required this.onBackToProductCatalog,
     required this.onOpenSubscriptions,
     required this.onCheckout,
@@ -166,8 +181,10 @@ class _DashboardPage extends StatelessWidget {
   final _DashboardTab selectedTab;
   final ProductItem? selectedProduct;
   final bool isOrderingIptv;
+  final bool isOrderingSignage;
   final ValueChanged<ProductItem> onSelectProduct;
   final VoidCallback onStartOrderIptv;
+  final VoidCallback onStartOrderSignage;
   final VoidCallback onBackToProductCatalog;
   final VoidCallback onOpenSubscriptions;
   final ValueChanged<BillingPlan> onCheckout;
@@ -205,7 +222,8 @@ class _DashboardPage extends StatelessWidget {
               ],
               if (selectedTab == _DashboardTab.apps &&
                   selectedProduct == null &&
-                  !isOrderingIptv) ...[
+                  !isOrderingIptv &&
+                  !isOrderingSignage) ...[
                 _DashboardSummaryStrip(snapshot: snapshot),
                 const SizedBox(height: 20),
               ],
@@ -218,6 +236,15 @@ class _DashboardPage extends StatelessWidget {
   }
 
   Widget _contentFor(BuildContext context) {
+    String productIdFor(String subscriptionId) {
+      for (final subscription in snapshot.subscriptions) {
+        if (subscription.id == subscriptionId) {
+          return subscription.productId;
+        }
+      }
+      return '';
+    }
+
     return switch (selectedTab) {
       _DashboardTab.apps => _buildAppsTab(context),
       _DashboardTab.subscriptions => SubscriptionsCard(
@@ -225,22 +252,44 @@ class _DashboardPage extends StatelessWidget {
         plans: snapshot.plans,
         subscriptions: snapshot.subscriptions,
         onRenew: ({required subscriptionId, required billingCycleMonths}) =>
-            context.read<BillingCubit>().renewIptvSubscription(
-              subscriptionId: subscriptionId,
-              billingCycleMonths: billingCycleMonths,
-            ),
+            productIdFor(subscriptionId) == 'costik-signage'
+            ? context.read<BillingCubit>().renewSignageSubscription(
+                subscriptionId: subscriptionId,
+                billingCycleMonths: billingCycleMonths,
+              )
+            : context.read<BillingCubit>().renewIptvSubscription(
+                subscriptionId: subscriptionId,
+                billingCycleMonths: billingCycleMonths,
+              ),
         onUpgradeDevice:
             ({required subscriptionId, required additionalDeviceCount}) =>
-                context.read<BillingCubit>().upgradeIptvSubscriptionDevices(
-                  subscriptionId: subscriptionId,
-                  additionalDeviceCount: additionalDeviceCount,
-                ),
-        onCancel: ({required subscriptionId}) => context
-            .read<BillingCubit>()
-            .cancelIptvSubscription(subscriptionId: subscriptionId),
-        onReactivate: ({required subscriptionId}) => context
-            .read<BillingCubit>()
-            .reactivateIptvSubscription(subscriptionId: subscriptionId),
+                productIdFor(subscriptionId) == 'costik-signage'
+                ? context
+                      .read<BillingCubit>()
+                      .upgradeSignageSubscriptionDevices(
+                        subscriptionId: subscriptionId,
+                        additionalDeviceCount: additionalDeviceCount,
+                      )
+                : context.read<BillingCubit>().upgradeIptvSubscriptionDevices(
+                    subscriptionId: subscriptionId,
+                    additionalDeviceCount: additionalDeviceCount,
+                  ),
+        onCancel: ({required subscriptionId}) =>
+            productIdFor(subscriptionId) == 'costik-signage'
+            ? context.read<BillingCubit>().cancelSignageSubscription(
+                subscriptionId: subscriptionId,
+              )
+            : context.read<BillingCubit>().cancelIptvSubscription(
+                subscriptionId: subscriptionId,
+              ),
+        onReactivate: ({required subscriptionId}) =>
+            productIdFor(subscriptionId) == 'costik-signage'
+            ? context.read<BillingCubit>().reactivateSignageSubscription(
+                subscriptionId: subscriptionId,
+              )
+            : context.read<BillingCubit>().reactivateIptvSubscription(
+                subscriptionId: subscriptionId,
+              ),
       ),
       _DashboardTab.billing => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,6 +324,13 @@ class _DashboardPage extends StatelessWidget {
       );
     }
 
+    if (isOrderingSignage) {
+      return SignageSubscriptionPage(
+        isEmbedded: true,
+        onBack: onBackToProductCatalog,
+      );
+    }
+
     if (selectedProduct != null) {
       return _EmbeddedProductDetail(
         product: selectedProduct!,
@@ -283,6 +339,8 @@ class _DashboardPage extends StatelessWidget {
         onSubscribe: () {
           if (selectedProduct!.id == 'costik-iptv') {
             onStartOrderIptv();
+          } else if (selectedProduct!.id == 'digital-signage') {
+            onStartOrderSignage();
           }
         },
         onUpgradeDevice: onOpenSubscriptions,
@@ -313,6 +371,7 @@ class _DashboardPage extends StatelessWidget {
   String _titleFor(_DashboardTab tab) {
     if (tab == _DashboardTab.apps) {
       if (isOrderingIptv) return 'Berlangganan Costik IPTV';
+      if (isOrderingSignage) return 'Berlangganan Costik Signage';
       if (selectedProduct != null) return selectedProduct!.name;
       return 'Produk';
     }
@@ -330,6 +389,9 @@ class _DashboardPage extends StatelessWidget {
     if (tab == _DashboardTab.apps) {
       if (isOrderingIptv) {
         return 'Hitung kebutuhan lisensi device IPTV untuk hotel atau bisnis Anda.';
+      }
+      if (isOrderingSignage) {
+        return 'Hitung kebutuhan lisensi layar Digital Signage sebelum membuka Web Admin.';
       }
       if (selectedProduct != null) {
         return selectedProduct!.tagline;
@@ -548,10 +610,13 @@ class _EmbeddedProductDetail extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = Color(product.accentHex);
 
-    // Find any existing IPTV subscription (active or cancelled)
-    final existingIptvSubscription = product.id == 'costik-iptv'
+    final subscriptionProductId = product.id == 'digital-signage'
+        ? 'costik-signage'
+        : product.id;
+    final existingManagedSubscription =
+        (product.id == 'costik-iptv' || product.id == 'digital-signage')
         ? subscriptions
-              .where((s) => s.productId == 'costik-iptv')
+              .where((s) => s.productId == subscriptionProductId)
               .where(
                 (s) =>
                     s.status == SubscriptionStatus.active ||
@@ -559,11 +624,11 @@ class _EmbeddedProductDetail extends StatelessWidget {
               )
               .firstOrNull
         : null;
-    final hasExistingIptvSubscription = existingIptvSubscription != null;
-    final isIptvActive =
-        existingIptvSubscription?.status == SubscriptionStatus.active;
-    final isIptvCancelled =
-        existingIptvSubscription?.status == SubscriptionStatus.cancelled;
+    final hasExistingManagedSubscription = existingManagedSubscription != null;
+    final isManagedActive =
+        existingManagedSubscription?.status == SubscriptionStatus.active;
+    final isManagedCancelled =
+        existingManagedSubscription?.status == SubscriptionStatus.cancelled;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -623,17 +688,17 @@ class _EmbeddedProductDetail extends StatelessWidget {
                     ?.copyWith(color: CostikStudioTheme.slate, height: 1.6),
               ),
               const SizedBox(height: 24),
-              if (hasExistingIptvSubscription) ...[
+              if (hasExistingManagedSubscription) ...[
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: isIptvCancelled
+                    color: isManagedCancelled
                         ? Colors.orange.withValues(alpha: 0.08)
                         : CostikStudioTheme.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isIptvCancelled
+                      color: isManagedCancelled
                           ? Colors.orange.withValues(alpha: 0.16)
                           : CostikStudioTheme.primary.withValues(alpha: 0.16),
                     ),
@@ -643,16 +708,16 @@ class _EmbeddedProductDetail extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.info_outline_rounded,
-                        color: isIptvCancelled
+                        color: isManagedCancelled
                             ? Colors.orange
                             : CostikStudioTheme.primary,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          isIptvCancelled
-                              ? 'Subscription IPTV Anda sedang tidak aktif (cancelled). Aktifkan kembali subscription Anda di halaman Subscription untuk melanjutkan layanan.'
-                              : 'Subscription IPTV Sudah Aktif. Untuk menambah kamar/device, gunakan fitur Upgrade Device pada halaman Subscription.',
+                          isManagedCancelled
+                              ? 'Subscription ${product.name} Anda sedang tidak aktif (cancelled). Aktifkan kembali subscription Anda di halaman Subscription untuk melanjutkan layanan.'
+                              : 'Subscription ${product.name} sudah aktif. Untuk menambah device/layar, gunakan fitur Upgrade Device pada halaman Subscription.',
                           style: const TextStyle(
                             color: CostikStudioTheme.navy,
                             fontWeight: FontWeight.w700,
@@ -669,13 +734,13 @@ class _EmbeddedProductDetail extends StatelessWidget {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  if (isIptvActive)
+                  if (isManagedActive)
                     FilledButton.icon(
                       onPressed: onUpgradeDevice,
                       icon: const Icon(Icons.add_to_queue_rounded),
                       label: const Text('Upgrade Device'),
                     )
-                  else if (isIptvCancelled)
+                  else if (isManagedCancelled)
                     FilledButton.icon(
                       onPressed: onUpgradeDevice,
                       icon: const Icon(Icons.replay_rounded),

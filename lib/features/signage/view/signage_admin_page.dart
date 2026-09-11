@@ -3,8 +3,12 @@ import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/features/billing/billing_dependencies.dart';
 import 'package:costikstudio/features/billing/cubit/billing_cubit.dart';
+import 'package:costikstudio/features/signage/cubit/signage_admin_cubit.dart';
 import 'package:costikstudio/features/signage/cubit/signage_cubit.dart';
+import 'package:costikstudio/features/signage/data/signage_admin_repository.dart';
 import 'package:costikstudio/features/signage/data/supabase_signage_repository.dart';
+import 'package:costikstudio/features/signage/view/signage_devices_section.dart';
+import 'package:costikstudio/features/signage/view/signage_hotel_profile_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -25,6 +29,11 @@ class SignageAdminPage extends StatelessWidget {
         BlocProvider(
           create: (_) =>
               SignageCubit(repository: const SupabaseSignageRepository()),
+        ),
+        BlocProvider(
+          create: (_) => SignageAdminCubit(
+            repository: const SupabaseSignageAdminRepository(),
+          ),
         ),
       ],
       child: const _SignageAdminView(),
@@ -96,7 +105,11 @@ class _SignageAdminView extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 22),
-                  const _SignageModulesPreview(),
+                  if (signageState.tenant != null) ...[
+                    const _SignageAdminModules(),
+                  ] else ...[
+                    const _SignageModulesPreview(),
+                  ],
                 ],
               ),
             );
@@ -228,6 +241,60 @@ class _TenantReadyCard extends StatelessWidget {
           'Data Signage akan dibatasi oleh RLS sesuai tenant akun ini.',
         ),
       ),
+    );
+  }
+}
+
+class _SignageAdminModules extends StatefulWidget {
+  const _SignageAdminModules();
+
+  @override
+  State<_SignageAdminModules> createState() => _SignageAdminModulesState();
+}
+
+class _SignageAdminModulesState extends State<_SignageAdminModules> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<SignageAdminCubit>().load();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<SignageAdminCubit, SignageAdminState>(
+      listener: (context, state) {
+        if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.red,
+              content: Text(state.errorMessage!),
+            ),
+          );
+        } else if (state.successMessage != null &&
+            state.successMessage!.isNotEmpty) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.successMessage!)));
+        }
+      },
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (state.isLoading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: LinearProgressIndicator(),
+              ),
+            const SignageHotelProfileSection(),
+            const SizedBox(height: 16),
+            const SignageDevicesSection(),
+            const SizedBox(height: 22),
+            const _SignageModulesPreview(),
+          ],
+        );
+      },
     );
   }
 }
