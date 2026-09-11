@@ -186,8 +186,11 @@ class DummyBillingRepository implements BillingRepository {
       );
     }
 
-    final amount =
-        additionalDeviceCount * 15000 * subscription.billingCycleMonths;
+    final remainingDays = _remainingSubscriptionDays(subscription);
+    final amount = _proratedUpgradeAmount(
+      additionalDeviceCount: additionalDeviceCount,
+      remainingDays: remainingDays,
+    );
 
     if (_wallet.balance < amount) {
       return _snapshot(
@@ -201,7 +204,8 @@ class DummyBillingRepository implements BillingRepository {
       amount: amount,
       balanceBefore: _wallet.balance,
       balanceAfter: _wallet.balance - amount,
-      referenceId: 'upgrade-device:$subscriptionId:$additionalDeviceCount',
+      referenceId:
+          'upgrade-device:$subscriptionId:$additionalDeviceCount:$remainingDays-days',
     );
     _wallet = Wallet(userId: _wallet.userId, balance: transaction.balanceAfter);
     _transactions.insert(0, transaction);
@@ -212,7 +216,8 @@ class DummyBillingRepository implements BillingRepository {
     );
 
     return _snapshot(
-      message: '${product.name} ditambah $additionalDeviceCount device.',
+      message:
+          '${product.name} ditambah $additionalDeviceCount device prorata $remainingDays hari.',
     );
   }
 
@@ -309,6 +314,21 @@ class DummyBillingRepository implements BillingRepository {
         message: 'Saldo kurang ${formatRupiah(error.shortfall)}',
       );
     }
+  }
+
+  int _remainingSubscriptionDays(Subscription subscription) {
+    final remaining = subscription.expiresAt
+        .difference(DateTime(2026, 9, 9))
+        .inDays;
+    return remaining <= 0 ? 1 : remaining;
+  }
+
+  int _proratedUpgradeAmount({
+    required int additionalDeviceCount,
+    required int remainingDays,
+  }) {
+    final amount = additionalDeviceCount * 15000 * remainingDays / 30;
+    return amount.ceil();
   }
 
   BillingInvoice _invoiceFrom(WalletTransaction transaction) {

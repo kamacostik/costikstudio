@@ -141,6 +141,15 @@ class _SubscriptionRow extends StatelessWidget {
   int get _remainingDays =>
       subscription.expiresAt.difference(DateTime.now()).inDays;
   int get _monthlyRenewalAmount => subscription.deviceCount * 15000;
+  int get _remainingDaysForBilling {
+    final remaining = subscription.expiresAt.difference(DateTime.now()).inDays;
+    return remaining <= 0 ? 1 : remaining;
+  }
+
+  int _proratedUpgradeAmount(int additionalDevices) {
+    return (additionalDevices * 15000 * _remainingDaysForBilling / 30).ceil();
+  }
+
   bool get _isActive => subscription.status == SubscriptionStatus.active;
   bool get _isCancelled => subscription.status == SubscriptionStatus.cancelled;
 
@@ -209,7 +218,7 @@ class _SubscriptionRow extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Biaya: ${formatRupiah(15000)} / device / bulan x ${subscription.billingCycleMonths} bulan',
+              'Sisa masa aktif: $_remainingDaysForBilling hari. Biaya upgrade dihitung prorata sampai tanggal expired existing.',
               style: const TextStyle(color: CostikStudioTheme.slate),
             ),
             const SizedBox(height: 16),
@@ -221,7 +230,7 @@ class _SubscriptionRow extends StatelessWidget {
                   FilledButton.tonal(
                     onPressed: () => Navigator.of(dialogCtx).pop(option),
                     child: Text(
-                      '+$option Device • ${formatRupiah(option * 15000 * subscription.billingCycleMonths)}',
+                      '+$option Device • ${formatRupiah(_proratedUpgradeAmount(option))}',
                     ),
                   ),
               ],

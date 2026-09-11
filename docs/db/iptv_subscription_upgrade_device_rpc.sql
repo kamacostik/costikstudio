@@ -1,6 +1,6 @@
 -- Trusted RPC for upgrading/adding devices to an active Costik IPTV subscription.
--- Charges customer wallet based on additional devices x Rp15.000 x current billing cycle months.
--- Updates subscription.device_count, inserts wallet_transactions and invoices atomically.
+-- Charges customer wallet prorated by remaining active days.
+-- Device additions keep the existing subscription expiry date.
 
 create or replace function public.upgrade_iptv_subscription_devices(
   target_subscription_id uuid,
@@ -14,8 +14,9 @@ as $$
 declare
   v_user_id uuid;
   v_device_count int;
-  v_billing_cycle_months int;
+  v_expires_at timestamp with time zone;
   v_unit_price numeric := 15000;
+  v_remaining_days int;
   v_total_amount numeric;
   v_wallet_balance numeric;
   v_new_balance numeric;
@@ -31,8 +32,8 @@ begin
     raise exception 'Additional device count must be greater than zero';
   end if;
 
-  select device_count, billing_cycle_months
-  into v_device_count, v_billing_cycle_months
+  select device_count, expires_at
+  into v_device_count, v_expires_at
   from public.subscriptions
   where id = target_subscription_id
     and user_id = v_user_id;
@@ -61,7 +62,8 @@ begin
     raise exception 'Only active IPTV subscriptions can be upgraded';
   end if;
 
-  v_total_amount := additional_device_count * v_unit_price * v_billing_cycle_months;
+  v_remaining_days := greatest(1, ceil(extract(epoch from (v_expires_at - now())) / 86400)::int);
+  v_total_amount := ceil(additional_device_count * v_unit_price * v_remaining_days / 30);
 
   select balance into v_wallet_balance
   from public.wallets
@@ -93,7 +95,7 @@ begin
     v_user_id,
     'purchase',
     v_total_amount,
-    'Costik IPTV device upgrade: +' || additional_device_count::text || ' device',
+    'Costik IPTV device upgrade: +' || additional_device_count::text || ' device, prorated ' || v_remaining_days::text || ' days',
     'completed'
   ) returning id into v_transaction_id;
 
