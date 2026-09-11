@@ -187,8 +187,12 @@ class _DashboardPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
               ],
-              _DashboardSummaryStrip(snapshot: snapshot),
-              const SizedBox(height: 20),
+              if (selectedTab == _DashboardTab.apps &&
+                  selectedProduct == null &&
+                  !isOrderingIptv) ...[
+                _DashboardSummaryStrip(snapshot: snapshot),
+                const SizedBox(height: 20),
+              ],
               _contentFor(context),
             ],
           ),
