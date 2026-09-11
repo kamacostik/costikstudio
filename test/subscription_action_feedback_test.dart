@@ -59,7 +59,11 @@ void main() {
       expect(find.textContaining('Device tambahan akan aktif'), findsOneWidget);
       expect(find.textContaining('+1 Device •'), findsOneWidget);
 
-      await tester.tap(find.byType(FilledButton).last);
+      await tester.tap(find.textContaining('+1 Device •'));
+      await tester.pump();
+      expect(find.text('Proses Upgrade'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Proses Upgrade'));
       await tester.pump();
 
       expect(find.byType(SnackBar), findsOneWidget);

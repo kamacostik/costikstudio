@@ -204,55 +204,12 @@ class _SubscriptionRow extends StatelessWidget {
 
     final additionalDevices = await showDialog<int>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: const Text('Simulasi Upgrade Device IPTV'),
-        content: SizedBox(
-          width: 520,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _productName,
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 12),
-              _UpgradeSimulationPanel(
-                currentDeviceCount: subscription.deviceCount,
-                remainingDays: _remainingDaysForBilling,
-                expiresAt: subscription.expiresAt,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Pilih jumlah device tambahan:',
-                style: TextStyle(
-                  color: CostikStudioTheme.navy,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  for (final option in const [1, 2, 5, 10])
-                    FilledButton.tonal(
-                      onPressed: () => Navigator.of(dialogCtx).pop(option),
-                      child: Text(
-                        '+$option Device • ${formatRupiah(_proratedUpgradeAmount(option))}',
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: const Text('Batal'),
-          ),
-        ],
+      builder: (dialogCtx) => _UpgradeDeviceDialog(
+        productName: _productName,
+        currentDeviceCount: subscription.deviceCount,
+        remainingDays: _remainingDaysForBilling,
+        expiresAt: subscription.expiresAt,
+        proratedAmount: _proratedUpgradeAmount,
       ),
     );
 
@@ -740,6 +697,112 @@ class _SubscriptionRow extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+class _UpgradeDeviceDialog extends StatefulWidget {
+  const _UpgradeDeviceDialog({
+    required this.productName,
+    required this.currentDeviceCount,
+    required this.remainingDays,
+    required this.expiresAt,
+    required this.proratedAmount,
+  });
+
+  final String productName;
+  final int currentDeviceCount;
+  final int remainingDays;
+  final DateTime expiresAt;
+  final int Function(int additionalDevices) proratedAmount;
+
+  @override
+  State<_UpgradeDeviceDialog> createState() => _UpgradeDeviceDialogState();
+}
+
+class _UpgradeDeviceDialogState extends State<_UpgradeDeviceDialog> {
+  int? _selectedDevices;
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedDevices = _selectedDevices;
+
+    return AlertDialog(
+      title: const Text('Simulasi Upgrade Device IPTV'),
+      content: SizedBox(
+        width: 520,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.productName,
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 12),
+            _UpgradeSimulationPanel(
+              currentDeviceCount: widget.currentDeviceCount,
+              remainingDays: widget.remainingDays,
+              expiresAt: widget.expiresAt,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Pilih jumlah device tambahan:',
+              style: TextStyle(
+                color: CostikStudioTheme.navy,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final option in const [1, 2, 5, 10])
+                  ChoiceChip(
+                    selected: selectedDevices == option,
+                    label: Text(
+                      '+$option Device • ${formatRupiah(widget.proratedAmount(option))}',
+                    ),
+                    onSelected: (_) =>
+                        setState(() => _selectedDevices = option),
+                  ),
+              ],
+            ),
+            if (selectedDevices != null) ...[
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Text(
+                  'Pilihan: +$selectedDevices device. Total prorata: ${formatRupiah(widget.proratedAmount(selectedDevices))}. Klik Proses Upgrade untuk melanjutkan.',
+                  style: const TextStyle(
+                    color: CostikStudioTheme.navy,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          onPressed: selectedDevices == null
+              ? null
+              : () => Navigator.of(context).pop(selectedDevices),
+          child: const Text('Proses Upgrade'),
+        ),
+      ],
     );
   }
 }
