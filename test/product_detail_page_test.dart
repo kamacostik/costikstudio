@@ -26,9 +26,9 @@ void main() {
         find.text('Live TV and guest room entertainment flow'),
         findsOneWidget,
       );
-      expect(find.text('Tampilan Aplikasi'), findsOneWidget);
-      expect(find.text('Lihat Dokumentasi'), findsOneWidget);
-      expect(find.text('Cara mulai'), findsOneWidget);
+      expect(find.text('Tampilan Aplikasi'), findsNothing);
+      expect(find.text('Lihat Dokumentasi'), findsNothing);
+      expect(find.text('Cara mulai'), findsNothing);
       expect(find.text('Login untuk berlangganan'), findsOneWidget);
     },
   );

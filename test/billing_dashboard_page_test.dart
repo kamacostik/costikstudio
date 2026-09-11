@@ -71,6 +71,9 @@ void main() {
         find.widgetWithText(FilledButton, 'Upgrade Device'),
         findsOneWidget,
       );
+      expect(find.text('Tampilan Aplikasi'), findsOneWidget);
+      expect(find.text('Lihat Dokumentasi'), findsOneWidget);
+      expect(find.text('Cara mulai'), findsOneWidget);
     },
   );
 

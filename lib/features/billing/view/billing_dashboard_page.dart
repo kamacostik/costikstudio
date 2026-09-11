@@ -687,6 +687,11 @@ class _EmbeddedProductDetail extends StatelessWidget {
                       icon: const Icon(Icons.workspace_premium_rounded),
                       label: const Text('Berlangganan sekarang'),
                     ),
+                  OutlinedButton.icon(
+                    onPressed: () => _showMemberDocumentation(context),
+                    icon: const Icon(Icons.menu_book_rounded),
+                    label: const Text('Lihat Dokumentasi'),
+                  ),
                   if (product.hasAdmin)
                     OutlinedButton.icon(
                       onPressed: () => context.go('/support'),
@@ -724,7 +729,367 @@ class _EmbeddedProductDetail extends StatelessWidget {
               ),
             ),
           ),
+        const SizedBox(height: 24),
+        _MemberPreviewShowcase(product: product, accent: accent),
+        const SizedBox(height: 24),
+        _MemberHowToStart(product: product),
       ],
+    );
+  }
+
+  void _showMemberDocumentation(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        final steps = _memberDocSteps(product);
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.82,
+          maxChildSize: 0.95,
+          minChildSize: 0.5,
+          builder: (_, scrollController) => Padding(
+            padding: const EdgeInsets.all(24),
+            child: ListView(
+              controller: scrollController,
+              children: [
+                Center(
+                  child: Container(
+                    width: 45,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Dokumentasi ${product.name}',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: CostikStudioTheme.navy,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Panduan member untuk setup, aktivasi, tutorial video, dan operasional produk.',
+                  style: TextStyle(
+                    color: CostikStudioTheme.slate,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                for (var i = 0; i < steps.length; i++)
+                  _MemberDocStep(
+                    number: i + 1,
+                    title: steps[i].$1,
+                    content: steps[i].$2,
+                  ),
+                const SizedBox(height: 18),
+                _MemberTutorialVideo(productName: product.name),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Tutup Dokumentasi'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+List<(String, String)> _memberDocSteps(ProductItem product) {
+  if (product.id == 'costik-iptv') {
+    return const [
+      (
+        'Pilih dan kelola subscription',
+        'Gunakan halaman Subscription untuk melihat status IPTV, renew, upgrade device, atau aktifkan kembali layanan.',
+      ),
+      (
+        'Aktivasi device kamar',
+        'Pasang aplikasi client pada Android TV/STB lalu hubungkan licence/device code sesuai jumlah device aktif.',
+      ),
+      (
+        'Kelola channel dan konten',
+        'Gunakan web admin untuk channel, playlist, banner promosi, informasi hotel, dan konten tamu.',
+      ),
+    ];
+  }
+  return [
+    (
+      'Buka dashboard produk',
+      'Masuk melalui sidebar Produk untuk melihat panduan member ${product.name}.',
+    ),
+    (
+      'Konfigurasi awal',
+      'Lengkapi data master, user operasional, dan pengaturan dasar.',
+    ),
+    (
+      'Pantau operasional',
+      'Gunakan dashboard, laporan, dan riwayat aktivitas untuk monitoring harian.',
+    ),
+  ];
+}
+
+class _MemberPreviewShowcase extends StatelessWidget {
+  const _MemberPreviewShowcase({required this.product, required this.accent});
+
+  final ProductItem product;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final previews = product.id == 'costik-iptv'
+        ? const [
+            (
+              'Guest Room IPTV Home',
+              'Layar utama tamu hotel untuk live TV, informasi hotel, promo, dan layanan kamar.',
+              Icons.tv_rounded,
+            ),
+            (
+              'Channel & EPG Management',
+              'Pengaturan channel, kategori, playlist M3U, dan urutan konten dari web dashboard.',
+              Icons.playlist_play_rounded,
+            ),
+            (
+              'Room Device Monitoring',
+              'Pantau status device kamar, lisensi aktif, dan kebutuhan maintenance.',
+              Icons.meeting_room_rounded,
+            ),
+          ]
+        : [
+            (
+              '${product.name} Dashboard',
+              product.tagline,
+              Icons.dashboard_customize_rounded,
+            ),
+            (
+              'Operational Workflow',
+              'Alur operasional dibuat sederhana untuk tim harian.',
+              Icons.route_rounded,
+            ),
+            (
+              'Reports & Visibility',
+              'Ringkasan data penting untuk owner dan supervisor.',
+              Icons.insights_rounded,
+            ),
+          ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: CostikStudioTheme.navy,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Tampilan Aplikasi',
+            style: Theme.of(context).textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w900, color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 14,
+            runSpacing: 14,
+            children: previews
+                .map((preview) {
+                  return SizedBox(
+                    width: 300,
+                    child: Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(preview.$3, color: accent, size: 34),
+                          const SizedBox(height: 12),
+                          Text(
+                            preview.$1,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            preview.$2,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              height: 1.45,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                })
+                .toList(growable: false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MemberHowToStart extends StatelessWidget {
+  const _MemberHowToStart({required this.product});
+
+  final ProductItem product;
+
+  @override
+  Widget build(BuildContext context) {
+    final steps = _memberDocSteps(product);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Cara mulai',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: CostikStudioTheme.navy,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 14,
+          runSpacing: 14,
+          children: List.generate(steps.length, (index) {
+            return SizedBox(
+              width: 300,
+              child: _MemberDocStep(
+                number: index + 1,
+                title: steps[index].$1,
+                content: steps[index].$2,
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+}
+
+class _MemberDocStep extends StatelessWidget {
+  const _MemberDocStep({
+    required this.number,
+    required this.title,
+    required this.content,
+  });
+
+  final int number;
+  final String title;
+  final String content;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: CostikStudioTheme.primary,
+              child: Text(
+                '$number',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: const TextStyle(
+                color: CostikStudioTheme.navy,
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              content,
+              style: const TextStyle(
+                color: CostikStudioTheme.slate,
+                height: 1.45,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MemberTutorialVideo extends StatelessWidget {
+  const _MemberTutorialVideo({required this.productName});
+
+  final String productName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: CostikStudioTheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: CostikStudioTheme.primary.withValues(alpha: 0.16),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.play_circle_fill_rounded,
+            color: CostikStudioTheme.primary,
+            size: 42,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Video Tutorial $productName',
+                  style: const TextStyle(
+                    color: CostikStudioTheme.navy,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Materi video tutorial member akan ditempatkan di sini setelah link resmi tersedia.',
+                  style: TextStyle(
+                    color: CostikStudioTheme.slate,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
