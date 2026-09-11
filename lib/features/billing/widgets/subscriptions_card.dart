@@ -218,6 +218,10 @@ class _SubscriptionRow extends StatelessWidget {
     );
 
     if (additionalDevices == null || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Memproses upgrade device...')),
+    );
     await onUpgradeDevice(
       subscriptionId: subscription.id,
       additionalDeviceCount: additionalDevices,
@@ -265,6 +269,10 @@ class _SubscriptionRow extends StatelessWidget {
     );
 
     if (months == null || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Memproses renewal subscription...')),
+    );
     await onRenew(subscriptionId: subscription.id, billingCycleMonths: months);
   }
 

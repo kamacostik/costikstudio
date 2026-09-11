@@ -49,7 +49,19 @@ class _BillingDashboardViewState extends State<_BillingDashboardView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<BillingCubit, BillingState>(
+    return BlocConsumer<BillingCubit, BillingState>(
+      listener: (context, state) {
+        final message = state.snapshot?.message;
+        final errorMessage = state.errorMessage;
+        final messenger = ScaffoldMessenger.of(context);
+        if (message != null && message.isNotEmpty) {
+          messenger.showSnackBar(SnackBar(content: Text(message)));
+        } else if (errorMessage != null && errorMessage.isNotEmpty) {
+          messenger.showSnackBar(
+            SnackBar(backgroundColor: Colors.red, content: Text(errorMessage)),
+          );
+        }
+      },
       builder: (context, state) {
         final snapshot = state.snapshot;
         if (snapshot == null) {
