@@ -27,7 +27,8 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Tampilan Aplikasi'), findsOneWidget);
-      expect(find.text('Dokumentasi & Tutorial Video'), findsOneWidget);
+      expect(find.text('Lihat Dokumentasi'), findsOneWidget);
+      expect(find.text('Cara mulai'), findsOneWidget);
       expect(find.text('Login untuk berlangganan'), findsOneWidget);
     },
   );
