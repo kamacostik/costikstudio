@@ -11,6 +11,7 @@ import 'package:costikstudio/features/home/view/home_page.dart';
 import 'package:costikstudio/features/payment_return/view/payment_return_page.dart';
 import 'package:costikstudio/features/product_detail/view/product_detail_page.dart';
 import 'package:costikstudio/features/products/view/products_page.dart';
+import 'package:costikstudio/features/signage/view/signage_admin_page.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
 import 'package:costikstudio/features/support/view/support_page.dart';
 import 'package:flutter/material.dart';
@@ -117,6 +118,18 @@ GoRouter createAppRouter(AppExperience experience) {
                 return null;
               },
               builder: (context, state) => const SupportPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.signageAdmin,
+              name: AppRouteNames.signageAdmin,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAuthenticated) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
+              builder: (context, state) => const SignageAdminPage(),
             ),
           ] else ...[
             GoRoute(

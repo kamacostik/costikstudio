@@ -4,7 +4,13 @@ _Last updated: 2026-09-11_
 
 ## Current project state
 
-Costik Studio is being built as a Flutter SaaS portal focused on IPTV billing, wallet/top-up, invoices, product onboarding, and separated user/admin experiences.
+Costik Studio is being built as a Flutter SaaS portal focused on IPTV and Digital Signage billing, wallet/top-up, invoices, product onboarding, and separated user/admin experiences.
+
+Digital Signage admin is moving into CostikStudio so the active runtime set becomes:
+- `costikstudio` for SaaS portal, subscriptions, wallet, invoices, and Signage web admin.
+- `4.-Client-Costik-Signage` for Android TV/player runtime.
+
+The old Admin Signage repo is now reference/legacy for porting modules only.
 
 ## Active architecture decisions
 
@@ -100,11 +106,14 @@ Costik Studio is being built as a Flutter SaaS portal focused on IPTV billing, w
 
 Run/update these in Supabase when testing full backend flows:
 
-1. `docs/db/iptv_subscription_renewal_rpc.sql`
-2. `docs/db/iptv_subscription_upgrade_device_rpc.sql`
-3. `docs/db/iptv_subscription_cancel_rpc.sql`
-4. `docs/db/iptv_subscription_reactivate_rpc.sql`
-5. `docs/db/iptv_subscription_admin_management_rpc.sql`
+1. `docs/db/seed_signage_product.sql`
+2. `docs/db/signage_subscription_provisioning.sql`
+3. `/opt/data/signage/admin-final/docs/supabase/signage_schema.sql` until copied into CostikStudio migrations/docs
+4. `docs/db/iptv_subscription_renewal_rpc.sql`
+5. `docs/db/iptv_subscription_upgrade_device_rpc.sql`
+6. `docs/db/iptv_subscription_cancel_rpc.sql`
+7. `docs/db/iptv_subscription_reactivate_rpc.sql`
+8. `docs/db/iptv_subscription_admin_management_rpc.sql`
 
 Important fixed SQL issue:
 - Old upgrade RPC used obsolete wallet columns:

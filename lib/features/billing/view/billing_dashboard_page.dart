@@ -692,7 +692,9 @@ class _EmbeddedProductDetail extends StatelessWidget {
                     icon: const Icon(Icons.menu_book_rounded),
                     label: const Text('Lihat Dokumentasi'),
                   ),
-                  if (product.hasAdmin)
+                  if (product.id == 'digital-signage')
+                    _SignageAdminAccessButton(subscriptions: subscriptions)
+                  else if (product.hasAdmin)
                     OutlinedButton.icon(
                       onPressed: () => context.go('/support'),
                       icon: const Icon(Icons.open_in_new_rounded),
@@ -837,6 +839,29 @@ List<(String, String)> _memberDocSteps(ProductItem product) {
       'Gunakan dashboard, laporan, dan riwayat aktivitas untuk monitoring harian.',
     ),
   ];
+}
+
+class _SignageAdminAccessButton extends StatelessWidget {
+  const _SignageAdminAccessButton({required this.subscriptions});
+
+  final List<Subscription> subscriptions;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final isActive = subscriptions.any(
+      (subscription) =>
+          subscription.productId == 'costik-signage' &&
+          subscription.status == SubscriptionStatus.active &&
+          subscription.expiresAt.isAfter(now),
+    );
+
+    return FilledButton.icon(
+      onPressed: isActive ? () => context.go(AppRoutes.signageAdmin) : null,
+      icon: const Icon(Icons.open_in_new_rounded),
+      label: Text(isActive ? 'Open Web Admin' : 'Aktifkan langganan dulu'),
+    );
+  }
 }
 
 class _MemberPreviewShowcase extends StatelessWidget {
