@@ -1,6 +1,7 @@
 import 'package:costikstudio/app/app_experience.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
+import 'package:costikstudio/features/account/view/account_page.dart';
 import 'package:costikstudio/features/apps/view/apps_page.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:costikstudio/features/auth/view/login_page.dart';
@@ -67,6 +68,18 @@ GoRouter createAppRouter(AppExperience experience) {
               builder: (context, state) => const LoginPage(),
             ),
             GoRoute(
+              path: AppRoutes.account,
+              name: AppRouteNames.account,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAuthenticated) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
+              builder: (context, state) => const AccountPage(),
+            ),
+            GoRoute(
               path: AppRoutes.billing,
               name: AppRouteNames.billing,
               redirect: (context, state) {
@@ -112,6 +125,18 @@ GoRouter createAppRouter(AppExperience experience) {
               builder: (context, state) => const LoginPage(),
             ),
             GoRoute(
+              path: AppRoutes.account,
+              name: AppRouteNames.account,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAdmin) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
+              builder: (context, state) => const AccountPage(),
+            ),
+            GoRoute(
               path: AppRoutes.adminBilling,
               name: AppRouteNames.adminBilling,
               redirect: (context, state) {
@@ -154,12 +179,16 @@ class CostikStudioShell extends StatelessWidget {
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
         final navItems = isAdminApp
-            ? const [_NavItem('Admin Billing', AppRoutes.adminBilling)]
+            ? const [
+                _NavItem('Admin Billing', AppRoutes.adminBilling),
+                _NavItem('Account', AppRoutes.account),
+              ]
             : [
                 const _NavItem('Home', AppRoutes.home),
                 const _NavItem('Products', AppRoutes.products),
                 if (authState.isAuthenticated) ...[
                   const _NavItem('Dashboard', AppRoutes.billing),
+                  const _NavItem('Account', AppRoutes.account),
                 ],
               ];
 

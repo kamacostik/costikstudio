@@ -6,6 +6,7 @@ class AppRoutes {
   static const apps = '/apps';
   static const downloads = '/downloads';
   static const login = '/login';
+  static const account = '/account';
   static const billing = '/billing';
   static const paymentSuccess = '/payment/success';
   static const paymentCancel = '/payment/cancel';
@@ -23,6 +24,7 @@ class AppRouteNames {
   static const subscribeIptv = 'subscribe-iptv';
   static const apps = 'apps';
   static const login = 'login';
+  static const account = 'account';
   static const billing = 'billing';
   static const paymentSuccess = 'payment-success';
   static const paymentCancel = 'payment-cancel';
