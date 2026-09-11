@@ -1,5 +1,6 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_core.dart';
+import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/models/product_item.dart';
@@ -161,32 +162,36 @@ class _DashboardPage extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(26),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _titleFor(selectedTab),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: CostikStudioTheme.navy,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _titleFor(selectedTab),
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: CostikStudioTheme.navy,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _descriptionFor(selectedTab),
-              style: Theme.of(context).textTheme.bodyLarge
-                  ?.copyWith(color: CostikStudioTheme.slate, height: 1.45),
-            ),
-            const SizedBox(height: 18),
-            if (snapshot.message != null) ...[
-              BillingNotice(
-                message: snapshot.message!,
-                onClose: context.read<BillingCubit>().clearMessage,
+              const SizedBox(height: 8),
+              Text(
+                _descriptionFor(selectedTab),
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(color: CostikStudioTheme.slate, height: 1.45),
               ),
               const SizedBox(height: 18),
+              if (snapshot.message != null) ...[
+                BillingNotice(
+                  message: snapshot.message!,
+                  onClose: context.read<BillingCubit>().clearMessage,
+                ),
+                const SizedBox(height: 18),
+              ],
+              _DashboardSummaryStrip(snapshot: snapshot),
+              const SizedBox(height: 20),
+              _contentFor(context),
             ],
-            Expanded(child: SingleChildScrollView(child: _contentFor(context))),
-          ],
+          ),
         ),
       ),
     );
@@ -297,13 +302,190 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.subscriptions =>
         'Pantau paket aktif dan masa berlaku layanan.',
       _DashboardTab.billing =>
-        'Top-up saldo dummy untuk pembayaran paket aplikasi.',
+        'Top-up saldo, pantau pembayaran pending, dan cek riwayat billing.',
       _DashboardTab.activity =>
         'Riwayat transaksi terakhir dari top-up dan pembelian paket.',
-      _DashboardTab.invoices => 'Daftar invoice dummy dari aktivitas billing.',
+      _DashboardTab.invoices => 'Daftar invoice dari aktivitas billing.',
       _DashboardTab.support =>
         'Bantuan produk, dokumentasi, integrasi, dan saluran kontak resmi.',
     };
+  }
+}
+
+class _DashboardSummaryStrip extends StatelessWidget {
+  const _DashboardSummaryStrip({required this.snapshot});
+
+  final BillingSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final pendingOrders = snapshot.paymentOrders
+        .where((order) => order.isPending)
+        .toList(growable: false);
+    final latestInvoice = snapshot.invoices.isEmpty
+        ? null
+        : snapshot.invoices.reduce(
+            (latest, invoice) =>
+                invoice.issuedAt.isAfter(latest.issuedAt) ? invoice : latest,
+          );
+    final activeSubscriptions = snapshot.subscriptions
+        .where(
+          (subscription) => subscription.status == SubscriptionStatus.active,
+        )
+        .length;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 760;
+        final cards = [
+          _DashboardSummaryCard(
+            icon: Icons.account_balance_wallet_rounded,
+            label: 'Wallet Balance',
+            value: formatRupiah(snapshot.wallet.balance),
+            detail: pendingOrders.isEmpty
+                ? 'Tidak ada pembayaran pending'
+                : '${pendingOrders.length} pembayaran pending',
+            color: CostikStudioTheme.primary,
+          ),
+          _DashboardSummaryCard(
+            icon: Icons.verified_user_rounded,
+            label: 'Active Subscription',
+            value: '$activeSubscriptions aktif',
+            detail: snapshot.subscriptions.isEmpty
+                ? 'Belum ada paket aktif'
+                : '${snapshot.subscriptions.length} total subscription',
+            color: Colors.green,
+          ),
+          _DashboardSummaryCard(
+            icon: Icons.receipt_long_rounded,
+            label: 'Latest Invoice',
+            value: latestInvoice == null
+                ? 'Belum ada'
+                : formatRupiah(latestInvoice.amount),
+            detail:
+                latestInvoice?.number ??
+                'Invoice akan muncul setelah transaksi',
+            color: Colors.indigo,
+          ),
+          _DashboardSummaryCard(
+            icon: Icons.pending_actions_rounded,
+            label: 'Payment Status',
+            value: pendingOrders.isEmpty
+                ? 'Clear'
+                : '${pendingOrders.length} pending',
+            detail: pendingOrders.isEmpty
+                ? 'Semua transaksi sudah selesai'
+                : 'Periksa atau batalkan di tab Billing',
+            color: pendingOrders.isEmpty ? Colors.teal : Colors.orange,
+          ),
+        ];
+
+        if (isWide) {
+          return Row(
+            children: [
+              for (var i = 0; i < cards.length; i++) ...[
+                Expanded(child: cards[i]),
+                if (i != cards.length - 1) const SizedBox(width: 12),
+              ],
+            ],
+          );
+        }
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: cards
+              .map(
+                (card) => SizedBox(
+                  width: constraints.maxWidth >= 520
+                      ? (constraints.maxWidth - 12) / 2
+                      : constraints.maxWidth,
+                  child: card,
+                ),
+              )
+              .toList(growable: false),
+        );
+      },
+    );
+  }
+}
+
+class _DashboardSummaryCard extends StatelessWidget {
+  const _DashboardSummaryCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.detail,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final String detail;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: CostikStudioTheme.slate,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: CostikStudioTheme.navy,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            detail,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: CostikStudioTheme.slate,
+              fontSize: 12,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

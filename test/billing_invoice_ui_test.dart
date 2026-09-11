@@ -19,7 +19,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Invoices'), findsOneWidget);
-    expect(find.text('INV-20260909-001'), findsOneWidget);
+    expect(find.text('INV-20260909-001'), findsWidgets);
     expect(find.text('Subscription payment'), findsOneWidget);
     expect(find.text('Paid Rp 150.000'), findsOneWidget);
   });
@@ -49,7 +49,7 @@ void main() {
     await tester.tap(find.byKey(const Key('dashboard_nav_invoices')));
     await tester.pumpAndSettle();
 
-    expect(find.text('INV-20260909-002'), findsOneWidget);
+    expect(find.text('INV-20260909-002'), findsWidgets);
     expect(find.text('Top up wallet'), findsOneWidget);
     expect(find.text('Paid Rp 100.000'), findsOneWidget);
   });

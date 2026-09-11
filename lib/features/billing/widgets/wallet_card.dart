@@ -141,6 +141,27 @@ class WalletCard extends StatelessWidget {
                                       color: CostikStudioTheme.navy,
                                     ),
                                   ),
+                                  const SizedBox(height: 4),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 6,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      _PaymentStatusBadge(order: order),
+                                      Text(
+                                        order.hasPaymentUrl
+                                            ? 'Link pembayaran siap'
+                                            : 'Menunggu link pembayaran',
+                                        style: const TextStyle(
+                                          color: CostikStudioTheme.slate,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'Ref: ${order.externalReference}',
                                     overflow: TextOverflow.ellipsis,
@@ -715,6 +736,46 @@ class WalletCard extends StatelessWidget {
 }
 
 enum _TopUpDialogAction { retry, cancelled }
+
+class _PaymentStatusBadge extends StatelessWidget {
+  const _PaymentStatusBadge({required this.order});
+
+  final PaymentOrder order;
+
+  @override
+  Widget build(BuildContext context) {
+    final ready = order.hasPaymentUrl;
+    final color = ready ? Colors.green : Colors.orange;
+    final label = ready ? 'Siap Dibayar' : 'Pending';
+    final icon = ready
+        ? Icons.check_circle_rounded
+        : Icons.hourglass_top_rounded;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 13),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _TopUpOrderRow extends StatelessWidget {
   const _TopUpOrderRow({required this.label, required this.value});

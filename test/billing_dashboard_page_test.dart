@@ -29,6 +29,8 @@ void main() {
     );
     expect(find.byKey(const Key('dashboard_nav_billing')), findsOneWidget);
     expect(find.byKey(const Key('dashboard_nav_invoices')), findsOneWidget);
+    expect(find.text('Wallet Balance'), findsOneWidget);
+    expect(find.text('Payment Status'), findsOneWidget);
     expect(find.text('Produk'), findsWidgets);
     expect(find.text('Costik IPTV'), findsWidgets);
     expect(find.text('Active subscriptions'), findsNothing);
