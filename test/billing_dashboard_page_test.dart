@@ -1,4 +1,5 @@
 import 'package:costikstudio/app/costik_studio_app.dart';
+import 'package:costikstudio/features/shared/widgets/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -41,6 +42,37 @@ void main() {
     expect(find.text('Active subscriptions'), findsOneWidget);
     expect(find.text('Recent wallet activity'), findsNothing);
   });
+
+  testWidgets(
+    'active IPTV customers are guided to upgrade devices instead of new subscription',
+    (tester) async {
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(const CostikStudioApp());
+      await tester.pumpAndSettle();
+
+      await loginAsCustomer(tester);
+
+      await tester.tap(find.byKey(const Key('header_nav_/billing')));
+      await tester.pumpAndSettle();
+      final iptvCard = find.widgetWithText(ProductCard, 'Costik IPTV');
+      await tester.ensureVisible(iptvCard);
+      await tester.tap(iptvCard);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Subscription IPTV Sudah Aktif'),
+        findsOneWidget,
+      );
+      expect(find.text('Berlangganan Sekarang'), findsNothing);
+      expect(
+        find.widgetWithText(FilledButton, 'Upgrade Device'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('billing menu shows wallet and top up action', (tester) async {
     tester.view.physicalSize = const Size(1280, 900);

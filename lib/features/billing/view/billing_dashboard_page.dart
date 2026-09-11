@@ -93,6 +93,8 @@ class _BillingDashboardViewState extends State<_BillingDashboardView> {
                   _isOrderingIptv = false;
                 });
               },
+              onOpenSubscriptions: () =>
+                  _selectTab(_DashboardTab.subscriptions),
               onCheckout: (plan) => _checkout(context, plan),
             );
 
@@ -156,6 +158,7 @@ class _DashboardPage extends StatelessWidget {
     required this.onSelectProduct,
     required this.onStartOrderIptv,
     required this.onBackToProductCatalog,
+    required this.onOpenSubscriptions,
     required this.onCheckout,
   });
 
@@ -166,6 +169,7 @@ class _DashboardPage extends StatelessWidget {
   final ValueChanged<ProductItem> onSelectProduct;
   final VoidCallback onStartOrderIptv;
   final VoidCallback onBackToProductCatalog;
+  final VoidCallback onOpenSubscriptions;
   final ValueChanged<BillingPlan> onCheckout;
 
   @override
@@ -273,12 +277,14 @@ class _DashboardPage extends StatelessWidget {
     if (selectedProduct != null) {
       return _EmbeddedProductDetail(
         product: selectedProduct!,
+        subscriptions: snapshot.subscriptions,
         onBack: onBackToProductCatalog,
         onSubscribe: () {
           if (selectedProduct!.id == 'costik-iptv') {
             onStartOrderIptv();
           }
         },
+        onUpgradeDevice: onOpenSubscriptions,
       );
     }
 
@@ -525,17 +531,38 @@ class _DashboardSummaryCard extends StatelessWidget {
 class _EmbeddedProductDetail extends StatelessWidget {
   const _EmbeddedProductDetail({
     required this.product,
+    required this.subscriptions,
     required this.onBack,
     required this.onSubscribe,
+    required this.onUpgradeDevice,
   });
 
   final ProductItem product;
+  final List<Subscription> subscriptions;
   final VoidCallback onBack;
   final VoidCallback onSubscribe;
+  final VoidCallback onUpgradeDevice;
 
   @override
   Widget build(BuildContext context) {
     final accent = Color(product.accentHex);
+
+    // Find any existing IPTV subscription (active or cancelled)
+    final existingIptvSubscription = product.id == 'costik-iptv'
+        ? subscriptions
+              .where((s) => s.productId == 'costik-iptv')
+              .where(
+                (s) =>
+                    s.status == SubscriptionStatus.active ||
+                    s.status == SubscriptionStatus.cancelled,
+              )
+              .firstOrNull
+        : null;
+    final hasExistingIptvSubscription = existingIptvSubscription != null;
+    final isIptvActive =
+        existingIptvSubscription?.status == SubscriptionStatus.active;
+    final isIptvCancelled =
+        existingIptvSubscription?.status == SubscriptionStatus.cancelled;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -595,15 +622,70 @@ class _EmbeddedProductDetail extends StatelessWidget {
                     ?.copyWith(color: CostikStudioTheme.slate, height: 1.6),
               ),
               const SizedBox(height: 24),
+              if (hasExistingIptvSubscription) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isIptvCancelled
+                        ? Colors.orange.withValues(alpha: 0.08)
+                        : CostikStudioTheme.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isIptvCancelled
+                          ? Colors.orange.withValues(alpha: 0.16)
+                          : CostikStudioTheme.primary.withValues(alpha: 0.16),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        color: isIptvCancelled
+                            ? Colors.orange
+                            : CostikStudioTheme.primary,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          isIptvCancelled
+                              ? 'Subscription IPTV Anda sedang tidak aktif (cancelled). Aktifkan kembali subscription Anda di halaman Subscription untuk melanjutkan layanan.'
+                              : 'Subscription IPTV Sudah Aktif. Untuk menambah kamar/device, gunakan fitur Upgrade Device pada halaman Subscription.',
+                          style: const TextStyle(
+                            color: CostikStudioTheme.navy,
+                            fontWeight: FontWeight.w700,
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  FilledButton.icon(
-                    onPressed: onSubscribe,
-                    icon: const Icon(Icons.workspace_premium_rounded),
-                    label: const Text('Berlangganan sekarang'),
-                  ),
+                  if (isIptvActive)
+                    FilledButton.icon(
+                      onPressed: onUpgradeDevice,
+                      icon: const Icon(Icons.add_to_queue_rounded),
+                      label: const Text('Upgrade Device'),
+                    )
+                  else if (isIptvCancelled)
+                    FilledButton.icon(
+                      onPressed: onUpgradeDevice,
+                      icon: const Icon(Icons.replay_rounded),
+                      label: const Text('Kelola Subscription'),
+                    )
+                  else
+                    FilledButton.icon(
+                      onPressed: onSubscribe,
+                      icon: const Icon(Icons.workspace_premium_rounded),
+                      label: const Text('Berlangganan sekarang'),
+                    ),
                   if (product.hasAdmin)
                     OutlinedButton.icon(
                       onPressed: () => context.go('/support'),
