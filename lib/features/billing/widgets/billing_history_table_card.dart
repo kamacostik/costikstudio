@@ -1,6 +1,7 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
+import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:flutter/material.dart';
 
 enum _BillingSubTab { transactions, topup }
@@ -10,10 +11,12 @@ class BillingHistoryTableCard extends StatefulWidget {
     super.key,
     required this.transactions,
     required this.invoices,
+    this.paymentOrders = const [],
   });
 
   final List<WalletTransaction> transactions;
   final List<BillingInvoice> invoices;
+  final List<PaymentOrder> paymentOrders;
 
   @override
   State<BillingHistoryTableCard> createState() =>
@@ -31,11 +34,18 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
       .where((t) => t.type == WalletTransactionType.topup)
       .toList();
 
+  List<PaymentOrder> get _failedPaymentOrders => widget.paymentOrders
+      .where((order) => _isFailedPaymentStatus(order.status))
+      .toList();
+
+  int get _topupLogCount =>
+      _topupTransactions.length + _failedPaymentOrders.length;
+
   @override
   Widget build(BuildContext context) {
     final displayedList = _activeTab == _BillingSubTab.transactions
-        ? _purchaseTransactions
-        : _topupTransactions;
+        ? <Object>[..._purchaseTransactions]
+        : <Object>[..._failedPaymentOrders, ..._topupTransactions];
 
     return Card(
       child: Padding(
@@ -76,11 +86,10 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
                       _TabButton(
                         label: 'Top Up',
                         icon: Icons.add_card_rounded,
-                        count: _topupTransactions.length,
+                        count: _topupLogCount,
                         isSelected: _activeTab == _BillingSubTab.topup,
-                        onTap: () => setState(
-                          () => _activeTab = _BillingSubTab.topup,
-                        ),
+                        onTap: () =>
+                            setState(() => _activeTab = _BillingSubTab.topup),
                       ),
                     ],
                   ),
@@ -120,7 +129,9 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
                   return SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                      constraints: BoxConstraints(
+                        minWidth: constraints.maxWidth,
+                      ),
                       child: DataTable(
                         headingRowColor: WidgetStatePropertyAll(
                           const Color(0xFFF8FAFC),
@@ -166,124 +177,8 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
                           ),
                         ],
                         rows: [
-                          for (final tx in displayedList)
-                            DataRow(
-                              cells: [
-                                DataCell(
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: (tx.type ==
-                                                      WalletTransactionType
-                                                          .topup
-                                                  ? Colors.green
-                                                  : Colors.blue)
-                                              .withValues(alpha: 0.12),
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                        child: Icon(
-                                          tx.type == WalletTransactionType.topup
-                                              ? Icons.arrow_downward_rounded
-                                              : Icons.arrow_upward_rounded,
-                                          color: tx.type ==
-                                                  WalletTransactionType.topup
-                                              ? Colors.green
-                                              : Colors.blue,
-                                          size: 16,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            tx.type ==
-                                                    WalletTransactionType.topup
-                                                ? 'Top Up Saldo'
-                                                : 'Pembayaran Paket',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                          Text(
-                                            tx.referenceId,
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              color: CostikStudioTheme.slate,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    tx.type.name.toUpperCase(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    '${tx.type == WalletTransactionType.topup ? '+' : '-'} ${formatRupiah(tx.amount)}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      color: tx.type ==
-                                              WalletTransactionType.topup
-                                          ? Colors.green.shade700
-                                          : CostikStudioTheme.navy,
-                                    ),
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    formatRupiah(tx.balanceBefore),
-                                    style: const TextStyle(
-                                      color: CostikStudioTheme.slate,
-                                    ),
-                                  ),
-                                ),
-                                DataCell(
-                                  Text(
-                                    formatRupiah(tx.balanceAfter),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                                DataCell(
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: const Text(
-                                      'Berhasil',
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                          for (final entry in displayedList)
+                            _buildHistoryRow(entry),
                         ],
                       ),
                     ),
@@ -291,6 +186,193 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
                 },
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  DataRow _buildHistoryRow(Object entry) {
+    if (entry is PaymentOrder) {
+      return _buildPaymentOrderRow(entry);
+    }
+    return _buildTransactionRow(entry as WalletTransaction);
+  }
+
+  DataRow _buildTransactionRow(WalletTransaction tx) {
+    final isTopup = tx.type == WalletTransactionType.topup;
+    final color = isTopup ? Colors.green : Colors.blue;
+    return DataRow(
+      cells: [
+        DataCell(
+          _ReferenceCell(
+            icon: isTopup
+                ? Icons.arrow_downward_rounded
+                : Icons.arrow_upward_rounded,
+            iconColor: color,
+            title: isTopup ? 'Top Up Saldo' : 'Pembayaran Paket',
+            reference: tx.referenceId,
+          ),
+        ),
+        DataCell(
+          Text(
+            tx.type.name.toUpperCase(),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+          ),
+        ),
+        DataCell(
+          Text(
+            '${isTopup ? '+' : '-'} ${formatRupiah(tx.amount)}',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: isTopup ? Colors.green.shade700 : CostikStudioTheme.navy,
+            ),
+          ),
+        ),
+        DataCell(
+          Text(
+            formatRupiah(tx.balanceBefore),
+            style: const TextStyle(color: CostikStudioTheme.slate),
+          ),
+        ),
+        DataCell(
+          Text(
+            formatRupiah(tx.balanceAfter),
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+        DataCell(_StatusBadge(label: 'Berhasil', color: Colors.green)),
+      ],
+    );
+  }
+
+  DataRow _buildPaymentOrderRow(PaymentOrder order) {
+    return DataRow(
+      cells: [
+        DataCell(
+          _ReferenceCell(
+            icon: Icons.error_outline_rounded,
+            iconColor: Colors.red,
+            title: 'Top Up Gagal',
+            reference: order.externalReference,
+          ),
+        ),
+        DataCell(
+          Text(
+            'TOPUP ${order.provider.toUpperCase()}',
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+          ),
+        ),
+        DataCell(
+          Text(
+            '+ ${formatRupiah(order.amount)}',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: Colors.red.shade700,
+            ),
+          ),
+        ),
+        const DataCell(
+          Text('-', style: TextStyle(color: CostikStudioTheme.slate)),
+        ),
+        const DataCell(
+          Text('-', style: TextStyle(color: CostikStudioTheme.slate)),
+        ),
+        DataCell(
+          _StatusBadge(
+            label: _paymentStatusLabel(order.status),
+            color: Colors.red,
+          ),
+        ),
+      ],
+    );
+  }
+
+  bool _isFailedPaymentStatus(String status) {
+    final normalized = status.toLowerCase();
+    return normalized == 'failed' ||
+        normalized == 'cancelled' ||
+        normalized == 'expired' ||
+        normalized == 'error';
+  }
+
+  String _paymentStatusLabel(String status) {
+    return switch (status.toLowerCase()) {
+      'cancelled' => 'Dibatalkan',
+      'expired' => 'Expired',
+      _ => 'Gagal',
+    };
+  }
+}
+
+class _ReferenceCell extends StatelessWidget {
+  const _ReferenceCell({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.reference,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String reference;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: iconColor, size: 16),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            Text(
+              reference,
+              style: const TextStyle(
+                fontSize: 11,
+                color: CostikStudioTheme.slate,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w800,
+          fontSize: 11,
         ),
       ),
     );

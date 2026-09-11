@@ -255,6 +255,7 @@ class _DashboardPage extends StatelessWidget {
           BillingHistoryTableCard(
             transactions: snapshot.transactions,
             invoices: snapshot.invoices,
+            paymentOrders: snapshot.paymentOrders,
           ),
         ],
       ),
