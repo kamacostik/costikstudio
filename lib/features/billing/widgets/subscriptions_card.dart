@@ -11,6 +11,7 @@ class SubscriptionsCard extends StatelessWidget {
     required this.subscriptions,
     required this.onRenew,
     required this.onUpgradeDevice,
+    required this.onCancel,
   });
 
   final List<BillingProduct> products;
@@ -26,6 +27,7 @@ class SubscriptionsCard extends StatelessWidget {
     required int additionalDeviceCount,
   })
   onUpgradeDevice;
+  final Future<void> Function({required String subscriptionId}) onCancel;
 
   BillingProduct? _productById(String id) {
     for (final product in products) {
@@ -96,6 +98,7 @@ class SubscriptionsCard extends StatelessWidget {
                   plan: _planById(subscription.planId),
                   onRenew: onRenew,
                   onUpgradeDevice: onUpgradeDevice,
+                  onCancel: onCancel,
                 ),
           ],
         ),
@@ -111,6 +114,7 @@ class _SubscriptionRow extends StatelessWidget {
     required this.plan,
     required this.onRenew,
     required this.onUpgradeDevice,
+    required this.onCancel,
   });
 
   final Subscription subscription;
@@ -126,11 +130,47 @@ class _SubscriptionRow extends StatelessWidget {
     required int additionalDeviceCount,
   })
   onUpgradeDevice;
+  final Future<void> Function({required String subscriptionId}) onCancel;
 
   String get _productName => product?.name ?? subscription.productId;
   int get _remainingDays =>
       subscription.expiresAt.difference(DateTime.now()).inDays;
   int get _monthlyRenewalAmount => subscription.deviceCount * 15000;
+
+  Future<void> _showCancelDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Batalkan Langganan'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_productName),
+            const SizedBox(height: 8),
+            const Text(
+              'Apakah Anda yakin ingin membatalkan langganan IPTV ini? Status akan menjadi dibatalkan.',
+              style: TextStyle(color: CostikStudioTheme.slate),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(false),
+            child: const Text('Kembali'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.of(dialogCtx).pop(true),
+            child: const Text('Ya, Batalkan'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+    await onCancel(subscriptionId: subscription.id);
+  }
 
   Future<void> _showUpgradeDeviceDialog(BuildContext context) async {
     final additionalDevices = await showDialog<int>(
@@ -372,6 +412,15 @@ class _SubscriptionRow extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    TextButton(
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                      onPressed: () {
+                        Navigator.of(dialogCtx).pop();
+                        _showCancelDialog(context);
+                      },
+                      child: const Text('Batalkan Langganan'),
+                    ),
+                    const Spacer(),
                     TextButton(
                       onPressed: () => Navigator.of(dialogCtx).pop(),
                       child: const Text('Tutup'),

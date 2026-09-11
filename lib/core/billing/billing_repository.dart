@@ -76,4 +76,8 @@ abstract class BillingRepository {
     required String subscriptionId,
     required int additionalDeviceCount,
   });
+
+  Future<BillingSnapshot> cancelIptvSubscription({
+    required String subscriptionId,
+  });
 }

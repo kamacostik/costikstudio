@@ -137,6 +137,20 @@ class SupabaseBillingRepository implements BillingRepository {
     );
   }
 
+  @override
+  Future<BillingSnapshot> cancelIptvSubscription({
+    required String subscriptionId,
+  }) async {
+    await _supabase.rpc<void>(
+      'cancel_iptv_subscription',
+      params: {'target_subscription_id': subscriptionId},
+    );
+
+    return _loadMutationSnapshot(
+      message: 'Langganan Costik IPTV berhasil dibatalkan.',
+    );
+  }
+
   Future<BillingSnapshot> _loadMutationSnapshot({
     required String message,
   }) async {

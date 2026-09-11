@@ -151,6 +151,12 @@ class BillingCubit extends Cubit<BillingState> {
     );
   }
 
+  Future<void> cancelIptvSubscription({required String subscriptionId}) async {
+    await _runMutation(
+      () => repository.cancelIptvSubscription(subscriptionId: subscriptionId),
+    );
+  }
+
   Future<void> _runMutation(Future<BillingSnapshot> Function() action) async {
     emit(state.copyWith(status: BillingStatus.loading));
     try {

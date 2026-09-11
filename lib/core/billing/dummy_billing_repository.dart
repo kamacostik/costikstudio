@@ -216,6 +216,29 @@ class DummyBillingRepository implements BillingRepository {
     );
   }
 
+  @override
+  Future<BillingSnapshot> cancelIptvSubscription({
+    required String subscriptionId,
+  }) async {
+    final index = _subscriptions.indexWhere(
+      (subscription) => subscription.id == subscriptionId,
+    );
+    if (index == -1) {
+      throw ArgumentError.value(
+        subscriptionId,
+        'subscriptionId',
+        'Unknown subscription.',
+      );
+    }
+
+    final subscription = _subscriptions[index];
+    _subscriptions[index] = subscription.copyWith(
+      status: SubscriptionStatus.cancelled,
+    );
+
+    return _snapshot(message: 'Langganan Costik IPTV berhasil dibatalkan.');
+  }
+
   Future<BillingSnapshot> _checkout({required BillingPlan plan}) async {
     final product = dummyBillingProductById(plan.productId);
     if (product == null) {
