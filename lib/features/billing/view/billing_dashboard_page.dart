@@ -209,6 +209,12 @@ class _DashboardPage extends StatelessWidget {
               subscriptionId: subscriptionId,
               billingCycleMonths: billingCycleMonths,
             ),
+        onUpgradeDevice:
+            ({required subscriptionId, required additionalDeviceCount}) =>
+                context.read<BillingCubit>().upgradeIptvSubscriptionDevices(
+                  subscriptionId: subscriptionId,
+                  additionalDeviceCount: additionalDeviceCount,
+                ),
       ),
       _DashboardTab.billing => Column(
         crossAxisAlignment: CrossAxisAlignment.start,

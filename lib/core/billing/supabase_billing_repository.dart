@@ -114,6 +114,32 @@ class SupabaseBillingRepository implements BillingRepository {
       },
     );
 
+    return _loadMutationSnapshot(
+      message: 'Langganan Costik IPTV berhasil diperpanjang.',
+    );
+  }
+
+  @override
+  Future<BillingSnapshot> upgradeIptvSubscriptionDevices({
+    required String subscriptionId,
+    required int additionalDeviceCount,
+  }) async {
+    await _supabase.rpc<void>(
+      'upgrade_iptv_subscription_devices',
+      params: {
+        'target_subscription_id': subscriptionId,
+        'additional_device_count': additionalDeviceCount,
+      },
+    );
+
+    return _loadMutationSnapshot(
+      message: 'Device Costik IPTV berhasil ditambahkan.',
+    );
+  }
+
+  Future<BillingSnapshot> _loadMutationSnapshot({
+    required String message,
+  }) async {
     final snapshot = await loadSnapshot();
     return BillingSnapshot(
       wallet: snapshot.wallet,
@@ -123,7 +149,7 @@ class SupabaseBillingRepository implements BillingRepository {
       transactions: snapshot.transactions,
       invoices: snapshot.invoices,
       paymentOrders: snapshot.paymentOrders,
-      message: 'Langganan Costik IPTV berhasil diperpanjang.',
+      message: message,
     );
   }
 

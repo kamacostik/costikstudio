@@ -10,6 +10,7 @@ class SubscriptionsCard extends StatelessWidget {
     required this.plans,
     required this.subscriptions,
     required this.onRenew,
+    required this.onUpgradeDevice,
   });
 
   final List<BillingProduct> products;
@@ -20,6 +21,11 @@ class SubscriptionsCard extends StatelessWidget {
     required int billingCycleMonths,
   })
   onRenew;
+  final Future<void> Function({
+    required String subscriptionId,
+    required int additionalDeviceCount,
+  })
+  onUpgradeDevice;
 
   BillingProduct? _productById(String id) {
     for (final product in products) {
@@ -89,6 +95,7 @@ class SubscriptionsCard extends StatelessWidget {
                   product: _productById(subscription.productId),
                   plan: _planById(subscription.planId),
                   onRenew: onRenew,
+                  onUpgradeDevice: onUpgradeDevice,
                 ),
           ],
         ),
@@ -103,6 +110,7 @@ class _SubscriptionRow extends StatelessWidget {
     required this.product,
     required this.plan,
     required this.onRenew,
+    required this.onUpgradeDevice,
   });
 
   final Subscription subscription;
@@ -113,11 +121,68 @@ class _SubscriptionRow extends StatelessWidget {
     required int billingCycleMonths,
   })
   onRenew;
+  final Future<void> Function({
+    required String subscriptionId,
+    required int additionalDeviceCount,
+  })
+  onUpgradeDevice;
 
   String get _productName => product?.name ?? subscription.productId;
   int get _remainingDays =>
       subscription.expiresAt.difference(DateTime.now()).inDays;
   int get _monthlyRenewalAmount => subscription.deviceCount * 15000;
+
+  Future<void> _showUpgradeDeviceDialog(BuildContext context) async {
+    final additionalDevices = await showDialog<int>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Upgrade Device IPTV'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_productName),
+            const SizedBox(height: 8),
+            Text(
+              'Device aktif sekarang: ${subscription.deviceCount}',
+              style: const TextStyle(color: CostikStudioTheme.slate),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Biaya: ${formatRupiah(15000)} / device / bulan x ${subscription.billingCycleMonths} bulan',
+              style: const TextStyle(color: CostikStudioTheme.slate),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final option in const [1, 2, 5, 10])
+                  FilledButton.tonal(
+                    onPressed: () => Navigator.of(dialogCtx).pop(option),
+                    child: Text(
+                      '+$option Device • ${formatRupiah(option * 15000 * subscription.billingCycleMonths)}',
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Batal'),
+          ),
+        ],
+      ),
+    );
+
+    if (additionalDevices == null || !context.mounted) return;
+    await onUpgradeDevice(
+      subscriptionId: subscription.id,
+      additionalDeviceCount: additionalDevices,
+    );
+  }
 
   Future<void> _showRenewDialog(BuildContext context) async {
     final months = await showDialog<int>(
@@ -312,6 +377,15 @@ class _SubscriptionRow extends StatelessWidget {
                       child: const Text('Tutup'),
                     ),
                     const SizedBox(width: 10),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(dialogCtx).pop();
+                        _showUpgradeDeviceDialog(context);
+                      },
+                      icon: const Icon(Icons.add_to_queue_rounded, size: 16),
+                      label: const Text('Upgrade Device'),
+                    ),
+                    const SizedBox(width: 10),
                     FilledButton.icon(
                       onPressed: () {
                         Navigator.of(dialogCtx).pop();
@@ -348,76 +422,165 @@ class _SubscriptionRow extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: CostikStudioTheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxWidth < 650;
+            final actions = [
+              OutlinedButton.icon(
+                onPressed: () => _showSubscriptionDetails(context),
+                icon: const Icon(Icons.info_outline_rounded, size: 16),
+                label: const Text('View Details'),
               ),
-              child: const Icon(
-                Icons.verified_rounded,
-                color: CostikStudioTheme.primary,
+              OutlinedButton.icon(
+                onPressed: () => _showUpgradeDeviceDialog(context),
+                icon: const Icon(Icons.add_to_queue_rounded, size: 16),
+                label: const Text('Upgrade Device'),
               ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
+              FilledButton.icon(
+                onPressed: () => _showRenewDialog(context),
+                icon: const Icon(Icons.update_rounded, size: 16),
+                label: const Text('Renew'),
+              ),
+            ];
+
+            if (isCompact) {
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Flexible(
-                        child: Text(
-                          _productName,
-                          style: const TextStyle(fontWeight: FontWeight.w900),
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: CostikStudioTheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.verified_rounded,
+                          color: CostikStudioTheme.primary,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      _StatusPill(status: subscription.status, compact: true),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    _productName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                _StatusPill(
+                                  status: subscription.status,
+                                  compact: true,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 6,
+                              children: [
+                                _MiniMeta(
+                                  icon: Icons.devices_rounded,
+                                  text: '${subscription.deviceCount} Device',
+                                ),
+                                _MiniMeta(
+                                  icon: Icons.calendar_month_rounded,
+                                  text:
+                                      '${subscription.billingCycleMonths} Bulan',
+                                ),
+                                _MiniMeta(
+                                  icon: Icons.event_available_rounded,
+                                  text:
+                                      'Expired ${_shortDate(subscription.expiresAt)}',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      _MiniMeta(
-                        icon: Icons.devices_rounded,
-                        text: '${subscription.deviceCount} Device',
-                      ),
-                      _MiniMeta(
-                        icon: Icons.calendar_month_rounded,
-                        text: '${subscription.billingCycleMonths} Bulan',
-                      ),
-                      _MiniMeta(
-                        icon: Icons.event_available_rounded,
-                        text: 'Expired ${_shortDate(subscription.expiresAt)}',
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 14),
+                  Wrap(spacing: 8, runSpacing: 8, children: actions),
                 ],
-              ),
-            ),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              );
+            }
+
+            return Row(
               children: [
-                OutlinedButton.icon(
-                  onPressed: () => _showSubscriptionDetails(context),
-                  icon: const Icon(Icons.info_outline_rounded, size: 16),
-                  label: const Text('View Details'),
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: CostikStudioTheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.verified_rounded,
+                    color: CostikStudioTheme.primary,
+                  ),
                 ),
-                FilledButton.icon(
-                  onPressed: () => _showRenewDialog(context),
-                  icon: const Icon(Icons.update_rounded, size: 16),
-                  label: const Text('Renew'),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _productName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _StatusPill(
+                            status: subscription.status,
+                            compact: true,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: [
+                          _MiniMeta(
+                            icon: Icons.devices_rounded,
+                            text: '${subscription.deviceCount} Device',
+                          ),
+                          _MiniMeta(
+                            icon: Icons.calendar_month_rounded,
+                            text: '${subscription.billingCycleMonths} Bulan',
+                          ),
+                          _MiniMeta(
+                            icon: Icons.event_available_rounded,
+                            text:
+                                'Expired ${_shortDate(subscription.expiresAt)}',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 12),
+                Wrap(spacing: 8, runSpacing: 8, children: actions),
               ],
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

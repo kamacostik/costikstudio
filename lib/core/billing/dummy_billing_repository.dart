@@ -152,6 +152,70 @@ class DummyBillingRepository implements BillingRepository {
     );
   }
 
+  @override
+  Future<BillingSnapshot> upgradeIptvSubscriptionDevices({
+    required String subscriptionId,
+    required int additionalDeviceCount,
+  }) async {
+    if (additionalDeviceCount <= 0) {
+      throw ArgumentError.value(
+        additionalDeviceCount,
+        'additionalDeviceCount',
+        'Additional device count must be greater than zero.',
+      );
+    }
+
+    final index = _subscriptions.indexWhere(
+      (subscription) => subscription.id == subscriptionId,
+    );
+    if (index == -1) {
+      throw ArgumentError.value(
+        subscriptionId,
+        'subscriptionId',
+        'Unknown subscription.',
+      );
+    }
+
+    final subscription = _subscriptions[index];
+    final product = dummyBillingProductById(subscription.productId);
+    if (product == null || product.id != 'costik-iptv') {
+      throw ArgumentError.value(
+        subscription.productId,
+        'productId',
+        'Only IPTV subscription is supported.',
+      );
+    }
+
+    final amount =
+        additionalDeviceCount * 15000 * subscription.billingCycleMonths;
+
+    if (_wallet.balance < amount) {
+      return _snapshot(
+        message: 'Saldo kurang ${formatRupiah(amount - _wallet.balance)}',
+      );
+    }
+
+    final transaction = WalletTransaction(
+      userId: _wallet.userId,
+      type: WalletTransactionType.purchase,
+      amount: amount,
+      balanceBefore: _wallet.balance,
+      balanceAfter: _wallet.balance - amount,
+      referenceId: 'upgrade-device:$subscriptionId:$additionalDeviceCount',
+    );
+    _wallet = Wallet(userId: _wallet.userId, balance: transaction.balanceAfter);
+    _transactions.insert(0, transaction);
+    _invoices.insert(0, _invoiceFrom(transaction));
+    _subscriptions[index] = subscription.copyWith(
+      status: SubscriptionStatus.active,
+      deviceCount: subscription.deviceCount + additionalDeviceCount,
+    );
+
+    return _snapshot(
+      message: '${product.name} ditambah $additionalDeviceCount device.',
+    );
+  }
+
   Future<BillingSnapshot> _checkout({required BillingPlan plan}) async {
     final product = dummyBillingProductById(plan.productId);
     if (product == null) {

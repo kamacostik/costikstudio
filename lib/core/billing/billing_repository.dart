@@ -71,4 +71,9 @@ abstract class BillingRepository {
     required String subscriptionId,
     required int billingCycleMonths,
   });
+
+  Future<BillingSnapshot> upgradeIptvSubscriptionDevices({
+    required String subscriptionId,
+    required int additionalDeviceCount,
+  });
 }
