@@ -35,12 +35,30 @@ begin
   into v_device_count, v_billing_cycle_months
   from subscriptions
   where id = target_subscription_id
-    and user_id = v_user_id
-    and product_id = 'costik-iptv'
-    and status = 'active';
+    and user_id = v_user_id;
 
   if not found then
-    raise exception 'Active IPTV subscription not found';
+    raise exception 'Subscription not found for current user';
+  end if;
+
+  if not exists (
+    select 1
+    from subscriptions
+    where id = target_subscription_id
+      and user_id = v_user_id
+      and product_id = 'costik-iptv'
+  ) then
+    raise exception 'Selected subscription is not Costik IPTV';
+  end if;
+
+  if not exists (
+    select 1
+    from subscriptions
+    where id = target_subscription_id
+      and user_id = v_user_id
+      and status = 'active'
+  ) then
+    raise exception 'Only active IPTV subscriptions can be upgraded';
   end if;
 
   v_total_amount := additional_device_count * v_unit_price * v_billing_cycle_months;

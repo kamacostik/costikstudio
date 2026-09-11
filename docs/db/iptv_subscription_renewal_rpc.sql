@@ -43,11 +43,14 @@ begin
   from public.subscriptions
   where id = target_subscription_id
     and user_id = current_user_id
-    and product_id = 'costik-iptv'
   for update;
 
   if target_subscription.id is null then
-    raise exception 'Active IPTV subscription not found';
+    raise exception 'Subscription not found for current user';
+  end if;
+
+  if target_subscription.product_id <> 'costik-iptv' then
+    raise exception 'Selected subscription is not Costik IPTV';
   end if;
 
   if target_subscription.status <> 'active' then
