@@ -28,7 +28,8 @@ class SignageAdminPage extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) =>
-              SignageCubit(repository: const SupabaseSignageRepository()),
+              SignageCubit(repository: const SupabaseSignageRepository())
+                ..loadTenant(),
         ),
         BlocProvider(
           create: (_) => SignageAdminCubit(

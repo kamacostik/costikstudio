@@ -16,5 +16,6 @@ class SignageTenant extends Equatable {
 }
 
 abstract class SignageRepository {
+  Future<SignageTenant?> fetchCurrentTenant();
   Future<SignageTenant> provisionTenant();
 }

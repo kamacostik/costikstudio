@@ -30,6 +30,16 @@ class SignageCubit extends Cubit<SignageState> {
 
   final SignageRepository repository;
 
+  Future<void> loadTenant() async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final tenant = await repository.fetchCurrentTenant();
+      emit(SignageState(tenant: tenant));
+    } catch (error) {
+      emit(SignageState(tenant: state.tenant, errorMessage: error.toString()));
+    }
+  }
+
   Future<void> provisionTenant() async {
     emit(state.copyWith(isLoading: true));
     try {
