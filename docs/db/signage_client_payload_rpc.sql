@@ -82,6 +82,7 @@ begin
       p.start_date,
       p.end_date,
       p.sort_order,
+      p.created_at,
       m.public_url as media_url,
       m.storage_path as media_storage_path,
       m.file_name as media_file_name,
