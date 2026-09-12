@@ -109,6 +109,7 @@ Run/update these in Supabase when testing full backend flows:
 1. `docs/db/signage_schema.sql` — creates `sg_profiles`, `sg_tenants`, hotel/device/media/playlist/event tables, RLS, and storage bucket.
 2. `docs/db/signage_event_slide_duration.sql` — adds `event_slide_duration_seconds` for existing databases.
 2b. `docs/db/signage_device_app_mode.sql` — adds `app_mode` (`daily_event`/`video_player`) for existing databases.
+2c. `docs/db/signage_playlist_items.sql` — adds `sg_playlist_items` (multi-video playlist rows) for existing databases.
 3. `docs/db/seed_signage_product.sql` — seeds `costik-signage` at Rp20.000/device/month.
 4. `docs/db/signage_subscription_rpc.sql` — checkout Signage + wallet deduction + tenant/profile provisioning.
 5. `docs/db/signage_subscription_lifecycle_rpc.sql` — renew, upgrade device, cancel, reactivate for Signage.
@@ -118,7 +119,7 @@ Run/update these in Supabase when testing full backend flows:
 9. `docs/db/iptv_subscription_reactivate_rpc.sql`
 10. `docs/db/iptv_subscription_admin_management_rpc.sql`
 11. `docs/db/signage_device_pairing_rpc.sql` — pairing/quota/delete device RPCs.
-12. `docs/db/signage_client_payload_rpc.sql` — payload/heartbeat RPCs including `event_slide_duration_seconds` and `app_mode`.
+12. `docs/db/signage_client_payload_rpc.sql` — payload/heartbeat RPCs including `event_slide_duration_seconds`, `app_mode`, and flattened multi-video playlist queue.
 
 Important fixed SQL issue:
 - Old upgrade RPC used obsolete wallet columns:

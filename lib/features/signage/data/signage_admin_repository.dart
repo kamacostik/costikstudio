@@ -220,6 +220,32 @@ class SignagePlaylistItem extends Equatable {
   List<Object?> get props => [id, name, mediaId, path, isEnabled];
 }
 
+class SignagePlaylistVideoItem extends Equatable {
+  const SignagePlaylistVideoItem({
+    this.id,
+    required this.playlistId,
+    this.mediaId,
+    this.sortOrder = 0,
+  });
+
+  final String? id;
+  final String playlistId;
+  final String? mediaId;
+  final int sortOrder;
+
+  factory SignagePlaylistVideoItem.fromMap(Map<String, dynamic> map) {
+    return SignagePlaylistVideoItem(
+      id: map['id'] as String?,
+      playlistId: map['playlist_id'] as String? ?? '',
+      mediaId: map['media_id'] as String?,
+      sortOrder: (map['sort_order'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, playlistId, mediaId, sortOrder];
+}
+
 class SignageEventItem extends Equatable {
   const SignageEventItem({
     this.id,
@@ -338,6 +364,10 @@ abstract class SignageAdminRepository {
   Future<SignageMediaItem> saveMedia(SignageMediaItem item);
   Future<List<SignagePlaylistItem>> fetchPlaylists();
   Future<SignagePlaylistItem> savePlaylist(SignagePlaylistItem item);
+  Future<void> deletePlaylist(String playlistId);
+  Future<List<SignagePlaylistVideoItem>> fetchPlaylistItems(String playlistId);
+  Future<Map<String, int>> fetchPlaylistVideoCounts();
+  Future<void> replacePlaylistItems(String playlistId, List<String> mediaIds);
   Future<List<SignageEventItem>> fetchEvents();
   Future<SignageEventItem> saveEvent(SignageEventItem item);
   Future<SignageDevicePairing> createDevicePairing({String? deviceName});
@@ -463,6 +493,81 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
         .select()
         .limit(1);
     return rows.isEmpty ? item : SignagePlaylistItem.fromMap(rows.first);
+  }
+
+  @override
+  Future<void> deletePlaylist(String playlistId) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    await _supabase
+        .from('sg_playlist_items')
+        .delete()
+        .eq('playlist_id', playlistId)
+        .eq('tenant_id', tenantId);
+    await _supabase
+        .from('sg_playlists')
+        .delete()
+        .eq('id', playlistId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
+  Future<List<SignagePlaylistVideoItem>> fetchPlaylistItems(
+    String playlistId,
+  ) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) return const [];
+    final rows = await _supabase
+        .from('sg_playlist_items')
+        .select()
+        .eq('tenant_id', tenantId)
+        .eq('playlist_id', playlistId)
+        .order('sort_order')
+        .order('created_at');
+    return rows.map(SignagePlaylistVideoItem.fromMap).toList();
+  }
+
+  @override
+  Future<Map<String, int>> fetchPlaylistVideoCounts() async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) return const {};
+    final rows = await _supabase
+        .from('sg_playlist_items')
+        .select('playlist_id')
+        .eq('tenant_id', tenantId)
+        .limit(2000);
+    final counts = <String, int>{};
+    for (final row in rows) {
+      final playlistId = row['playlist_id'] as String?;
+      if (playlistId == null || playlistId.isEmpty) continue;
+      counts[playlistId] = (counts[playlistId] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  @override
+  Future<void> replacePlaylistItems(
+    String playlistId,
+    List<String> mediaIds,
+  ) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    await _supabase
+        .from('sg_playlist_items')
+        .delete()
+        .eq('playlist_id', playlistId)
+        .eq('tenant_id', tenantId);
+    if (mediaIds.isEmpty) return;
+    final rows = [
+      for (var i = 0; i < mediaIds.length; i++)
+        {
+          'tenant_id': tenantId,
+          'playlist_id': playlistId,
+          'media_id': mediaIds[i],
+          'sort_order': i,
+        },
+    ];
+    await _supabase.from('sg_playlist_items').insert(rows);
   }
 
   @override

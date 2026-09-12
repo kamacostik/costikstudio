@@ -101,6 +101,19 @@ create table if not exists public.sg_playlists (
   updated_at timestamptz not null default now()
 );
 
+-- Playlist item rows: one playlist holds many videos in play order.
+-- Client flattens these into the play queue. The legacy
+-- sg_playlists.media_id single-video column stays as fallback.
+create table if not exists public.sg_playlist_items (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.sg_tenants(id) on delete cascade,
+  playlist_id uuid not null references public.sg_playlists(id) on delete cascade,
+  media_id uuid references public.sg_media(id) on delete set null,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Event/meeting-room info shown by Client.
 create table if not exists public.sg_event_lists (
   id uuid primary key default gen_random_uuid(),
@@ -127,6 +140,8 @@ create index if not exists sg_devices_tenant_id_idx on public.sg_devices (tenant
 create index if not exists sg_devices_pairing_code_idx on public.sg_devices (pairing_code);
 create index if not exists sg_media_tenant_id_idx on public.sg_media (tenant_id);
 create index if not exists sg_playlists_tenant_id_idx on public.sg_playlists (tenant_id);
+create index if not exists sg_playlist_items_playlist_id_idx on public.sg_playlist_items (playlist_id);
+create index if not exists sg_playlist_items_tenant_id_idx on public.sg_playlist_items (tenant_id);
 create index if not exists sg_event_lists_tenant_id_idx on public.sg_event_lists (tenant_id);
 
 -- Updated-at triggers
@@ -152,6 +167,10 @@ for each row execute function public.sg_set_updated_at();
 
 drop trigger if exists sg_playlists_set_updated_at on public.sg_playlists;
 create trigger sg_playlists_set_updated_at before update on public.sg_playlists
+for each row execute function public.sg_set_updated_at();
+
+drop trigger if exists sg_playlist_items_set_updated_at on public.sg_playlist_items;
+create trigger sg_playlist_items_set_updated_at before update on public.sg_playlist_items
 for each row execute function public.sg_set_updated_at();
 
 drop trigger if exists sg_event_lists_set_updated_at on public.sg_event_lists;
@@ -194,6 +213,7 @@ alter table public.sg_hotel_profiles enable row level security;
 alter table public.sg_devices enable row level security;
 alter table public.sg_media enable row level security;
 alter table public.sg_playlists enable row level security;
+alter table public.sg_playlist_items enable row level security;
 alter table public.sg_event_lists enable row level security;
 
 -- Profiles: users can read profiles in their tenant; users can update their own profile.
@@ -235,6 +255,12 @@ with check (public.sg_is_tenant_member(tenant_id));
 
 drop policy if exists sg_playlists_member_all on public.sg_playlists;
 create policy sg_playlists_member_all on public.sg_playlists
+for all to authenticated
+using (public.sg_is_tenant_member(tenant_id))
+with check (public.sg_is_tenant_member(tenant_id));
+
+drop policy if exists sg_playlist_items_member_all on public.sg_playlist_items;
+create policy sg_playlist_items_member_all on public.sg_playlist_items
 for all to authenticated
 using (public.sg_is_tenant_member(tenant_id))
 with check (public.sg_is_tenant_member(tenant_id));

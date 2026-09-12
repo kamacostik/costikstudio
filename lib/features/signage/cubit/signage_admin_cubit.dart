@@ -10,6 +10,7 @@ class SignageAdminState extends Equatable {
     this.devices = const [],
     this.mediaItems = const [],
     this.playlists = const [],
+    this.playlistVideoCounts = const {},
     this.events = const [],
     this.devicePairing,
     this.deviceQuota = const SignageDeviceQuota(deviceLimit: 0, usedDevices: 0),
@@ -23,6 +24,7 @@ class SignageAdminState extends Equatable {
   final List<SignageDevice> devices;
   final List<SignageMediaItem> mediaItems;
   final List<SignagePlaylistItem> playlists;
+  final Map<String, int> playlistVideoCounts;
   final List<SignageEventItem> events;
   final SignageDevicePairing? devicePairing;
   final SignageDeviceQuota deviceQuota;
@@ -36,6 +38,7 @@ class SignageAdminState extends Equatable {
     List<SignageDevice>? devices,
     List<SignageMediaItem>? mediaItems,
     List<SignagePlaylistItem>? playlists,
+    Map<String, int>? playlistVideoCounts,
     List<SignageEventItem>? events,
     SignageDevicePairing? devicePairing,
     SignageDeviceQuota? deviceQuota,
@@ -50,6 +53,7 @@ class SignageAdminState extends Equatable {
       devices: devices ?? this.devices,
       mediaItems: mediaItems ?? this.mediaItems,
       playlists: playlists ?? this.playlists,
+      playlistVideoCounts: playlistVideoCounts ?? this.playlistVideoCounts,
       events: events ?? this.events,
       devicePairing: devicePairing ?? this.devicePairing,
       deviceQuota: deviceQuota ?? this.deviceQuota,
@@ -68,6 +72,7 @@ class SignageAdminState extends Equatable {
     devices,
     mediaItems,
     playlists,
+    playlistVideoCounts,
     events,
     devicePairing,
     deviceQuota,
@@ -90,6 +95,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
       final deviceQuota = await _repository.fetchDeviceQuota();
       final mediaItems = await _repository.fetchMedia();
       final playlists = await _repository.fetchPlaylists();
+      final playlistVideoCounts = await _repository.fetchPlaylistVideoCounts();
       final events = await _repository.fetchEvents();
       emit(
         state.copyWith(
@@ -99,6 +105,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           deviceQuota: deviceQuota,
           mediaItems: mediaItems,
           playlists: playlists,
+          playlistVideoCounts: playlistVideoCounts,
           events: events,
           clearMessages: true,
         ),
@@ -146,16 +153,78 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     try {
       await _repository.savePlaylist(item);
       final playlists = await _repository.fetchPlaylists();
+      final playlistVideoCounts = await _repository.fetchPlaylistVideoCounts();
       emit(
         state.copyWith(
           isSaving: false,
           playlists: playlists,
+          playlistVideoCounts: playlistVideoCounts,
           successMessage: 'Playlist berhasil disimpan.',
         ),
       );
     } catch (e) {
       emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
+  }
+
+  Future<void> savePlaylistWithVideos({
+    SignagePlaylistItem? existing,
+    required String name,
+    required List<String> mediaIds,
+    required bool isEnabled,
+  }) async {
+    emit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      final saved = await _repository.savePlaylist(
+        SignagePlaylistItem(
+          id: existing?.id,
+          name: name,
+          mediaId: mediaIds.isNotEmpty ? mediaIds.first : existing?.mediaId,
+          path: existing?.path,
+          isEnabled: isEnabled,
+        ),
+      );
+      if (saved.id != null && saved.id!.isNotEmpty) {
+        await _repository.replacePlaylistItems(saved.id!, mediaIds);
+      }
+      final playlists = await _repository.fetchPlaylists();
+      final playlistVideoCounts = await _repository.fetchPlaylistVideoCounts();
+      emit(
+        state.copyWith(
+          isSaving: false,
+          playlists: playlists,
+          playlistVideoCounts: playlistVideoCounts,
+          successMessage: existing == null
+              ? 'Playlist berhasil ditambahkan.'
+              : 'Playlist berhasil diubah.',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> deletePlaylist(String playlistId) async {
+    emit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.deletePlaylist(playlistId);
+      final playlists = await _repository.fetchPlaylists();
+      final playlistVideoCounts = await _repository.fetchPlaylistVideoCounts();
+      emit(
+        state.copyWith(
+          isSaving: false,
+          playlists: playlists,
+          playlistVideoCounts: playlistVideoCounts,
+          successMessage: 'Playlist berhasil dihapus.',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<List<SignagePlaylistVideoItem>> playlistItems(String playlistId) {
+    return _repository.fetchPlaylistItems(playlistId);
   }
 
   Future<void> saveEvent(SignageEventItem item) async {

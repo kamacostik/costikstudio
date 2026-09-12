@@ -68,6 +68,11 @@ begin
   where h.tenant_id = v_device.tenant_id
   limit 1;
 
+  -- Flattened play queue: legacy single-video playlist rows that have
+  -- no items, plus every multi-video playlist item in play order.
+  -- Playlists with items appear once per item (no legacy duplicate);
+  -- playlists without items appear once (possibly without URL so the
+  -- TV can list them as pending).
   select coalesce(
     jsonb_agg(to_jsonb(pl) order by pl.sort_order, pl.created_at),
     '[]'::jsonb
@@ -91,7 +96,31 @@ begin
     left join public.sg_media as m on m.id = p.media_id
     where p.tenant_id = v_device.tenant_id
       and p.is_enabled = true
-    order by p.sort_order, p.created_at
+      and not exists (
+        select 1
+        from public.sg_playlist_items as pi
+        where pi.playlist_id = p.id
+      )
+    union all
+    select
+      pi.id,
+      p.nama_playlist,
+      p.path_playlist,
+      p.is_enabled,
+      p.start_date,
+      p.end_date,
+      (p.sort_order * 1000 + pi.sort_order) as sort_order,
+      pi.created_at,
+      m.public_url as media_url,
+      m.storage_path as media_storage_path,
+      m.file_name as media_file_name,
+      m.mime_type as media_mime_type
+    from public.sg_playlist_items as pi
+    join public.sg_playlists as p on p.id = pi.playlist_id
+    left join public.sg_media as m on m.id = pi.media_id
+    where pi.tenant_id = v_device.tenant_id
+      and p.tenant_id = v_device.tenant_id
+      and p.is_enabled = true
     limit 500
   ) as pl;
 

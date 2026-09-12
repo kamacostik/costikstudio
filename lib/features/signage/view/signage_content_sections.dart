@@ -217,8 +217,9 @@ class SignagePlaylistSection extends StatelessWidget {
             emptyMessage: 'Belum ada playlist.',
             columns: [
               signageDataColumn('Playlist'),
-              signageDataColumn('Media / Path'),
+              signageDataColumn('Video'),
               signageDataColumn('Status'),
+              signageDataColumn('Aksi'),
             ],
             rows: [
               for (final item in state.playlists)
@@ -236,11 +237,40 @@ class SignagePlaylistSection extends StatelessWidget {
                         reference: item.id ?? '-',
                       ),
                     ),
-                    DataCell(Text(item.path ?? 'Belum pilih media')),
+                    DataCell(
+                      Text(
+                        _playlistVideoLabel(item, state.playlistVideoCounts),
+                      ),
+                    ),
                     DataCell(
                       SignageStatusBadge(
                         label: item.isEnabled ? 'Aktif' : 'Nonaktif',
                         color: item.isEnabled ? Colors.green : Colors.orange,
+                      ),
+                    ),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: 'Ubah playlist',
+                            icon: const Icon(Icons.edit_rounded),
+                            onPressed: state.isSaving
+                                ? null
+                                : () =>
+                                      _showPlaylistDialog(context, state, item),
+                          ),
+                          IconButton(
+                            tooltip: 'Hapus playlist',
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.red,
+                            ),
+                            onPressed: state.isSaving || item.id == null
+                                ? null
+                                : () => _confirmDeletePlaylist(context, item),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -254,22 +284,43 @@ class SignagePlaylistSection extends StatelessWidget {
 
   Future<void> _showPlaylistDialog(
     BuildContext context,
-    SignageAdminState state,
-  ) async {
-    final nameController = TextEditingController();
-    String? mediaId;
-    var enabled = true;
-    final item = await showDialog<SignagePlaylistItem>(
+    SignageAdminState state, [
+    SignagePlaylistItem? existing,
+  ]) async {
+    final nameController = TextEditingController(text: existing?.name ?? '');
+    var enabled = existing?.isEnabled ?? true;
+    var selectedIds = <String>[];
+    if (existing?.id != null && existing!.id!.isNotEmpty) {
+      try {
+        final items = await context.read<SignageAdminCubit>().playlistItems(
+          existing.id!,
+        );
+        selectedIds = [
+          for (final entry in items)
+            if ((entry.mediaId ?? '').isNotEmpty) entry.mediaId!,
+        ];
+      } catch (_) {
+        selectedIds = [
+          if ((existing.mediaId ?? '').isNotEmpty) existing.mediaId!,
+        ];
+      }
+    } else if ((existing?.mediaId ?? '').isNotEmpty) {
+      selectedIds = [existing!.mediaId!];
+    }
+    if (!context.mounted) {
+      nameController.dispose();
+      return;
+    }
+    final result = await showDialog<_PlaylistDialogResult>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           titlePadding: EdgeInsets.zero,
           contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-          title: const _StyledDialogHeader(
+          title: _StyledDialogHeader(
             icon: Icons.playlist_play_rounded,
-            title: 'Tambah Playlist',
-            subtitle:
-                'Pilih media dan aktifkan playlist untuk layar Android TV.',
+            title: existing == null ? 'Tambah Playlist' : 'Ubah Playlist',
+            subtitle: 'Pilih beberapa video sesuai urutan putar, lalu aktifkan untuk layar Android TV.',
           ),
           content: SizedBox(
             width: 560,
@@ -284,22 +335,80 @@ class SignagePlaylistSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: mediaId,
-                  decoration: const InputDecoration(
-                    labelText: 'Media',
-                    prefixIcon: Icon(Icons.perm_media_rounded),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Video dalam playlist (${selectedIds.length}) — urutan sesuai pilihan',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  items: [
-                    for (final media in state.mediaItems)
-                      DropdownMenuItem(
-                        value: media.id,
-                        child: Text(media.fileName),
-                      ),
-                  ],
-                  onChanged: (value) => setState(() => mediaId = value),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 260,
+                  width: double.maxFinite,
+                  child: state.mediaItems.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Belum ada media. Tambahkan dulu di tab Media.',
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: state.mediaItems.length,
+                          itemBuilder: (context, index) {
+                            final media = state.mediaItems[index];
+                            final id = media.id ?? '';
+                            final order = selectedIds.indexOf(id);
+                            final selected = order >= 0;
+                            return CheckboxListTile(
+                              contentPadding: EdgeInsets.zero,
+                              value: selected,
+                              onChanged: id.isEmpty
+                                  ? null
+                                  : (checked) {
+                                      setState(() {
+                                        if (checked == true) {
+                                          if (!selectedIds.contains(id)) {
+                                            selectedIds.add(id);
+                                          }
+                                        } else {
+                                          selectedIds.remove(id);
+                                        }
+                                      });
+                                    },
+                              secondary: CircleAvatar(
+                                child: Text(selected ? '${order + 1}' : '•'),
+                              ),
+                              title: Text(media.fileName),
+                              subtitle: Text(
+                                media.mediaType.isEmpty
+                                    ? media.storagePath
+                                    : '${media.mediaType} • ${media.storagePath}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          },
+                        ),
+                ),
+                if (selectedIds.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (var i = 0; i < selectedIds.length; i++)
+                        Chip(
+                          label: Text(
+                            '${i + 1}. ${_mediaName(state, selectedIds[i])}',
+                          ),
+                          onDeleted: () =>
+                              setState(() => selectedIds.removeAt(i)),
+                        ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 4),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   value: enabled,
@@ -318,19 +427,28 @@ class SignagePlaylistSection extends StatelessWidget {
               icon: const Icon(Icons.save_rounded),
               onPressed: () {
                 final name = nameController.text.trim();
-                if (name.isEmpty) return;
-                SignageMediaItem? media;
-                for (final item in state.mediaItems) {
-                  if (item.id == mediaId) {
-                    media = item;
-                    break;
-                  }
+                if (name.isEmpty) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(
+                      content: Text('Nama playlist wajib diisi.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+                if (selectedIds.isEmpty) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(
+                      content: Text('Pilih minimal satu video.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
                 }
                 Navigator.of(dialogContext).pop(
-                  SignagePlaylistItem(
+                  _PlaylistDialogResult(
                     name: name,
-                    mediaId: mediaId,
-                    path: media?.publicUrl ?? media?.storagePath,
+                    mediaIds: List.of(selectedIds),
                     isEnabled: enabled,
                   ),
                 );
@@ -342,10 +460,72 @@ class SignagePlaylistSection extends StatelessWidget {
       ),
     );
     nameController.dispose();
-    if (item != null && context.mounted) {
-      await context.read<SignageAdminCubit>().savePlaylist(item);
+    if (result != null && context.mounted) {
+      await context.read<SignageAdminCubit>().savePlaylistWithVideos(
+        existing: existing,
+        name: result.name,
+        mediaIds: result.mediaIds,
+        isEnabled: result.isEnabled,
+      );
     }
   }
+
+  Future<void> _confirmDeletePlaylist(
+    BuildContext context,
+    SignagePlaylistItem item,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus Playlist?'),
+        content: Text(
+          'Playlist "${item.name}" beserta seluruh urutan videonya akan dihapus dari TV.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted && item.id != null) {
+      await context.read<SignageAdminCubit>().deletePlaylist(item.id!);
+    }
+  }
+}
+
+class _PlaylistDialogResult {
+  const _PlaylistDialogResult({
+    required this.name,
+    required this.mediaIds,
+    required this.isEnabled,
+  });
+
+  final String name;
+  final List<String> mediaIds;
+  final bool isEnabled;
+}
+
+String _playlistVideoLabel(SignagePlaylistItem item, Map<String, int> counts) {
+  final id = item.id;
+  if (id == null || id.isEmpty) return 'Belum ada video';
+  final count = counts[id] ?? 0;
+  if (count <= 0) return 'Belum ada video';
+  return '$count video';
+}
+
+String _mediaName(SignageAdminState state, String mediaId) {
+  for (final media in state.mediaItems) {
+    if (media.id == mediaId) return media.fileName;
+  }
+  return mediaId;
 }
 
 class SignageEventListSection extends StatelessWidget {
