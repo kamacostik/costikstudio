@@ -28,4 +28,20 @@ void main() {
 
     expect(find.text('Produk'), findsWidgets);
   });
+
+  testWidgets('home hero shows dashboard action after login', (tester) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(const CostikStudioApp());
+    await tester.pumpAndSettle();
+
+    await loginAsCustomer(tester);
+    await tester.tap(find.byKey(const Key('header_nav_/')));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(FilledButton, 'Dashboard'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Login'), findsNothing);
+  });
 }

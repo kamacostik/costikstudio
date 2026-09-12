@@ -3,7 +3,9 @@ import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/core/router/app_router.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
+import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class HomePage extends StatefulWidget {
@@ -42,6 +44,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isAuthenticated = context.watch<AuthCubit>().state.isAuthenticated;
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -57,12 +61,13 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       'Launch business apps from one clean studio.',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                        color: CostikStudioTheme.navy,
-                        fontWeight: FontWeight.w900,
-                        height: 1.04,
-                        letterSpacing: -1.6,
-                      ),
+                      style: Theme.of(context).textTheme.displayMedium
+                          ?.copyWith(
+                            color: CostikStudioTheme.navy,
+                            fontWeight: FontWeight.w900,
+                            height: 1.04,
+                            letterSpacing: -1.6,
+                          ),
                     ),
                     const SizedBox(height: 18),
                     ConstrainedBox(
@@ -70,10 +75,11 @@ class _HomePageState extends State<HomePage> {
                       child: Text(
                         'CostikStudio brings all your business applications into a single central portal for IPTV, Digital Signage, CosHRIS, and Smart INV.',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: CostikStudioTheme.slate,
-                          height: 1.65,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: CostikStudioTheme.slate,
+                              height: 1.65,
+                            ),
                       ),
                     ),
                     const SizedBox(height: 34),
@@ -83,9 +89,17 @@ class _HomePageState extends State<HomePage> {
                       alignment: WrapAlignment.center,
                       children: [
                         FilledButton.icon(
-                          onPressed: () => context.go(AppRoutes.login),
-                          icon: const Icon(Icons.login_rounded),
-                          label: const Text('Login'),
+                          onPressed: () => context.go(
+                            isAuthenticated
+                                ? AppRoutes.billing
+                                : AppRoutes.login,
+                          ),
+                          icon: Icon(
+                            isAuthenticated
+                                ? Icons.dashboard_rounded
+                                : Icons.login_rounded,
+                          ),
+                          label: Text(isAuthenticated ? 'Dashboard' : 'Login'),
                         ),
                         OutlinedButton.icon(
                           onPressed: HomePage.scrollToProducts,
@@ -97,7 +111,10 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 54),
                     const _MinimalPortalPreview(),
                     const SizedBox(height: 92),
-                    _ProductSection(key: _productsKey, products: _focusProducts),
+                    _ProductSection(
+                      key: _productsKey,
+                      products: _focusProducts,
+                    ),
                     const SizedBox(height: 92),
                     const _HowItWorksSection(),
                   ],
