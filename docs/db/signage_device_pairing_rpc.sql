@@ -47,13 +47,13 @@ begin
     raise exception 'Tenant Signage belum tersedia.';
   end if;
 
-  select coalesce(max(device_count), 0)
+  select coalesce(max(s.device_count), 0)
     into v_device_limit
-  from public.subscriptions
-  where user_id = v_user_id
-    and product_id = 'costik-signage'
-    and status = 'active'
-    and expires_at > now();
+  from public.subscriptions as s
+  where s.user_id = v_user_id
+    and s.product_id = 'costik-signage'
+    and s.status = 'active'
+    and s.expires_at > now();
 
   if coalesce(v_device_limit, 0) <= 0 then
     raise exception 'Subscription Costik Signage belum aktif.';
@@ -61,10 +61,10 @@ begin
 
   select count(*)
     into v_active_devices
-  from public.sg_devices
-  where tenant_id = v_tenant_id
-    and is_active = true
-    and activated_at is not null;
+  from public.sg_devices as d
+  where d.tenant_id = v_tenant_id
+    and d.is_active = true
+    and d.activated_at is not null;
 
   if v_active_devices >= v_device_limit then
     raise exception 'Kuota device Signage sudah penuh. Upgrade device untuk menambah layar.';
@@ -74,9 +74,9 @@ begin
   v_pairing_code := lpad((floor(random() * 1000000))::int::text, 6, '0');
 
   while exists (
-    select 1 from public.sg_devices
-    where pairing_code = v_pairing_code
-      and pairing_expires_at > now()
+    select 1 from public.sg_devices as d
+    where d.pairing_code = v_pairing_code
+      and d.pairing_expires_at > now()
   ) loop
     v_pairing_code := lpad((floor(random() * 1000000))::int::text, 6, '0');
   end loop;
@@ -121,13 +121,13 @@ declare
   v_device public.sg_devices%rowtype;
   v_device_token text;
 begin
-  select *
+  select d.*
     into v_device
-  from public.sg_devices
-  where pairing_code = trim(p_pairing_code)
-    and pairing_expires_at > now()
-    and is_active = true
-  order by created_at desc
+  from public.sg_devices as d
+  where d.pairing_code = trim(p_pairing_code)
+    and d.pairing_expires_at > now()
+    and d.is_active = true
+  order by d.created_at desc
   limit 1;
 
   if v_device.id is null then
