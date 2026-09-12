@@ -890,6 +890,22 @@ List<(String, String)> _memberDocSteps(ProductItem product) {
       ),
     ];
   }
+  if (product.id == 'digital-signage') {
+    return const [
+      (
+        'Berlangganan sesuai jumlah device',
+        'Pilih jumlah device Digital Signage. Kuota device akan membatasi jumlah TV/browser client yang bisa dipairing.',
+      ),
+      (
+        'Buka Web Admin Signage',
+        'Lengkapi profil hotel dan logo, lalu kelola Media, Playlist multi-video, Daily Event, Device, dan mode tampilan.',
+      ),
+      (
+        'Pairing TV atau browser',
+        'Generate kode pairing 6 digit dari menu Device, masukkan di aplikasi TV/browser, lalu pilih mode Daily Event atau Video Player per device.',
+      ),
+    ];
+  }
   return [
     (
       'Buka dashboard produk',
@@ -937,41 +953,59 @@ class _MemberPreviewShowcase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final previews = product.id == 'costik-iptv'
-        ? const [
-            (
-              'Guest Room IPTV Home',
-              'Layar utama tamu hotel untuk live TV, informasi hotel, promo, dan layanan kamar.',
-              Icons.tv_rounded,
-            ),
-            (
-              'Channel & EPG Management',
-              'Pengaturan channel, kategori, playlist M3U, dan urutan konten dari web dashboard.',
-              Icons.playlist_play_rounded,
-            ),
-            (
-              'Room Device Monitoring',
-              'Pantau status device kamar, lisensi aktif, dan kebutuhan maintenance.',
-              Icons.meeting_room_rounded,
-            ),
-          ]
-        : [
-            (
-              '${product.name} Dashboard',
-              product.tagline,
-              Icons.dashboard_customize_rounded,
-            ),
-            (
-              'Operational Workflow',
-              'Alur operasional dibuat sederhana untuk tim harian.',
-              Icons.route_rounded,
-            ),
-            (
-              'Reports & Visibility',
-              'Ringkasan data penting untuk owner dan supervisor.',
-              Icons.insights_rounded,
-            ),
-          ];
+    final previews = switch (product.id) {
+      'costik-iptv' => const [
+        (
+          'Guest Room IPTV Home',
+          'Layar utama tamu hotel untuk live TV, informasi hotel, promo, dan layanan kamar.',
+          Icons.tv_rounded,
+        ),
+        (
+          'Channel & EPG Management',
+          'Pengaturan channel, kategori, playlist M3U, dan urutan konten dari web dashboard.',
+          Icons.playlist_play_rounded,
+        ),
+        (
+          'Room Device Monitoring',
+          'Pantau status device kamar, lisensi aktif, dan kebutuhan maintenance.',
+          Icons.meeting_room_rounded,
+        ),
+      ],
+      'digital-signage' => const [
+        (
+          'Daily Event Board',
+          'Tampilan jadwal event hari ini di TV: nama event, room, jam mulai-selesai, floor, auto-slide, dan refresh OK remote.',
+          Icons.event_note_rounded,
+        ),
+        (
+          'Fullscreen Video Player',
+          'Putar playlist video fullscreen dengan logo hotel overlay, multi-video berurutan, dan loop otomatis.',
+          Icons.smart_display_rounded,
+        ),
+        (
+          'Device Pairing & Mode',
+          'Pairing TV/browser dengan kode 6 digit, pantau status device, batasi kuota lisensi, dan ubah mode per device.',
+          Icons.cast_connected_rounded,
+        ),
+      ],
+      _ => [
+        (
+          '${product.name} Dashboard',
+          product.tagline,
+          Icons.dashboard_customize_rounded,
+        ),
+        (
+          'Operational Workflow',
+          'Alur operasional dibuat sederhana untuk tim harian.',
+          Icons.route_rounded,
+        ),
+        (
+          'Reports & Visibility',
+          'Ringkasan data penting untuk owner dan supervisor.',
+          Icons.insights_rounded,
+        ),
+      ],
+    };
 
     return Container(
       width: double.infinity,
