@@ -42,7 +42,7 @@ const dummyProducts = <ProductItem>[
     status: ProductStatus.beta,
     accentHex: 0xFF7C3AED,
     productUrl: 'https://hris.costikstudio.com',
-    adminUrl: 'https://admin.hris.costikstudio.com',
+    adminUrl: 'https://coshris.pages.dev',
     features: [
       'Employee and department management',
       'Attendance, shifts, and leave workflow',
