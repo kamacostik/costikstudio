@@ -101,32 +101,38 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Tambah Device Signage'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Buat kode pairing, lalu masukkan kode ini di APK Android TV.',
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _deviceNameController,
-              decoration: const InputDecoration(
-                labelText: 'Nama device',
-                hintText: 'Contoh: Android TV Lobby',
+        titlePadding: EdgeInsets.zero,
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+        title: const _DeviceDialogHeader(),
+        content: SizedBox(
+          width: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _deviceNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nama device',
+                  hintText: 'Contoh: Android TV Lobby',
+                  helperText:
+                      'Nama ini akan tampil di daftar device Web Admin.',
+                  prefixIcon: Icon(Icons.tv_rounded),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Batal'),
           ),
-          FilledButton(
+          FilledButton.icon(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Buat Kode'),
+            icon: const Icon(Icons.qr_code_2_rounded),
+            label: const Text('Buat Kode'),
           ),
         ],
       ),
@@ -134,6 +140,48 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
     if (confirmed != true || !context.mounted) return;
     await context.read<SignageAdminCubit>().createDevicePairing(
       deviceName: _deviceNameController.text.trim(),
+    );
+  }
+}
+
+class _DeviceDialogHeader extends StatelessWidget {
+  const _DeviceDialogHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: CostikStudioTheme.primary.withValues(alpha: 0.10),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: const Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.white,
+            foregroundColor: CostikStudioTheme.primary,
+            child: Icon(Icons.add_link_rounded),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Tambah Device Signage'),
+                SizedBox(height: 4),
+                Text(
+                  'Buat kode pairing untuk menghubungkan APK Android TV.',
+                  style: TextStyle(
+                    color: CostikStudioTheme.slate,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

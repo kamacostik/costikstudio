@@ -4,6 +4,56 @@ import 'package:costikstudio/features/signage/data/signage_admin_repository.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+class _StyledDialogHeader extends StatelessWidget {
+  const _StyledDialogHeader({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: CostikStudioTheme.primary.withValues(alpha: 0.10),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.white,
+            foregroundColor: CostikStudioTheme.primary,
+            child: Icon(icon),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: CostikStudioTheme.slate,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class SignageMediaSection extends StatelessWidget {
   const SignageMediaSection({super.key});
 
@@ -49,27 +99,42 @@ class SignageMediaSection extends StatelessWidget {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Tambah Media'),
+          titlePadding: EdgeInsets.zero,
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+          title: const _StyledDialogHeader(
+            icon: Icons.perm_media_rounded,
+            title: 'Tambah Media',
+            subtitle:
+                'Tambahkan URL gambar atau video untuk bahan playlist signage.',
+          ),
           content: SizedBox(
-            width: 520,
+            width: 560,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Nama media'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nama media',
+                    prefixIcon: Icon(Icons.badge_rounded),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: pathController,
                   decoration: const InputDecoration(
                     labelText: 'URL / storage path',
+                    helperText: 'Sementara bisa pakai URL langsung; upload storage menyusul.',
+                    prefixIcon: Icon(Icons.link_rounded),
                   ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: mediaType,
-                  decoration: const InputDecoration(labelText: 'Tipe'),
+                  decoration: const InputDecoration(
+                    labelText: 'Tipe media',
+                    prefixIcon: Icon(Icons.category_rounded),
+                  ),
                   items: const [
                     DropdownMenuItem(value: 'image', child: Text('Image')),
                     DropdownMenuItem(value: 'video', child: Text('Video')),
@@ -81,12 +146,14 @@ class SignageMediaSection extends StatelessWidget {
               ],
             ),
           ),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Batal'),
             ),
-            FilledButton(
+            FilledButton.icon(
+              icon: const Icon(Icons.save_rounded),
               onPressed: () {
                 final name = nameController.text.trim();
                 final path = pathController.text.trim();
@@ -100,7 +167,7 @@ class SignageMediaSection extends StatelessWidget {
                   ),
                 );
               },
-              child: const Text('Simpan'),
+              label: const Text('Simpan Media'),
             ),
           ],
         ),
@@ -164,20 +231,33 @@ class SignagePlaylistSection extends StatelessWidget {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Tambah Playlist'),
+          titlePadding: EdgeInsets.zero,
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+          title: const _StyledDialogHeader(
+            icon: Icons.playlist_play_rounded,
+            title: 'Tambah Playlist',
+            subtitle:
+                'Pilih media dan aktifkan playlist untuk layar Android TV.',
+          ),
           content: SizedBox(
-            width: 520,
+            width: 560,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Nama playlist'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nama playlist',
+                    prefixIcon: Icon(Icons.title_rounded),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: mediaId,
-                  decoration: const InputDecoration(labelText: 'Media'),
+                  decoration: const InputDecoration(
+                    labelText: 'Media',
+                    prefixIcon: Icon(Icons.perm_media_rounded),
+                  ),
                   items: [
                     for (final media in state.mediaItems)
                       DropdownMenuItem(
@@ -202,7 +282,8 @@ class SignagePlaylistSection extends StatelessWidget {
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Batal'),
             ),
-            FilledButton(
+            FilledButton.icon(
+              icon: const Icon(Icons.save_rounded),
               onPressed: () {
                 final name = nameController.text.trim();
                 if (name.isEmpty) return;
@@ -222,7 +303,7 @@ class SignagePlaylistSection extends StatelessWidget {
                   ),
                 );
               },
-              child: const Text('Simpan'),
+              label: const Text('Simpan Playlist'),
             ),
           ],
         ),
