@@ -89,8 +89,12 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
 
   final SignageAdminRepository _repository;
 
+  void _safeEmit(SignageAdminState nextState) {
+    if (!isClosed) emit(nextState);
+  }
+
   Future<void> load() async {
-    emit(state.copyWith(isLoading: true, clearMessages: true));
+    _safeEmit(state.copyWith(isLoading: true, clearMessages: true));
     try {
       final hotelProfile = await _repository.fetchHotelProfile();
       final devices = await _repository.fetchDevices();
@@ -99,7 +103,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
       final playlists = await _repository.fetchPlaylists();
       final playlistVideoCounts = await _repository.fetchPlaylistVideoCounts();
       final events = await _repository.fetchEvents();
-      emit(
+      _safeEmit(
         state.copyWith(
           isLoading: false,
           hotelProfile: hotelProfile ?? const SignageHotelProfile(),
@@ -113,15 +117,15 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isLoading: false, errorMessage: e.toString()));
     }
   }
 
   Future<void> saveHotelProfile(SignageHotelProfile profile) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       final savedProfile = await _repository.saveHotelProfile(profile);
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           hotelProfile: savedProfile,
@@ -129,7 +133,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
 
@@ -138,14 +142,14 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     required String fileName,
     required String contentType,
   }) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       final url = await _repository.uploadHotelLogo(
         bytes: bytes,
         fileName: fileName,
         contentType: contentType,
       );
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           successMessage: 'Logo hotel berhasil diupload.',
@@ -153,17 +157,17 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
       );
       return url;
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
       return null;
     }
   }
 
   Future<void> saveMedia(SignageMediaItem item) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       await _repository.saveMedia(item);
       final mediaItems = await _repository.fetchMedia();
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           mediaItems: mediaItems,
@@ -171,17 +175,17 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
 
   Future<void> savePlaylist(SignagePlaylistItem item) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       await _repository.savePlaylist(item);
       final playlists = await _repository.fetchPlaylists();
       final playlistVideoCounts = await _repository.fetchPlaylistVideoCounts();
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           playlists: playlists,
@@ -190,7 +194,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
 
@@ -200,7 +204,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     required List<String> mediaIds,
     required bool isEnabled,
   }) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       final saved = await _repository.savePlaylist(
         SignagePlaylistItem(
@@ -216,7 +220,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
       }
       final playlists = await _repository.fetchPlaylists();
       final playlistVideoCounts = await _repository.fetchPlaylistVideoCounts();
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           playlists: playlists,
@@ -227,17 +231,17 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
 
   Future<void> deletePlaylist(String playlistId) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       await _repository.deletePlaylist(playlistId);
       final playlists = await _repository.fetchPlaylists();
       final playlistVideoCounts = await _repository.fetchPlaylistVideoCounts();
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           playlists: playlists,
@@ -246,7 +250,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
 
@@ -255,11 +259,11 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
   }
 
   Future<void> saveEvent(SignageEventItem item) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       await _repository.saveEvent(item);
       final events = await _repository.fetchEvents();
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           events: events,
@@ -267,19 +271,19 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
 
   Future<void> createDevicePairing({String? deviceName}) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       final pairing = await _repository.createDevicePairing(
         deviceName: deviceName,
       );
       final devices = await _repository.fetchDevices();
       final deviceQuota = await _repository.fetchDeviceQuota();
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           devicePairing: pairing,
@@ -289,7 +293,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
 
@@ -297,14 +301,14 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     String deviceId, {
     required int durationSeconds,
   }) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       await _repository.updateDeviceSlideDuration(
         deviceId,
         durationSeconds: durationSeconds,
       );
       final devices = await _repository.fetchDevices();
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           devices: devices,
@@ -312,7 +316,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
 
@@ -320,11 +324,11 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     String deviceId, {
     required SignageAppMode appMode,
   }) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       await _repository.updateDeviceAppMode(deviceId, appMode: appMode);
       final devices = await _repository.fetchDevices();
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           devices: devices,
@@ -332,17 +336,17 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
 
   Future<void> deleteDevice(String deviceId) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       await _repository.deleteDevice(deviceId);
       final devices = await _repository.fetchDevices();
       final deviceQuota = await _repository.fetchDeviceQuota();
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           devices: devices,
@@ -351,17 +355,17 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
 
   Future<void> regenerateDevicePairing(String deviceId) async {
-    emit(state.copyWith(isSaving: true, clearMessages: true));
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
       final pairing = await _repository.regenerateDevicePairing(deviceId);
       final devices = await _repository.fetchDevices();
       final deviceQuota = await _repository.fetchDeviceQuota();
-      emit(
+      _safeEmit(
         state.copyWith(
           isSaving: false,
           devicePairing: pairing,
@@ -371,7 +375,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
 }
