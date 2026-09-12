@@ -30,14 +30,11 @@ class SignageSubscriptionPage extends StatefulWidget {
 class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
   final _formKey = GlobalKey<FormState>();
   final _deviceCountController = TextEditingController(text: '10');
-  final _organizationController = TextEditingController();
-  final _contactNameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
 
   static const int pricePerDevice = signagePricePerDevice;
   int _deviceCount = 10;
   int _billingCycleMonths = 1; // 1, 3, 6, 12 bulan
+  bool _autoRenew = false;
 
   ProductItem get _product => dummyProducts.firstWhere(
     (p) => p.id == 'digital-signage',
@@ -62,10 +59,6 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
   @override
   void dispose() {
     _deviceCountController.dispose();
-    _organizationController.dispose();
-    _contactNameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
     super.dispose();
   }
 
@@ -95,6 +88,7 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
     await billingCubit.checkoutSignageSubscription(
       deviceCount: _deviceCount,
       billingCycleMonths: _billingCycleMonths,
+      autoRenew: _autoRenew,
     );
 
     if (!mounted) return;
@@ -411,106 +405,74 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
                                     );
                                   }).toList(),
                             ),
+                            const SizedBox(height: 26),
+                            const Divider(),
+                            const SizedBox(height: 18),
+
+                            // Auto renew
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text(
+                                'Auto-Renew per Bulan',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                              subtitle: const Text(
+                                'Perpanjangan otomatis tiap bulan dari saldo wallet. Pastikan saldo mencukupi agar langganan tidak kedaluwarsa.',
+                                style: TextStyle(
+                                  color: CostikStudioTheme.slate,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              secondary: const Icon(
+                                Icons.autorenew_rounded,
+                                color: CostikStudioTheme.primary,
+                              ),
+                              value: _autoRenew,
+                              onChanged: (value) {
+                                setState(() {
+                                  _autoRenew = value;
+                                });
+                              },
+                            ),
+                            if (_autoRenew)
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.orange.withValues(
+                                      alpha: 0.25,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(
+                                      Icons.info_outline_rounded,
+                                      color: Colors.orange,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Saldo wallet harus mencukupi (${formatRupiah(_deviceCount * pricePerDevice)}/bulan) saat auto-renew berjalan, kalau tidak langganan bisa expire.',
+                                        style: const TextStyle(
+                                          color: CostikStudioTheme.slate,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    // Card Business & Contact Details
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: const [
-                                Icon(
-                                  Icons.business_rounded,
-                                  color: CostikStudioTheme.primary,
-                                ),
-                                SizedBox(width: 10),
-                                Text(
-                                  'Informasi Bisnis / Hotel',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            TextFormField(
-                              controller: _organizationController,
-                              decoration: const InputDecoration(
-                                labelText: 'Nama Hotel / Instansi / Perusahaan',
-                                hintText: 'Contoh: Grand Costik Hotel & Resort',
-                                prefixIcon: Icon(Icons.apartment_rounded),
-                              ),
-                              validator: (val) =>
-                                  (val == null || val.trim().isEmpty)
-                                  ? 'Harap isi nama hotel/perusahaan'
-                                  : null,
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _contactNameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Nama Penanggung Jawab (PIC)',
-                                hintText: 'Contoh: Budi Santoso',
-                                prefixIcon: Icon(Icons.person_rounded),
-                              ),
-                              validator: (val) =>
-                                  (val == null || val.trim().isEmpty)
-                                  ? 'Harap isi nama kontak penanggung jawab'
-                                  : null,
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Alamat Email',
-                                      hintText: 'pic@hotel.com',
-                                      prefixIcon: Icon(Icons.email_rounded),
-                                    ),
-                                    validator: (val) {
-                                      if (val == null || val.trim().isEmpty) {
-                                        return 'Harap isi email';
-                                      }
-                                      if (!val.contains('@')) {
-                                        return 'Format email tidak valid';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _phoneController,
-                                    keyboardType: TextInputType.phone,
-                                    decoration: const InputDecoration(
-                                      labelText: 'No. WhatsApp / Telepon',
-                                      hintText: '08123456789',
-                                      prefixIcon: Icon(Icons.phone_rounded),
-                                    ),
-                                    validator: (val) =>
-                                        (val == null || val.trim().isEmpty)
-                                        ? 'Harap isi nomor telepon'
-                                        : null,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   ],
                 );
 
@@ -545,6 +507,10 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
                         _OrderSummaryRow(
                           label: 'Durasi Berlangganan',
                           value: '$_billingCycleMonths Bulan',
+                        ),
+                        _OrderSummaryRow(
+                          label: 'Auto-Renew',
+                          value: _autoRenew ? 'Aktif' : 'Mati',
                         ),
                         const Divider(color: Colors.white24, height: 28),
                         Row(

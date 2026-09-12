@@ -8,5 +8,7 @@ void main() {
       const MaterialApp(home: Scaffold(body: IptvSubscriptionPage())),
     );
     expect(find.text('Formulir Berlangganan Costik IPTV'), findsOneWidget);
+    expect(find.text('Informasi Bisnis / Hotel'), findsNothing);
+    expect(find.text('Auto-Renew per Bulan'), findsOneWidget);
   });
 }

@@ -118,11 +118,13 @@ class BillingCubit extends Cubit<BillingState> {
   Future<void> checkoutIptvSubscription({
     required int deviceCount,
     required int billingCycleMonths,
+    bool autoRenew = false,
   }) async {
     await _runMutation(
       () => repository.checkoutIptvSubscription(
         deviceCount: deviceCount,
         billingCycleMonths: billingCycleMonths,
+        autoRenew: autoRenew,
       ),
     );
   }
@@ -130,11 +132,13 @@ class BillingCubit extends Cubit<BillingState> {
   Future<void> checkoutSignageSubscription({
     required int deviceCount,
     required int billingCycleMonths,
+    bool autoRenew = false,
   }) async {
     await _runMutation(
       () => repository.checkoutSignageSubscription(
         deviceCount: deviceCount,
         billingCycleMonths: billingCycleMonths,
+        autoRenew: autoRenew,
       ),
     );
   }
@@ -218,6 +222,18 @@ class BillingCubit extends Cubit<BillingState> {
     await _runMutation(
       () =>
           repository.cancelSignageSubscription(subscriptionId: subscriptionId),
+    );
+  }
+
+  Future<void> setSubscriptionAutoRenew({
+    required String subscriptionId,
+    required bool autoRenew,
+  }) async {
+    await _runMutation(
+      () => repository.setSubscriptionAutoRenew(
+        subscriptionId: subscriptionId,
+        autoRenew: autoRenew,
+      ),
     );
   }
 

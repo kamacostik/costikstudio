@@ -85,12 +85,14 @@ class SupabaseBillingRepository implements BillingRepository {
   Future<BillingSnapshot> checkoutIptvSubscription({
     required int deviceCount,
     required int billingCycleMonths,
+    bool autoRenew = false,
   }) async {
     await _supabase.rpc<void>(
       'checkout_iptv_subscription',
       params: {
         'device_count': deviceCount,
         'billing_cycle_months': billingCycleMonths,
+        'p_auto_renew': autoRenew,
       },
     );
 
@@ -111,12 +113,14 @@ class SupabaseBillingRepository implements BillingRepository {
   Future<BillingSnapshot> checkoutSignageSubscription({
     required int deviceCount,
     required int billingCycleMonths,
+    bool autoRenew = false,
   }) async {
     await _supabase.rpc<void>(
       'checkout_signage_subscription',
       params: {
         'device_count': deviceCount,
         'billing_cycle_months': billingCycleMonths,
+        'p_auto_renew': autoRenew,
       },
     );
 
@@ -253,6 +257,26 @@ class SupabaseBillingRepository implements BillingRepository {
     );
   }
 
+  @override
+  Future<BillingSnapshot> setSubscriptionAutoRenew({
+    required String subscriptionId,
+    required bool autoRenew,
+  }) async {
+    await _supabase.rpc<void>(
+      'set_subscription_auto_renew',
+      params: {
+        'target_subscription_id': subscriptionId,
+        'enable_auto_renew': autoRenew,
+      },
+    );
+
+    return _loadMutationSnapshot(
+      message: autoRenew
+          ? 'Auto-renew langganan berhasil diaktifkan.'
+          : 'Auto-renew langganan berhasil dimatikan.',
+    );
+  }
+
   Future<BillingSnapshot> _loadMutationSnapshot({
     required String message,
   }) async {
@@ -299,7 +323,7 @@ class SupabaseBillingRepository implements BillingRepository {
     final rows = await _supabase
         .from('subscriptions')
         .select(
-          'id, user_id, product_id, device_count, billing_cycle_months, status, starts_at, expires_at',
+          'id, user_id, product_id, device_count, billing_cycle_months, auto_renew, status, starts_at, expires_at',
         )
         .eq('user_id', userId)
         .order('created_at', ascending: false);
@@ -317,7 +341,7 @@ class SupabaseBillingRepository implements BillingRepository {
             _date(row['starts_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
         expiresAt:
             _date(row['expires_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
-        autoRenew: false,
+        autoRenew: (row['auto_renew'] as bool?) ?? false,
       );
     }).toList();
   }

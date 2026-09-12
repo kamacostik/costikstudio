@@ -75,6 +75,7 @@ class DummyBillingRepository implements BillingRepository {
   Future<BillingSnapshot> checkoutIptvSubscription({
     required int deviceCount,
     required int billingCycleMonths,
+    bool autoRenew = false,
   }) async {
     final amount = deviceCount * iptvPricePerDevice * billingCycleMonths;
     final plan = BillingPlan(
@@ -85,13 +86,14 @@ class DummyBillingRepository implements BillingRepository {
       durationDays: 30 * billingCycleMonths,
       features: const ['Custom IPTV device licence'],
     );
-    return _checkout(plan: plan);
+    return _checkout(plan: plan, autoRenew: autoRenew);
   }
 
   @override
   Future<BillingSnapshot> checkoutSignageSubscription({
     required int deviceCount,
     required int billingCycleMonths,
+    bool autoRenew = false,
   }) async {
     final amount = deviceCount * signagePricePerDevice * billingCycleMonths;
     final plan = BillingPlan(
@@ -102,7 +104,7 @@ class DummyBillingRepository implements BillingRepository {
       durationDays: 30 * billingCycleMonths,
       features: const ['Custom Signage screen licence'],
     );
-    return _checkout(plan: plan);
+    return _checkout(plan: plan, autoRenew: autoRenew);
   }
 
   @override
@@ -388,7 +390,35 @@ class DummyBillingRepository implements BillingRepository {
     return _snapshot(message: 'Langganan $productName berhasil dibatalkan.');
   }
 
-  Future<BillingSnapshot> _checkout({required BillingPlan plan}) async {
+  @override
+  Future<BillingSnapshot> setSubscriptionAutoRenew({
+    required String subscriptionId,
+    required bool autoRenew,
+  }) async {
+    final index = _subscriptions.indexWhere(
+      (subscription) => subscription.id == subscriptionId,
+    );
+    if (index == -1) {
+      throw ArgumentError.value(
+        subscriptionId,
+        'subscriptionId',
+        'Unknown subscription.',
+      );
+    }
+
+    final subscription = _subscriptions[index];
+    _subscriptions[index] = subscription.copyWith(autoRenew: autoRenew);
+    return _snapshot(
+      message: autoRenew
+          ? 'Auto-renew ${subscription.productId} diaktifkan.'
+          : 'Auto-renew ${subscription.productId} dimatikan.',
+    );
+  }
+
+  Future<BillingSnapshot> _checkout({
+    required BillingPlan plan,
+    bool autoRenew = false,
+  }) async {
     final product = dummyBillingProductById(plan.productId);
     if (product == null) {
       throw ArgumentError.value(
@@ -408,6 +438,7 @@ class DummyBillingRepository implements BillingRepository {
         plan: plan,
         existingSubscription: existingSubscription,
         now: DateTime(2026, 9, 9),
+        autoRenew: autoRenew,
       );
 
       _wallet = result.wallet;

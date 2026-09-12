@@ -303,6 +303,12 @@ class _DashboardPage extends StatelessWidget {
             : context.read<BillingCubit>().reactivateIptvSubscription(
                 subscriptionId: subscriptionId,
               ),
+        onToggleAutoRenew:
+            ({required subscriptionId, required bool autoRenew}) =>
+                context.read<BillingCubit>().setSubscriptionAutoRenew(
+                  subscriptionId: subscriptionId,
+                  autoRenew: autoRenew,
+                ),
       ),
       _DashboardTab.billing => Column(
         crossAxisAlignment: CrossAxisAlignment.start,

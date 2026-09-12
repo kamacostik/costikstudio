@@ -40,6 +40,10 @@ void main() {
                 onReactivate: ({required subscriptionId}) async {
                   reactivatedSubscriptionId = subscriptionId;
                 },
+                onToggleAutoRenew: ({
+                  required subscriptionId,
+                  required bool autoRenew,
+                }) async {},
               ),
             ),
           ),

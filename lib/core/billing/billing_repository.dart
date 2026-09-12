@@ -65,11 +65,13 @@ abstract class BillingRepository {
   Future<BillingSnapshot> checkoutIptvSubscription({
     required int deviceCount,
     required int billingCycleMonths,
+    bool autoRenew = false,
   });
 
   Future<BillingSnapshot> checkoutSignageSubscription({
     required int deviceCount,
     required int billingCycleMonths,
+    bool autoRenew = false,
   });
 
   Future<BillingSnapshot> renewIptvSubscription({
@@ -106,5 +108,10 @@ abstract class BillingRepository {
 
   Future<BillingSnapshot> cancelSignageSubscription({
     required String subscriptionId,
+  });
+
+  Future<BillingSnapshot> setSubscriptionAutoRenew({
+    required String subscriptionId,
+    required bool autoRenew,
   });
 }

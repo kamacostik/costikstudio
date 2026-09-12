@@ -27,22 +27,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.bySemanticsLabel('Nama Hotel / Instansi / Perusahaan'),
-        'Costik Hotel',
-      );
-      await tester.enterText(
-        find.bySemanticsLabel('Nama Penanggung Jawab (PIC)'),
-        'Kama',
-      );
-      await tester.enterText(
-        find.bySemanticsLabel('Alamat Email'),
-        'kama@example.com',
-      );
-      await tester.enterText(
-        find.bySemanticsLabel('No. WhatsApp / Telepon'),
-        '08123456789',
-      );
       await tester.tap(find.widgetWithText(ChoiceChip, '25 Device'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ChoiceChip, '1 Tahun (12 Bln)'));

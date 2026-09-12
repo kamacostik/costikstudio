@@ -108,5 +108,29 @@ void main() {
       expect(unitPriceForProductId('costik-iptv'), 15000);
       expect(formatRupiah(signagePricePerDevice), contains('20'));
     });
+
+    test('checkout with auto-renew stores the flag', () async {
+      final repository = DummyBillingRepository();
+
+      final snapshot = await repository.checkoutSignageSubscription(
+        deviceCount: 1,
+        billingCycleMonths: 1,
+        autoRenew: true,
+      );
+
+      final signage = snapshot.subscriptions.firstWhere(
+        (s) => s.productId == 'costik-signage',
+      );
+      expect(signage.autoRenew, isTrue);
+
+      final toggled = await repository.setSubscriptionAutoRenew(
+        subscriptionId: signage.id,
+        autoRenew: false,
+      );
+      expect(
+        toggled.subscriptions.firstWhere((s) => s.id == signage.id).autoRenew,
+        isFalse,
+      );
+    });
   });
 }

@@ -14,6 +14,7 @@ class SubscriptionsCard extends StatelessWidget {
     required this.onUpgradeDevice,
     required this.onCancel,
     required this.onReactivate,
+    required this.onToggleAutoRenew,
   });
 
   final List<BillingProduct> products;
@@ -31,6 +32,11 @@ class SubscriptionsCard extends StatelessWidget {
   onUpgradeDevice;
   final Future<void> Function({required String subscriptionId}) onCancel;
   final Future<void> Function({required String subscriptionId}) onReactivate;
+  final Future<void> Function({
+    required String subscriptionId,
+    required bool autoRenew,
+  })
+  onToggleAutoRenew;
 
   BillingProduct? _productById(String id) {
     for (final product in products) {
@@ -103,6 +109,7 @@ class SubscriptionsCard extends StatelessWidget {
                   onUpgradeDevice: onUpgradeDevice,
                   onCancel: onCancel,
                   onReactivate: onReactivate,
+                  onToggleAutoRenew: onToggleAutoRenew,
                 ),
           ],
         ),
@@ -120,6 +127,7 @@ class _SubscriptionRow extends StatelessWidget {
     required this.onUpgradeDevice,
     required this.onCancel,
     required this.onReactivate,
+    required this.onToggleAutoRenew,
   });
 
   final Subscription subscription;
@@ -137,6 +145,11 @@ class _SubscriptionRow extends StatelessWidget {
   onUpgradeDevice;
   final Future<void> Function({required String subscriptionId}) onCancel;
   final Future<void> Function({required String subscriptionId}) onReactivate;
+  final Future<void> Function({
+    required String subscriptionId,
+    required bool autoRenew,
+  })
+  onToggleAutoRenew;
 
   String get _productName => product?.name ?? subscription.productId;
   int get _unitPrice => unitPriceForProductId(subscription.productId);
@@ -446,7 +459,60 @@ class _SubscriptionRow extends StatelessWidget {
                         label: 'Renewal 1 Bulan',
                         value: formatRupiah(_monthlyRenewalAmount),
                       ),
+                      _DetailRow(
+                        label: 'Auto-Renew',
+                        value: subscription.autoRenew
+                            ? 'Aktif (per bulan)'
+                            : 'Mati',
+                      ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'Auto-Renew per Bulan',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    subtitle: Text(
+                      'Perpanjangan otomatis tiap bulan dari saldo wallet (${formatRupiah(_monthlyRenewalAmount)}/bulan). Pastikan saldo mencukupi agar langganan tidak kedaluwarsa.',
+                      style: const TextStyle(
+                        color: CostikStudioTheme.slate,
+                        fontSize: 12,
+                      ),
+                    ),
+                    value: subscription.autoRenew,
+                    onChanged: _isActive
+                        ? (value) async {
+                            Navigator.of(dialogCtx).pop();
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  value
+                                      ? 'Mengaktifkan auto-renew...'
+                                      : 'Mematikan auto-renew...',
+                                ),
+                              ),
+                            );
+                            await onToggleAutoRenew(
+                              subscriptionId: subscription.id,
+                              autoRenew: value,
+                            );
+                          }
+                        : null,
                   ),
                 ),
                 const SizedBox(height: 22),
@@ -622,6 +688,12 @@ class _SubscriptionRow extends StatelessWidget {
                                   text:
                                       'Expired ${_shortDate(subscription.expiresAt)}',
                                 ),
+                                _MiniMeta(
+                                  icon: Icons.autorenew_rounded,
+                                  text: subscription.autoRenew
+                                      ? 'Auto-Renew Aktif'
+                                      : 'Auto-Renew Mati',
+                                ),
                               ],
                             ),
                           ],
@@ -690,6 +762,12 @@ class _SubscriptionRow extends StatelessWidget {
                             icon: Icons.event_available_rounded,
                             text:
                                 'Expired ${_shortDate(subscription.expiresAt)}',
+                          ),
+                          _MiniMeta(
+                            icon: Icons.autorenew_rounded,
+                            text: subscription.autoRenew
+                                ? 'Auto-Renew Aktif'
+                                : 'Auto-Renew Mati',
                           ),
                         ],
                       ),

@@ -216,6 +216,7 @@ class BillingCheckout {
     required BillingPlan plan,
     required DateTime now,
     Subscription? existingSubscription,
+    bool autoRenew = false,
   }) {
     if (plan.productId != product.id) {
       throw ArgumentError('Plan does not belong to selected product.');
@@ -237,6 +238,7 @@ class BillingCheckout {
       now: now,
       baseDate: baseDate,
       existingSubscription: existingSubscription,
+      autoRenew: autoRenew,
     );
 
     return CheckoutResult(
@@ -272,6 +274,7 @@ class BillingCheckout {
     required DateTime now,
     required DateTime baseDate,
     required Subscription? existingSubscription,
+    bool autoRenew = false,
   }) {
     final expiresAt = baseDate.add(Duration(days: plan.durationDays));
     if (existingSubscription != null) {
@@ -279,6 +282,7 @@ class BillingCheckout {
         planId: plan.id,
         status: SubscriptionStatus.active,
         expiresAt: expiresAt,
+        autoRenew: autoRenew,
       );
     }
 
@@ -290,7 +294,7 @@ class BillingCheckout {
       status: SubscriptionStatus.active,
       startedAt: now,
       expiresAt: expiresAt,
-      autoRenew: false,
+      autoRenew: autoRenew,
     );
   }
 }
