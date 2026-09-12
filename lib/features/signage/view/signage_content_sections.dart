@@ -78,6 +78,7 @@ class SignageMediaSection extends StatelessWidget {
               signageDataColumn('Media'),
               signageDataColumn('Tipe'),
               signageDataColumn('Path / URL'),
+              signageDataColumn('Aksi'),
             ],
             rows: [
               for (final item in state.mediaItems)
@@ -95,6 +96,30 @@ class SignageMediaSection extends StatelessWidget {
                     ),
                     DataCell(Text(item.mediaType.toUpperCase())),
                     DataCell(Text(item.publicUrl ?? item.storagePath)),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: 'Ubah media',
+                            icon: const Icon(Icons.edit_rounded),
+                            onPressed: state.isSaving
+                                ? null
+                                : () => _showMediaDialog(context, item),
+                          ),
+                          IconButton(
+                            tooltip: 'Hapus media',
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.red,
+                            ),
+                            onPressed: state.isSaving || item.id == null
+                                ? null
+                                : () => _confirmDeleteMedia(context, item),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
             ],
@@ -104,19 +129,26 @@ class SignageMediaSection extends StatelessWidget {
     );
   }
 
-  Future<void> _showMediaDialog(BuildContext context) async {
-    final nameController = TextEditingController();
-    final pathController = TextEditingController();
-    var mediaType = 'image';
+  Future<void> _showMediaDialog(
+    BuildContext context, [
+    SignageMediaItem? existing,
+  ]) async {
+    final nameController = TextEditingController(
+      text: existing?.fileName ?? '',
+    );
+    final pathController = TextEditingController(
+      text: existing?.publicUrl ?? existing?.storagePath ?? '',
+    );
+    var mediaType = existing?.mediaType ?? 'image';
     final item = await showDialog<SignageMediaItem>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           titlePadding: EdgeInsets.zero,
           contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-          title: const _StyledDialogHeader(
+          title: _StyledDialogHeader(
             icon: Icons.perm_media_rounded,
-            title: 'Tambah Media',
+            title: existing == null ? 'Tambah Media' : 'Ubah Media',
             subtitle:
                 'Tambahkan URL gambar atau video untuk bahan playlist signage.',
           ),
@@ -170,9 +202,18 @@ class SignageMediaSection extends StatelessWidget {
               onPressed: () {
                 final name = nameController.text.trim();
                 final path = pathController.text.trim();
-                if (name.isEmpty || path.isEmpty) return;
+                if (name.isEmpty || path.isEmpty) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Colors.red,
+                      content: Text('Nama media dan URL/path wajib diisi.'),
+                    ),
+                  );
+                  return;
+                }
                 Navigator.of(dialogContext).pop(
                   SignageMediaItem(
+                    id: existing?.id,
                     fileName: name,
                     storagePath: path,
                     publicUrl: path.startsWith('http') ? path : null,
@@ -190,6 +231,36 @@ class SignageMediaSection extends StatelessWidget {
     pathController.dispose();
     if (item != null && context.mounted) {
       await context.read<SignageAdminCubit>().saveMedia(item);
+    }
+  }
+
+  Future<void> _confirmDeleteMedia(
+    BuildContext context,
+    SignageMediaItem item,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus Media?'),
+        content: Text(
+          'Media "${item.fileName}" akan dihapus dari playlist dan daftar media TV.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted && item.id != null) {
+      await context.read<SignageAdminCubit>().deleteMedia(item.id!);
     }
   }
 }
@@ -657,6 +728,9 @@ class _DailyEventTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSaving = context.select<SignageAdminCubit, bool>(
+      (cubit) => cubit.state.isSaving,
+    );
     return SignageDataTable(
       emptyIcon: group.icon,
       emptyMessage: group.emptyText,
@@ -666,6 +740,7 @@ class _DailyEventTable extends StatelessWidget {
         signageDataColumn('Jam'),
         signageDataColumn('Room / Floor'),
         signageDataColumn('Direction'),
+        signageDataColumn('Aksi'),
       ],
       rows: [
         for (final item in group.events)
@@ -687,6 +762,30 @@ class _DailyEventTable extends StatelessWidget {
               ),
               DataCell(Text('${item.meetingRoom} • Floor ${item.floor}')),
               DataCell(Text(item.direction)),
+              DataCell(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Ubah event',
+                      icon: const Icon(Icons.edit_rounded),
+                      onPressed: isSaving
+                          ? null
+                          : () => _showEventDialog(context, item),
+                    ),
+                    IconButton(
+                      tooltip: 'Hapus event',
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.red,
+                      ),
+                      onPressed: isSaving || item.id == null
+                          ? null
+                          : () => _confirmDeleteEvent(context, item),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
       ],
@@ -704,14 +803,31 @@ DateTime _dateOnly(DateTime value) =>
 bool _isSameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
 
-Future<void> _showEventDialog(BuildContext context) async {
-  final eventController = TextEditingController();
-  final roomController = TextEditingController();
-  final floorController = TextEditingController();
-  var direction = 'right';
-  var eventDate = DateTime.now();
-  var startTime = const TimeOfDay(hour: 9, minute: 0);
-  var endTime = const TimeOfDay(hour: 10, minute: 0);
+Future<void> _showEventDialog(
+  BuildContext context, [
+  SignageEventItem? existing,
+]) async {
+  final eventController = TextEditingController(
+    text: existing?.eventName ?? '',
+  );
+  final roomController = TextEditingController(
+    text: existing?.meetingRoom ?? '',
+  );
+  final floorController = TextEditingController(text: existing?.floor ?? '');
+  var direction = existing?.direction ?? 'right';
+  var eventDate = existing?.startDate ?? DateTime.now();
+  var startTime = existing?.startDate != null
+      ? TimeOfDay(
+          hour: existing!.startDate!.hour,
+          minute: existing.startDate!.minute,
+        )
+      : const TimeOfDay(hour: 9, minute: 0);
+  var endTime = existing?.endDate != null
+      ? TimeOfDay(
+          hour: existing!.endDate!.hour,
+          minute: existing.endDate!.minute,
+        )
+      : const TimeOfDay(hour: 10, minute: 0);
 
   final item = await showDialog<SignageEventItem>(
     context: context,
@@ -754,20 +870,24 @@ Future<void> _showEventDialog(BuildContext context) async {
                 top: Radius.circular(28),
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                CircleAvatar(
+                const CircleAvatar(
                   backgroundColor: Colors.white,
                   foregroundColor: CostikStudioTheme.primary,
                   child: Icon(Icons.event_note_rounded),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Tambah Daily Event'),
-                      SizedBox(height: 4),
+                      Text(
+                        existing == null
+                            ? 'Tambah Daily Event'
+                            : 'Ubah Daily Event',
+                      ),
+                      const SizedBox(height: 4),
                       Text(
                         'Event akan tampil di client sesuai tanggal hari berjalan.',
                         style: TextStyle(
@@ -920,12 +1040,14 @@ Future<void> _showEventDialog(BuildContext context) async {
                 }
                 Navigator.of(dialogContext).pop(
                   SignageEventItem(
+                    id: existing?.id,
                     eventName: eventName,
                     meetingRoom: room,
                     floor: floorController.text.trim(),
                     direction: direction,
                     startDate: startDateTime,
                     endDate: endDateTime,
+                    isActive: existing?.isActive ?? true,
                   ),
                 );
               },
@@ -942,6 +1064,36 @@ Future<void> _showEventDialog(BuildContext context) async {
   floorController.dispose();
   if (item != null && context.mounted) {
     await context.read<SignageAdminCubit>().saveEvent(item);
+  }
+}
+
+Future<void> _confirmDeleteEvent(
+  BuildContext context,
+  SignageEventItem item,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Hapus Event?'),
+      content: Text(
+        'Event "${item.eventName}" akan dihapus dari daftar Daily Event TV.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('Batal'),
+        ),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(backgroundColor: Colors.red),
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          icon: const Icon(Icons.delete_outline_rounded),
+          label: const Text('Hapus'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed == true && context.mounted && item.id != null) {
+    await context.read<SignageAdminCubit>().deleteEvent(item.id!);
   }
 }
 

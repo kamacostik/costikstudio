@@ -369,6 +369,7 @@ abstract class SignageAdminRepository {
   Future<SignageDeviceQuota> fetchDeviceQuota();
   Future<List<SignageMediaItem>> fetchMedia();
   Future<SignageMediaItem> saveMedia(SignageMediaItem item);
+  Future<void> deleteMedia(String mediaId);
   Future<List<SignagePlaylistItem>> fetchPlaylists();
   Future<SignagePlaylistItem> savePlaylist(SignagePlaylistItem item);
   Future<void> deletePlaylist(String playlistId);
@@ -377,6 +378,7 @@ abstract class SignageAdminRepository {
   Future<void> replacePlaylistItems(String playlistId, List<String> mediaIds);
   Future<List<SignageEventItem>> fetchEvents();
   Future<SignageEventItem> saveEvent(SignageEventItem item);
+  Future<void> deleteEvent(String eventId);
   Future<SignageDevicePairing> createDevicePairing({String? deviceName});
   Future<SignageDevicePairing> regenerateDevicePairing(String deviceId);
   Future<void> updateDeviceSlideDuration(
@@ -509,6 +511,22 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
   }
 
   @override
+  Future<void> deleteMedia(String mediaId) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    await _supabase
+        .from('sg_playlist_items')
+        .delete()
+        .eq('media_id', mediaId)
+        .eq('tenant_id', tenantId);
+    await _supabase
+        .from('sg_media')
+        .delete()
+        .eq('id', mediaId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
   Future<List<SignagePlaylistItem>> fetchPlaylists() async {
     final tenantId = await currentTenantId();
     if (tenantId == null) return const [];
@@ -629,6 +647,17 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
         .select()
         .limit(1);
     return rows.isEmpty ? item : SignageEventItem.fromMap(rows.first);
+  }
+
+  @override
+  Future<void> deleteEvent(String eventId) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    await _supabase
+        .from('sg_event_lists')
+        .delete()
+        .eq('id', eventId)
+        .eq('tenant_id', tenantId);
   }
 
   @override

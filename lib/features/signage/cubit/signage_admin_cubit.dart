@@ -179,6 +179,25 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     }
   }
 
+  Future<void> deleteMedia(String mediaId) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.deleteMedia(mediaId);
+      final mediaItems = await _repository.fetchMedia();
+      final playlistVideoCounts = await _repository.fetchPlaylistVideoCounts();
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          mediaItems: mediaItems,
+          playlistVideoCounts: playlistVideoCounts,
+          successMessage: 'Media berhasil dihapus.',
+        ),
+      );
+    } catch (e) {
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
   Future<void> savePlaylist(SignagePlaylistItem item) async {
     _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
@@ -268,6 +287,23 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           isSaving: false,
           events: events,
           successMessage: 'Event berhasil disimpan.',
+        ),
+      );
+    } catch (e) {
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> deleteEvent(String eventId) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.deleteEvent(eventId);
+      final events = await _repository.fetchEvents();
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          events: events,
+          successMessage: 'Event berhasil dihapus.',
         ),
       );
     } catch (e) {
