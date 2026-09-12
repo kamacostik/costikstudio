@@ -62,6 +62,8 @@ create table if not exists public.sg_devices (
   promo_duration double precision not null default 7,
   table_column integer not null default 4,
   event_slide_duration_seconds integer not null default 7,
+  app_mode text not null default 'daily_event'
+    check (app_mode in ('daily_event', 'video_player')),
   is_active boolean not null default true,
   last_seen_at timestamptz,
   created_at timestamptz not null default now(),

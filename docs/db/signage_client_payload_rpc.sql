@@ -128,7 +128,8 @@ begin
       'is_promo', v_device.is_promo,
       'promo_duration', v_device.promo_duration,
       'table_column', v_device.table_column,
-      'event_slide_duration_seconds', v_device.event_slide_duration_seconds
+      'event_slide_duration_seconds', v_device.event_slide_duration_seconds,
+      'app_mode', v_device.app_mode
     ),
     'tenant_id', v_device.tenant_id,
     'hotel', coalesce(v_hotel, 'null'::jsonb),

@@ -220,6 +220,26 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     }
   }
 
+  Future<void> updateDeviceAppMode(
+    String deviceId, {
+    required SignageAppMode appMode,
+  }) async {
+    emit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.updateDeviceAppMode(deviceId, appMode: appMode);
+      final devices = await _repository.fetchDevices();
+      emit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          successMessage: 'Mode aplikasi device berhasil disimpan.',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
   Future<void> deleteDevice(String deviceId) async {
     emit(state.copyWith(isSaving: true, clearMessages: true));
     try {

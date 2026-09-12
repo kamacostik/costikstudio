@@ -72,6 +72,7 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                   columns: [
                     signageDataColumn('Device'),
                     signageDataColumn('Layout'),
+                    signageDataColumn('Mode'),
                     signageDataColumn('Slide Event'),
                     signageDataColumn('Konten'),
                     signageDataColumn('Status'),
@@ -93,6 +94,15 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                             ),
                           ),
                           DataCell(Text('${device.tableColumn} kolom')),
+                          DataCell(
+                            SignageStatusBadge(
+                              label: device.appMode.label,
+                              color:
+                                  device.appMode == SignageAppMode.videoPlayer
+                                  ? Colors.purple
+                                  : CostikStudioTheme.navy,
+                            ),
+                          ),
                           DataCell(
                             Text('${device.eventSlideDurationSeconds} detik'),
                           ),
@@ -302,6 +312,7 @@ class _DeviceSettingsAction extends StatelessWidget {
 
   Future<void> _showSettingsDialog(BuildContext context) async {
     var slideDuration = device.eventSlideDurationSeconds.clamp(3, 60);
+    var appMode = device.appMode;
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -319,6 +330,26 @@ class _DeviceSettingsAction extends StatelessWidget {
                     color: CostikStudioTheme.navy,
                     fontWeight: FontWeight.w900,
                   ),
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'Mode aplikasi',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<SignageAppMode>(
+                  initialValue: appMode,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.apps_rounded),
+                    helperText: 'TV menampilkan Daily Event atau Video Player.',
+                  ),
+                  items: [
+                    for (final mode in SignageAppMode.values)
+                      DropdownMenuItem(value: mode, child: Text(mode.label)),
+                  ],
+                  onChanged: (mode) {
+                    if (mode != null) setState(() => appMode = mode);
+                  },
                 ),
                 const SizedBox(height: 18),
                 Text('Durasi slide Daily Event: $slideDuration detik'),
@@ -355,10 +386,16 @@ class _DeviceSettingsAction extends StatelessWidget {
       ),
     );
     if (saved != true || !context.mounted) return;
-    await context.read<SignageAdminCubit>().updateDeviceSlideDuration(
-      device.id,
-      durationSeconds: slideDuration,
-    );
+    final cubit = context.read<SignageAdminCubit>();
+    if (appMode != device.appMode) {
+      await cubit.updateDeviceAppMode(device.id, appMode: appMode);
+    }
+    if (slideDuration != device.eventSlideDurationSeconds) {
+      await cubit.updateDeviceSlideDuration(
+        device.id,
+        durationSeconds: slideDuration,
+      );
+    }
   }
 }
 

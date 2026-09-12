@@ -41,6 +41,23 @@ class SignageHotelProfile extends Equatable {
   List<Object?> get props => [id, name, address, description, logoUrl];
 }
 
+enum SignageAppMode {
+  dailyEvent('daily_event', 'Daily Event'),
+  videoPlayer('video_player', 'Video Player');
+
+  const SignageAppMode(this.value, this.label);
+
+  final String value;
+  final String label;
+
+  static SignageAppMode fromValue(String? value) {
+    return SignageAppMode.values.firstWhere(
+      (mode) => mode.value == value,
+      orElse: () => SignageAppMode.dailyEvent,
+    );
+  }
+}
+
 class SignageDevice extends Equatable {
   const SignageDevice({
     required this.id,
@@ -50,6 +67,7 @@ class SignageDevice extends Equatable {
     required this.promoDuration,
     required this.tableColumn,
     this.eventSlideDurationSeconds = 7,
+    this.appMode = SignageAppMode.dailyEvent,
     required this.isActive,
     this.pairingCode,
     this.pairingExpiresAt,
@@ -64,6 +82,7 @@ class SignageDevice extends Equatable {
   final double promoDuration;
   final int tableColumn;
   final int eventSlideDurationSeconds;
+  final SignageAppMode appMode;
   final bool isActive;
   final String? pairingCode;
   final DateTime? pairingExpiresAt;
@@ -91,6 +110,7 @@ class SignageDevice extends Equatable {
       tableColumn: map['table_column'] as int? ?? 4,
       eventSlideDurationSeconds:
           (map['event_slide_duration_seconds'] as num?)?.round() ?? 7,
+      appMode: SignageAppMode.fromValue(map['app_mode'] as String?),
       isActive: map['is_active'] as bool? ?? true,
       pairingCode: map['pairing_code'] as String?,
       pairingExpiresAt: DateTime.tryParse(
@@ -110,6 +130,7 @@ class SignageDevice extends Equatable {
     promoDuration,
     tableColumn,
     eventSlideDurationSeconds,
+    appMode,
     isActive,
     pairingCode,
     pairingExpiresAt,
@@ -325,6 +346,10 @@ abstract class SignageAdminRepository {
     String deviceId, {
     required int durationSeconds,
   });
+  Future<void> updateDeviceAppMode(
+    String deviceId, {
+    required SignageAppMode appMode,
+  });
   Future<void> deleteDevice(String deviceId);
 }
 
@@ -503,6 +528,23 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
         .from('sg_devices')
         .update({
           'event_slide_duration_seconds': durationSeconds.clamp(3, 60),
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', deviceId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
+  Future<void> updateDeviceAppMode(
+    String deviceId, {
+    required SignageAppMode appMode,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    await _supabase
+        .from('sg_devices')
+        .update({
+          'app_mode': appMode.value,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', deviceId)
