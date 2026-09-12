@@ -90,11 +90,7 @@ class _SignageAdminView extends StatelessWidget {
                   _SubscriptionAccessCard(subscription: subscription),
                   const SizedBox(height: 16),
                   if (signageState.tenant == null)
-                    _ProvisionTenantCard(isLoading: signageState.isLoading)
-                  else
-                    _TenantReadyCard(
-                      tenantName: signageState.tenant!.tenantName,
-                    ),
+                    _ProvisionTenantCard(isLoading: signageState.isLoading),
                   if (signageState.errorMessage != null) ...[
                     const SizedBox(height: 12),
                     Text(
@@ -253,26 +249,6 @@ class _TenantRequiredModulesNotice extends StatelessWidget {
               style: TextStyle(color: CostikStudioTheme.slate),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TenantReadyCard extends StatelessWidget {
-  const _TenantReadyCard({required this.tenantName});
-
-  final String tenantName;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.green.withValues(alpha: 0.06),
-      child: ListTile(
-        leading: const Icon(Icons.check_circle_rounded, color: Colors.green),
-        title: Text('Tenant aktif: $tenantName'),
-        subtitle: const Text(
-          'Data Signage akan dibatasi oleh RLS sesuai tenant akun ini.',
         ),
       ),
     );
