@@ -14,9 +14,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SignageAdminPage extends StatelessWidget {
-  const SignageAdminPage({super.key, this.repository});
+  const SignageAdminPage({super.key, this.repository, this.isEmbedded = false});
 
   final BillingRepository? repository;
+  final bool isEmbedded;
 
   @override
   Widget build(BuildContext context) {
@@ -38,13 +39,15 @@ class SignageAdminPage extends StatelessWidget {
           ),
         ),
       ],
-      child: const _SignageAdminView(),
+      child: _SignageAdminView(isEmbedded: isEmbedded),
     );
   }
 }
 
 class _SignageAdminView extends StatelessWidget {
-  const _SignageAdminView();
+  const _SignageAdminView({required this.isEmbedded});
+
+  final bool isEmbedded;
 
   @override
   Widget build(BuildContext context) {
@@ -70,46 +73,52 @@ class _SignageAdminView extends StatelessWidget {
 
         return BlocBuilder<SignageCubit, SignageState>(
           builder: (context, signageState) {
+            final content = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Costik Signage Admin',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: CostikStudioTheme.navy,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Kelola data signage langsung dari CostikStudio. Akses ini hanya aktif untuk subscription Costik Signage yang masih berlaku.',
+                  style: TextStyle(color: CostikStudioTheme.slate),
+                ),
+                const SizedBox(height: 20),
+                _SubscriptionAccessCard(subscription: subscription),
+                const SizedBox(height: 16),
+                if (signageState.tenant == null)
+                  _ProvisionTenantCard(isLoading: signageState.isLoading),
+                if (signageState.errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    signageState.errorMessage!,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 22),
+                if (signageState.tenant != null) ...[
+                  _SignageAdminModules(subscription: subscription),
+                ] else ...[
+                  const _TenantRequiredModulesNotice(),
+                ],
+              ],
+            );
+
+            if (isEmbedded) {
+              return content;
+            }
+
             return SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Costik Signage Admin',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: CostikStudioTheme.navy,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Kelola data signage langsung dari CostikStudio. Akses ini hanya aktif untuk subscription Costik Signage yang masih berlaku.',
-                    style: TextStyle(color: CostikStudioTheme.slate),
-                  ),
-                  const SizedBox(height: 20),
-                  _SubscriptionAccessCard(subscription: subscription),
-                  const SizedBox(height: 16),
-                  if (signageState.tenant == null)
-                    _ProvisionTenantCard(isLoading: signageState.isLoading),
-                  if (signageState.errorMessage != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      signageState.errorMessage!,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 22),
-                  if (signageState.tenant != null) ...[
-                    _SignageAdminModules(subscription: subscription),
-                  ] else ...[
-                    const _TenantRequiredModulesNotice(),
-                  ],
-                ],
-              ),
+              child: content,
             );
           },
         );

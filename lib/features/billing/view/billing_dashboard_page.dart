@@ -14,6 +14,7 @@ import 'package:costikstudio/features/billing/widgets/subscriptions_card.dart';
 import 'package:costikstudio/features/billing/widgets/transactions_card.dart';
 import 'package:costikstudio/features/billing/widgets/wallet_card.dart';
 import 'package:costikstudio/features/shared/widgets/product_card.dart';
+import 'package:costikstudio/features/signage/view/signage_admin_page.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
 import 'package:costikstudio/features/subscription/view/signage_subscription_page.dart';
 import 'package:costikstudio/features/support/view/support_page.dart';
@@ -34,7 +35,15 @@ class BillingDashboardPage extends StatelessWidget {
   }
 }
 
-enum _DashboardTab { apps, subscriptions, billing, activity, invoices, support }
+enum _DashboardTab {
+  apps,
+  signageAdmin,
+  subscriptions,
+  billing,
+  activity,
+  invoices,
+  support,
+}
 
 class _BillingDashboardView extends StatefulWidget {
   const _BillingDashboardView();
@@ -247,6 +256,7 @@ class _DashboardPage extends StatelessWidget {
 
     return switch (selectedTab) {
       _DashboardTab.apps => _buildAppsTab(context),
+      _DashboardTab.signageAdmin => const SignageAdminPage(isEmbedded: true),
       _DashboardTab.subscriptions => SubscriptionsCard(
         products: snapshot.products,
         plans: snapshot.plans,
@@ -377,6 +387,7 @@ class _DashboardPage extends StatelessWidget {
     }
     return switch (tab) {
       _DashboardTab.apps => 'Produk',
+      _DashboardTab.signageAdmin => 'Web Admin Digital Signage',
       _DashboardTab.subscriptions => 'Subscription',
       _DashboardTab.billing => 'Billing Wallet',
       _DashboardTab.activity => 'Aktivitas Wallet',
@@ -401,6 +412,7 @@ class _DashboardPage extends StatelessWidget {
     return switch (tab) {
       _DashboardTab.apps =>
         'Pilih produk aktif dan paket yang ingin dijalankan.',
+      _DashboardTab.signageAdmin => 'Kelola profil hotel, device pairing, Daily Event, media, playlist, dan mode player langsung dari panel member.',
       _DashboardTab.subscriptions =>
         'Pantau paket aktif dan masa berlaku layanan.',
       _DashboardTab.billing =>
@@ -1237,6 +1249,11 @@ class _DashboardNavBar extends StatelessWidget {
           _DashboardTab.apps,
           'Produk',
           Icons.inventory_2_rounded,
+        ),
+        _DashboardNavItem(
+          _DashboardTab.signageAdmin,
+          'Web Admin Signage',
+          Icons.cast_connected_rounded,
         ),
         _DashboardNavItem(
           _DashboardTab.subscriptions,
