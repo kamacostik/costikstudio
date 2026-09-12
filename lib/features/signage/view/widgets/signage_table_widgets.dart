@@ -141,42 +141,126 @@ class SignageEmptyTableState extends StatelessWidget {
   }
 }
 
-class SignageDataTable extends StatelessWidget {
+class SignageDataTable extends StatefulWidget {
   const SignageDataTable({
     super.key,
     required this.columns,
     required this.rows,
     required this.emptyIcon,
     required this.emptyMessage,
+    this.rowsPerPage = 10,
   });
 
   final List<DataColumn> columns;
   final List<DataRow> rows;
   final IconData emptyIcon;
   final String emptyMessage;
+  final int rowsPerPage;
+
+  @override
+  State<SignageDataTable> createState() => _SignageDataTableState();
+}
+
+class _SignageDataTableState extends State<SignageDataTable> {
+  int _pageIndex = 0;
+
+  @override
+  void didUpdateWidget(covariant SignageDataTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.rows.length != oldWidget.rows.length) {
+      _pageIndex = 0;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (rows.isEmpty) {
-      return SignageEmptyTableState(icon: emptyIcon, message: emptyMessage);
+    if (widget.rows.isEmpty) {
+      return SignageEmptyTableState(
+        icon: widget.emptyIcon,
+        message: widget.emptyMessage,
+      );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: constraints.maxWidth),
-            child: DataTable(
-              headingRowColor: const WidgetStatePropertyAll(Color(0xFFF8FAFC)),
-              horizontalMargin: 16,
-              columnSpacing: 24,
-              columns: columns,
-              rows: rows,
-            ),
+    final totalPages = (widget.rows.length / widget.rowsPerPage).ceil();
+    final safePageIndex = _pageIndex.clamp(0, totalPages - 1);
+    final start = safePageIndex * widget.rowsPerPage;
+    final end = (start + widget.rowsPerPage).clamp(0, widget.rows.length);
+    final visibleRows = widget.rows.sublist(start, end);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                child: DataTable(
+                  headingRowColor: const WidgetStatePropertyAll(
+                    Color(0xFFF8FAFC),
+                  ),
+                  horizontalMargin: 16,
+                  columnSpacing: 24,
+                  columns: widget.columns,
+                  rows: visibleRows,
+                ),
+              ),
+            );
+          },
+        ),
+        if (totalPages > 1) ...[
+          const SizedBox(height: 12),
+          _TablePaginationBar(
+            currentPage: safePageIndex + 1,
+            totalPages: totalPages,
+            totalItems: widget.rows.length,
+            onPrevious: safePageIndex == 0
+                ? null
+                : () => setState(() => _pageIndex = safePageIndex - 1),
+            onNext: safePageIndex >= totalPages - 1
+                ? null
+                : () => setState(() => _pageIndex = safePageIndex + 1),
           ),
-        );
-      },
+        ],
+      ],
+    );
+  }
+}
+
+class _TablePaginationBar extends StatelessWidget {
+  const _TablePaginationBar({
+    required this.currentPage,
+    required this.totalPages,
+    required this.totalItems,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final int currentPage;
+  final int totalPages;
+  final int totalItems;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(
+          '$totalItems data • Halaman $currentPage/$totalPages',
+          style: const TextStyle(
+            color: CostikStudioTheme.slate,
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(width: 12),
+        OutlinedButton(onPressed: onPrevious, child: const Text('Sebelumnya')),
+        const SizedBox(width: 8),
+        FilledButton.tonal(onPressed: onNext, child: const Text('Berikutnya')),
+      ],
     );
   }
 }

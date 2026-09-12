@@ -24,7 +24,10 @@ class BillingHistoryTableCard extends StatefulWidget {
 }
 
 class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
+  static const _rowsPerPage = 10;
+
   _BillingSubTab _activeTab = _BillingSubTab.transactions;
+  int _pageIndex = 0;
 
   List<WalletTransaction> get _purchaseTransactions => widget.transactions
       .where((t) => t.type != WalletTransactionType.topup)
@@ -48,6 +51,13 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
           ? <Object>[..._purchaseTransactions]
           : <Object>[..._failedPaymentOrders, ..._topupTransactions],
     );
+    final totalPages = displayedList.isEmpty
+        ? 1
+        : (displayedList.length / _rowsPerPage).ceil();
+    final safePageIndex = _pageIndex.clamp(0, totalPages - 1);
+    final start = safePageIndex * _rowsPerPage;
+    final end = (start + _rowsPerPage).clamp(0, displayedList.length);
+    final visibleList = displayedList.sublist(start, end);
 
     return Card(
       child: Padding(
@@ -80,9 +90,10 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
                         icon: Icons.receipt_long_rounded,
                         count: _purchaseTransactions.length,
                         isSelected: _activeTab == _BillingSubTab.transactions,
-                        onTap: () => setState(
-                          () => _activeTab = _BillingSubTab.transactions,
-                        ),
+                        onTap: () => setState(() {
+                          _activeTab = _BillingSubTab.transactions;
+                          _pageIndex = 0;
+                        }),
                       ),
                       const SizedBox(width: 4),
                       _TabButton(
@@ -90,8 +101,10 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
                         icon: Icons.add_card_rounded,
                         count: _topupLogCount,
                         isSelected: _activeTab == _BillingSubTab.topup,
-                        onTap: () =>
-                            setState(() => _activeTab = _BillingSubTab.topup),
+                        onTap: () => setState(() {
+                          _activeTab = _BillingSubTab.topup;
+                          _pageIndex = 0;
+                        }),
                       ),
                     ],
                   ),
@@ -185,7 +198,7 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
                           ),
                         ],
                         rows: [
-                          for (final entry in displayedList)
+                          for (final entry in visibleList)
                             _buildHistoryRow(entry),
                         ],
                       ),
@@ -193,6 +206,20 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
                   );
                 },
               ),
+            if (displayedList.length > _rowsPerPage) ...[
+              const SizedBox(height: 12),
+              _HistoryPaginationBar(
+                currentPage: safePageIndex + 1,
+                totalPages: totalPages,
+                totalItems: displayedList.length,
+                onPrevious: safePageIndex == 0
+                    ? null
+                    : () => setState(() => _pageIndex = safePageIndex - 1),
+                onNext: safePageIndex >= totalPages - 1
+                    ? null
+                    : () => setState(() => _pageIndex = safePageIndex + 1),
+              ),
+            ],
           ],
         ),
       ),
@@ -439,6 +466,43 @@ class _StatusBadge extends StatelessWidget {
           fontSize: 11,
         ),
       ),
+    );
+  }
+}
+
+class _HistoryPaginationBar extends StatelessWidget {
+  const _HistoryPaginationBar({
+    required this.currentPage,
+    required this.totalPages,
+    required this.totalItems,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final int currentPage;
+  final int totalPages;
+  final int totalItems;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(
+          '$totalItems data • Halaman $currentPage/$totalPages',
+          style: const TextStyle(
+            color: CostikStudioTheme.slate,
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(width: 12),
+        OutlinedButton(onPressed: onPrevious, child: const Text('Sebelumnya')),
+        const SizedBox(width: 8),
+        FilledButton.tonal(onPressed: onNext, child: const Text('Berikutnya')),
+      ],
     );
   }
 }
