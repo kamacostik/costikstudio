@@ -1,6 +1,9 @@
 -- Costik Signage device pairing RPCs
 -- Run after docs/db/signage_schema.sql and core billing/subscription schema.
 
+-- pgcrypto ships in the extensions schema on Supabase (not public), so every
+-- function below that uses gen_random_bytes()/digest() sets
+-- search_path = public, extensions.
 create extension if not exists pgcrypto;
 
 alter table public.sg_devices
@@ -118,7 +121,7 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_device public.sg_devices%rowtype;

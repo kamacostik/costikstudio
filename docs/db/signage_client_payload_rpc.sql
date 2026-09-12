@@ -8,6 +8,8 @@
 -- Every successful call refreshes last_seen_at so Web Admin can tell which
 -- devices are online.
 
+-- pgcrypto ships in the extensions schema on Supabase (not public), so the
+-- functions below set search_path = public, extensions to reach digest().
 create extension if not exists pgcrypto;
 
 -- Full tenant payload for one paired device: device config, hotel profile,
@@ -19,7 +21,7 @@ create or replace function public.get_signage_device_payload(
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_device public.sg_devices%rowtype;
@@ -141,7 +143,7 @@ create or replace function public.touch_signage_device(
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_device public.sg_devices%rowtype;
