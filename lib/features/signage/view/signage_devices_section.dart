@@ -71,6 +71,7 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                     signageDataColumn('Layout'),
                     signageDataColumn('Konten'),
                     signageDataColumn('Status'),
+                    signageDataColumn('Pairing'),
                   ],
                   rows: [
                     for (final device in state.devices)
@@ -92,14 +93,8 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                               'Video: ${device.isVideo ? 'On' : 'Off'} • Promo: ${device.isPromo ? 'On' : 'Off'}',
                             ),
                           ),
-                          DataCell(
-                            SignageStatusBadge(
-                              label: device.isActive ? 'Aktif' : 'Nonaktif',
-                              color: device.isActive
-                                  ? Colors.green
-                                  : Colors.orange,
-                            ),
-                          ),
+                          DataCell(_DeviceStatusBadge(device: device)),
+                          DataCell(_DevicePairingAction(device: device)),
                         ],
                       ),
                   ],
@@ -158,6 +153,80 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
       deviceName: _deviceNameController.text.trim(),
     );
   }
+}
+
+class _DeviceStatusBadge extends StatelessWidget {
+  const _DeviceStatusBadge({required this.device});
+
+  final SignageDevice device;
+
+  @override
+  Widget build(BuildContext context) {
+    if (device.isConnected) {
+      return const SignageStatusBadge(label: 'Connected', color: Colors.green);
+    }
+    if (device.isWaitingPairing) {
+      return const SignageStatusBadge(
+        label: 'Menunggu Pairing',
+        color: Colors.orange,
+      );
+    }
+    if (device.isPairingExpired) {
+      return const SignageStatusBadge(label: 'Kode Expired', color: Colors.red);
+    }
+    return const SignageStatusBadge(
+      label: 'Belum Pairing',
+      color: Colors.blueGrey,
+    );
+  }
+}
+
+class _DevicePairingAction extends StatelessWidget {
+  const _DevicePairingAction({required this.device});
+
+  final SignageDevice device;
+
+  @override
+  Widget build(BuildContext context) {
+    if (device.isConnected) {
+      return Text(
+        device.lastSeenAt == null
+            ? 'Sudah input kode'
+            : 'Last seen ${_formatDeviceTime(device.lastSeenAt!)}',
+        style: const TextStyle(color: CostikStudioTheme.slate),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (device.pairingCode != null && device.pairingCode!.isNotEmpty)
+          SelectableText(
+            device.pairingCode!,
+            style: const TextStyle(
+              color: CostikStudioTheme.primary,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
+            ),
+          )
+        else
+          const Text('-', style: TextStyle(color: CostikStudioTheme.slate)),
+        const SizedBox(width: 10),
+        TextButton.icon(
+          onPressed: () => context
+              .read<SignageAdminCubit>()
+              .regenerateDevicePairing(device.id),
+          icon: const Icon(Icons.refresh_rounded, size: 16),
+          label: Text(device.isPairingExpired ? 'Generate Lagi' : 'Buat Ulang'),
+        ),
+      ],
+    );
+  }
+}
+
+String _formatDeviceTime(DateTime value) {
+  final local = value.toLocal();
+  return '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')} ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
 }
 
 class _DeviceDialogHeader extends StatelessWidget {

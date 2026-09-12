@@ -187,4 +187,22 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
       emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
+
+  Future<void> regenerateDevicePairing(String deviceId) async {
+    emit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      final pairing = await _repository.regenerateDevicePairing(deviceId);
+      final devices = await _repository.fetchDevices();
+      emit(
+        state.copyWith(
+          isSaving: false,
+          devicePairing: pairing,
+          devices: devices,
+          successMessage: 'Kode pairing device berhasil dibuat ulang.',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
 }

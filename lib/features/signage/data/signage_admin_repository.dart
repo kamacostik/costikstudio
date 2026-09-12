@@ -50,6 +50,10 @@ class SignageDevice extends Equatable {
     required this.promoDuration,
     required this.tableColumn,
     required this.isActive,
+    this.pairingCode,
+    this.pairingExpiresAt,
+    this.activatedAt,
+    this.lastSeenAt,
   });
 
   final String id;
@@ -59,6 +63,21 @@ class SignageDevice extends Equatable {
   final double promoDuration;
   final int tableColumn;
   final bool isActive;
+  final String? pairingCode;
+  final DateTime? pairingExpiresAt;
+  final DateTime? activatedAt;
+  final DateTime? lastSeenAt;
+
+  bool get isConnected => activatedAt != null;
+  bool get isWaitingPairing =>
+      !isConnected &&
+      pairingCode != null &&
+      pairingExpiresAt != null &&
+      pairingExpiresAt!.isAfter(DateTime.now());
+  bool get isPairingExpired =>
+      !isConnected &&
+      pairingExpiresAt != null &&
+      !pairingExpiresAt!.isAfter(DateTime.now());
 
   factory SignageDevice.fromMap(Map<String, dynamic> map) {
     return SignageDevice(
@@ -69,6 +88,12 @@ class SignageDevice extends Equatable {
       promoDuration: (map['promo_duration'] as num?)?.toDouble() ?? 20,
       tableColumn: map['table_column'] as int? ?? 4,
       isActive: map['is_active'] as bool? ?? true,
+      pairingCode: map['pairing_code'] as String?,
+      pairingExpiresAt: DateTime.tryParse(
+        map['pairing_expires_at'] as String? ?? '',
+      ),
+      activatedAt: DateTime.tryParse(map['activated_at'] as String? ?? ''),
+      lastSeenAt: DateTime.tryParse(map['last_seen_at'] as String? ?? ''),
     );
   }
 
@@ -81,6 +106,10 @@ class SignageDevice extends Equatable {
     promoDuration,
     tableColumn,
     isActive,
+    pairingCode,
+    pairingExpiresAt,
+    activatedAt,
+    lastSeenAt,
   ];
 }
 
@@ -263,6 +292,7 @@ abstract class SignageAdminRepository {
   Future<List<SignageEventItem>> fetchEvents();
   Future<SignageEventItem> saveEvent(SignageEventItem item);
   Future<SignageDevicePairing> createDevicePairing({String? deviceName});
+  Future<SignageDevicePairing> regenerateDevicePairing(String deviceId);
 }
 
 class SupabaseSignageAdminRepository extends SignageAdminRepository {
@@ -398,6 +428,20 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
     );
     if (response is! List || response.isEmpty) {
       throw StateError('Gagal membuat kode pairing device.');
+    }
+    return SignageDevicePairing.fromMap(
+      Map<String, dynamic>.from(response.first as Map),
+    );
+  }
+
+  @override
+  Future<SignageDevicePairing> regenerateDevicePairing(String deviceId) async {
+    final response = await _supabase.rpc(
+      'regenerate_signage_device_pairing',
+      params: {'p_device_id': deviceId},
+    );
+    if (response is! List || response.isEmpty) {
+      throw StateError('Gagal membuat ulang kode pairing device.');
     }
     return SignageDevicePairing.fromMap(
       Map<String, dynamic>.from(response.first as Map),

@@ -4,6 +4,7 @@
 create extension if not exists pgcrypto;
 
 alter table public.sg_devices
+add column if not exists pairing_code text,
 add column if not exists device_token_hash text,
 add column if not exists pairing_expires_at timestamptz,
 add column if not exists activated_at timestamptz,
@@ -63,8 +64,10 @@ begin
     into v_active_devices
   from public.sg_devices as d
   where d.tenant_id = v_tenant_id
-    and d.is_active = true
-    and d.activated_at is not null;
+    and (
+      (d.is_active = true and d.activated_at is not null)
+      or (d.activated_at is null and d.pairing_code is not null and d.pairing_expires_at > now())
+    );
 
   if v_active_devices >= v_device_limit then
     raise exception 'Kuota device Signage sudah penuh. Upgrade device untuk menambah layar.';
@@ -96,7 +99,7 @@ begin
     v_pairing_code,
     now() + interval '10 minutes',
     coalesce(nullif(trim(p_platform), ''), 'android-tv'),
-    true
+    false
   );
 
   return query
@@ -126,7 +129,7 @@ begin
   from public.sg_devices as d
   where d.pairing_code = trim(p_pairing_code)
     and d.pairing_expires_at > now()
-    and d.is_active = true
+    and d.activated_at is null
   order by d.created_at desc
   limit 1;
 
@@ -139,6 +142,7 @@ begin
   update public.sg_devices
   set pairing_code = null,
       pairing_expires_at = null,
+      is_active = true,
       activated_at = now(),
       last_seen_at = now(),
       device_token_hash = encode(digest(v_device_token, 'sha256'), 'hex'),
@@ -150,5 +154,76 @@ begin
 end;
 $$;
 
+
+create or replace function public.regenerate_signage_device_pairing(
+  p_device_id text
+)
+returns table (
+  device_id text,
+  pairing_code text,
+  expires_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_tenant_id uuid;
+  v_device public.sg_devices%rowtype;
+  v_pairing_code text;
+begin
+  if v_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select p.tenant_id
+    into v_tenant_id
+  from public.sg_profiles as p
+  where p.id = v_user_id
+  limit 1;
+
+  if v_tenant_id is null then
+    raise exception 'Tenant Signage belum tersedia.';
+  end if;
+
+  select d.*
+    into v_device
+  from public.sg_devices as d
+  where d.id = p_device_id
+    and d.tenant_id = v_tenant_id
+  limit 1;
+
+  if v_device.id is null then
+    raise exception 'Device tidak ditemukan.';
+  end if;
+
+  if v_device.activated_at is not null then
+    raise exception 'Device sudah terhubung. Tidak perlu membuat kode pairing lagi.';
+  end if;
+
+  v_pairing_code := lpad((floor(random() * 1000000))::int::text, 6, '0');
+
+  while exists (
+    select 1 from public.sg_devices as d
+    where d.pairing_code = v_pairing_code
+      and d.pairing_expires_at > now()
+      and d.id <> v_device.id
+  ) loop
+    v_pairing_code := lpad((floor(random() * 1000000))::int::text, 6, '0');
+  end loop;
+
+  update public.sg_devices as d
+  set pairing_code = v_pairing_code,
+      pairing_expires_at = now() + interval '10 minutes',
+      is_active = false
+  where d.id = v_device.id;
+
+  return query
+  select v_device.id, v_pairing_code, now() + interval '10 minutes';
+end;
+$$;
+
 grant execute on function public.create_signage_device_pairing(text, text) to authenticated;
 grant execute on function public.activate_signage_device(text, jsonb) to anon, authenticated;
+grant execute on function public.regenerate_signage_device_pairing(text) to authenticated;
