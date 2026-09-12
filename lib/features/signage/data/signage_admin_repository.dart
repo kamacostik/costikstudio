@@ -172,6 +172,8 @@ class SignageEventItem extends Equatable {
     required this.meetingRoom,
     this.floor = '',
     this.direction = 'right',
+    this.startDate,
+    this.endDate,
     this.isActive = true,
   });
 
@@ -180,6 +182,8 @@ class SignageEventItem extends Equatable {
   final String meetingRoom;
   final String floor;
   final String direction;
+  final DateTime? startDate;
+  final DateTime? endDate;
   final bool isActive;
 
   factory SignageEventItem.fromMap(Map<String, dynamic> map) {
@@ -189,6 +193,8 @@ class SignageEventItem extends Equatable {
       meetingRoom: map['meeting_room'] as String? ?? '',
       floor: map['floor'] as String? ?? '',
       direction: map['direction'] as String? ?? 'right',
+      startDate: DateTime.tryParse(map['start_date'] as String? ?? ''),
+      endDate: DateTime.tryParse(map['end_date'] as String? ?? ''),
       isActive: map['is_active'] as bool? ?? true,
     );
   }
@@ -201,6 +207,8 @@ class SignageEventItem extends Equatable {
       'meeting_room': meetingRoom,
       'floor': floor,
       'direction': direction,
+      'start_date': startDate?.toIso8601String(),
+      'end_date': endDate?.toIso8601String(),
       'is_active': isActive,
     };
   }
@@ -212,6 +220,8 @@ class SignageEventItem extends Equatable {
     meetingRoom,
     floor,
     direction,
+    startDate,
+    endDate,
     isActive,
   ];
 }

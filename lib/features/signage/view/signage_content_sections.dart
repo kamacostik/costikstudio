@@ -244,24 +244,31 @@ class SignageEventListSection extends StatelessWidget {
       builder: (context, state) {
         return _SectionCard(
           icon: Icons.event_note_rounded,
-          title: 'Event List',
-          subtitle: 'Kelola agenda atau informasi meeting room untuk ditampilkan di layar.',
+          title: 'Daily Event',
+          subtitle: 'Kelola event harian berdasarkan tanggal, jam mulai, dan jam selesai.',
           action: FilledButton.icon(
             onPressed: state.isSaving ? null : () => _showEventDialog(context),
             icon: const Icon(Icons.add_rounded),
             label: const Text('Tambah Event'),
           ),
           child: _SimpleList(
-            emptyText: 'Belum ada event.',
+            emptyText: 'Belum ada daily event.',
             children: [
               for (final item in state.events)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.event_available_rounded),
+                  leading: CircleAvatar(
+                    backgroundColor: CostikStudioTheme.primary.withValues(
+                      alpha: 0.10,
+                    ),
+                    foregroundColor: CostikStudioTheme.primary,
+                    child: const Icon(Icons.event_available_rounded),
+                  ),
                   title: Text(item.eventName),
                   subtitle: Text(
-                    '${item.meetingRoom} • Floor ${item.floor} • ${item.direction}',
+                    '${_formatDate(item.startDate)} • ${_formatTime(item.startDate)} - ${_formatTime(item.endDate)} • ${item.meetingRoom} • Floor ${item.floor}',
                   ),
+                  trailing: Chip(label: Text(item.direction)),
                 ),
             ],
           ),
@@ -275,69 +282,214 @@ class SignageEventListSection extends StatelessWidget {
     final roomController = TextEditingController();
     final floorController = TextEditingController();
     var direction = 'right';
+    var eventDate = DateTime.now();
+    var startTime = const TimeOfDay(hour: 9, minute: 0);
+    var endTime = const TimeOfDay(hour: 10, minute: 0);
+
     final item = await showDialog<SignageEventItem>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Tambah Event'),
-          content: SizedBox(
-            width: 520,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: eventController,
-                  decoration: const InputDecoration(labelText: 'Nama event'),
+        builder: (context, setState) {
+          Future<void> pickDate() async {
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: eventDate,
+              firstDate: DateTime.now().subtract(const Duration(days: 365)),
+              lastDate: DateTime.now().add(const Duration(days: 730)),
+            );
+            if (picked != null) setState(() => eventDate = picked);
+          }
+
+          Future<void> pickStartTime() async {
+            final picked = await showTimePicker(
+              context: context,
+              initialTime: startTime,
+            );
+            if (picked != null) setState(() => startTime = picked);
+          }
+
+          Future<void> pickEndTime() async {
+            final picked = await showTimePicker(
+              context: context,
+              initialTime: endTime,
+            );
+            if (picked != null) setState(() => endTime = picked);
+          }
+
+          return AlertDialog(
+            titlePadding: EdgeInsets.zero,
+            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+            title: Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: CostikStudioTheme.primary.withValues(alpha: 0.10),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: roomController,
-                  decoration: const InputDecoration(labelText: 'Meeting room'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: floorController,
-                  decoration: const InputDecoration(labelText: 'Floor'),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: direction,
-                  decoration: const InputDecoration(labelText: 'Direction'),
-                  items: const [
-                    DropdownMenuItem(value: 'right', child: Text('Right')),
-                    DropdownMenuItem(value: 'left', child: Text('Left')),
-                    DropdownMenuItem(value: 'up', child: Text('Up')),
-                    DropdownMenuItem(value: 'down', child: Text('Down')),
-                  ],
-                  onChanged: (value) =>
-                      setState(() => direction = value ?? 'right'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Batal'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final eventName = eventController.text.trim();
-                final room = roomController.text.trim();
-                if (eventName.isEmpty || room.isEmpty) return;
-                Navigator.of(dialogContext).pop(
-                  SignageEventItem(
-                    eventName: eventName,
-                    meetingRoom: room,
-                    floor: floorController.text.trim(),
-                    direction: direction,
+              ),
+              child: const Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.white,
+                    foregroundColor: CostikStudioTheme.primary,
+                    child: Icon(Icons.event_note_rounded),
                   ),
-                );
-              },
-              child: const Text('Simpan'),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Tambah Daily Event'),
+                        SizedBox(height: 4),
+                        Text(
+                          'Event akan tampil di client sesuai tanggal hari berjalan.',
+                          style: TextStyle(
+                            color: CostikStudioTheme.slate,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+            content: SizedBox(
+              width: 620,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: eventController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama event',
+                        prefixIcon: Icon(Icons.title_rounded),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: roomController,
+                            decoration: const InputDecoration(
+                              labelText: 'Meeting room',
+                              prefixIcon: Icon(Icons.meeting_room_rounded),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 150,
+                          child: TextField(
+                            controller: floorController,
+                            decoration: const InputDecoration(
+                              labelText: 'Floor',
+                              prefixIcon: Icon(Icons.layers_rounded),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Jadwal Event',
+                      style: TextStyle(
+                        color: CostikStudioTheme.navy,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        _PickerChip(
+                          icon: Icons.calendar_today_rounded,
+                          label: 'Tanggal',
+                          value: _formatDate(eventDate),
+                          onTap: pickDate,
+                        ),
+                        _PickerChip(
+                          icon: Icons.play_arrow_rounded,
+                          label: 'Mulai',
+                          value: startTime.format(context),
+                          onTap: pickStartTime,
+                        ),
+                        _PickerChip(
+                          icon: Icons.stop_rounded,
+                          label: 'Selesai',
+                          value: endTime.format(context),
+                          onTap: pickEndTime,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      initialValue: direction,
+                      decoration: const InputDecoration(
+                        labelText: 'Direction',
+                        prefixIcon: Icon(Icons.assistant_direction_rounded),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'right', child: Text('Right')),
+                        DropdownMenuItem(value: 'left', child: Text('Left')),
+                        DropdownMenuItem(value: 'up', child: Text('Up')),
+                        DropdownMenuItem(value: 'down', child: Text('Down')),
+                      ],
+                      onChanged: (value) =>
+                          setState(() => direction = value ?? 'right'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Batal'),
+              ),
+              FilledButton.icon(
+                onPressed: () {
+                  final eventName = eventController.text.trim();
+                  final room = roomController.text.trim();
+                  if (eventName.isEmpty || room.isEmpty) return;
+                  final startDateTime = DateTime(
+                    eventDate.year,
+                    eventDate.month,
+                    eventDate.day,
+                    startTime.hour,
+                    startTime.minute,
+                  );
+                  final endDateTime = DateTime(
+                    eventDate.year,
+                    eventDate.month,
+                    eventDate.day,
+                    endTime.hour,
+                    endTime.minute,
+                  );
+                  if (!endDateTime.isAfter(startDateTime)) return;
+                  Navigator.of(dialogContext).pop(
+                    SignageEventItem(
+                      eventName: eventName,
+                      meetingRoom: room,
+                      floor: floorController.text.trim(),
+                      direction: direction,
+                      startDate: startDateTime,
+                      endDate: endDateTime,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.save_rounded),
+                label: const Text('Simpan Event'),
+              ),
+            ],
+          );
+        },
       ),
     );
     eventController.dispose();
@@ -347,6 +499,76 @@ class SignageEventListSection extends StatelessWidget {
       await context.read<SignageAdminCubit>().saveEvent(item);
     }
   }
+}
+
+class _PickerChip extends StatelessWidget {
+  const _PickerChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Container(
+        width: 185,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: CostikStudioTheme.primary.withValues(alpha: 0.18),
+          ),
+          color: CostikStudioTheme.primary.withValues(alpha: 0.05),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: CostikStudioTheme.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: CostikStudioTheme.slate,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      color: CostikStudioTheme.navy,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _formatDate(DateTime? value) {
+  if (value == null) return '-';
+  return '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
+}
+
+String _formatTime(DateTime? value) {
+  if (value == null) return '--:--';
+  return '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
 }
 
 class SignageProfileMenuSection extends StatelessWidget {
