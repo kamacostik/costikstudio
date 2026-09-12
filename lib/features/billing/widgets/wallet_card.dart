@@ -482,7 +482,7 @@ class WalletCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${formatRupiah(amount)} sedang diproses ke Sumopod QRIS.',
+              '${formatRupiah(amount)} sedang diproses untuk pembayaran QRIS.',
               style: const TextStyle(color: CostikStudioTheme.slate),
               textAlign: TextAlign.center,
             ),
@@ -562,7 +562,7 @@ class WalletCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Payment order sudah dibuat. Link QRIS sedang dibuat oleh Sumopod. Refresh Billing beberapa saat lagi bila belum muncul.',
+              'Payment order sudah dibuat. Link QRIS sedang disiapkan. Refresh Billing beberapa saat lagi bila belum muncul.',
             ),
             const SizedBox(height: 16),
             _TopUpOrderRow(label: 'Reference', value: order.externalReference),
