@@ -10,7 +10,7 @@ const dummyProducts = <ProductItem>[
     status: ProductStatus.beta,
     accentHex: 0xFF0EA5E9,
     productUrl: 'https://iptv.costikstudio.com',
-    adminUrl: 'https://admin.iptv.costikstudio.com',
+    adminUrl: 'https://admin-ip-tv.pages.dev/',
     features: [
       'Live TV and guest room entertainment flow',
       'Hotel information, menu, and content management',

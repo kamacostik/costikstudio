@@ -21,9 +21,15 @@ void main() {
     expect(adminProducts.length, greaterThanOrEqualTo(4));
     expect(
       adminProducts.every(
-        (product) => product.adminUrl!.contains('costikstudio.com'),
+        (product) => product.adminUrl!.startsWith('https://'),
       ),
       isTrue,
+    );
+    expect(
+      dummyProducts
+          .firstWhere((product) => product.id == 'costik-iptv')
+          .adminUrl,
+      'https://admin-ip-tv.pages.dev/',
     );
   });
 
