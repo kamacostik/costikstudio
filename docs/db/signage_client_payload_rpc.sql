@@ -112,7 +112,7 @@ begin
     from public.sg_event_lists as e
     where e.tenant_id = v_device.tenant_id
       and e.is_active = true
-      and (e.end_date is null or e.end_date >= now())
+      and (e.end_date is null or e.end_date::date >= current_date)
     order by e.start_date nulls last
     limit 200
   ) as ev;
