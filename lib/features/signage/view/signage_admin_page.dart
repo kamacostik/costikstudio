@@ -7,6 +7,7 @@ import 'package:costikstudio/features/signage/cubit/signage_admin_cubit.dart';
 import 'package:costikstudio/features/signage/cubit/signage_cubit.dart';
 import 'package:costikstudio/features/signage/data/signage_admin_repository.dart';
 import 'package:costikstudio/features/signage/data/supabase_signage_repository.dart';
+import 'package:costikstudio/features/signage/view/signage_content_sections.dart';
 import 'package:costikstudio/features/signage/view/signage_devices_section.dart';
 import 'package:costikstudio/features/signage/view/signage_hotel_profile_section.dart';
 import 'package:flutter/material.dart';
@@ -364,26 +365,10 @@ class _SignageAdminModulesState extends State<_SignageAdminModules> {
       ),
       _SignageAdminTab.hotelProfile => const SignageHotelProfileSection(),
       _SignageAdminTab.devices => const SignageDevicesSection(),
-      _SignageAdminTab.media => const _ComingSoonModule(
-        icon: Icons.perm_media_rounded,
-        title: 'Media Library',
-        description: 'Tempat upload dan kelola gambar/video signage. Modul ini berikutnya dipindahkan dari Admin Signage lama ke tabel sg_media.',
-      ),
-      _SignageAdminTab.playlists => const _ComingSoonModule(
-        icon: Icons.playlist_play_rounded,
-        title: 'Playlist',
-        description: 'Susun urutan media, jadwal tayang, dan konten per device. Modul ini akan terhubung ke sg_playlists.',
-      ),
-      _SignageAdminTab.eventLists => const _ComingSoonModule(
-        icon: Icons.event_note_rounded,
-        title: 'Event List',
-        description: 'Kelola agenda/event hotel untuk ditampilkan di layar signage. Modul ini akan terhubung ke sg_event_lists.',
-      ),
-      _SignageAdminTab.profileMenu => const _ComingSoonModule(
-        icon: Icons.manage_accounts_rounded,
-        title: 'Profile & Menu Access',
-        description: 'Pengaturan profil tenant, hak akses menu, dan preferensi admin. Modul ini akan dipindahkan setelah modul operasional utama.',
-      ),
+      _SignageAdminTab.media => const SignageMediaSection(),
+      _SignageAdminTab.playlists => const SignagePlaylistSection(),
+      _SignageAdminTab.eventLists => const SignageEventListSection(),
+      _SignageAdminTab.profileMenu => const SignageProfileMenuSection(),
     };
   }
 }
@@ -707,48 +692,6 @@ class _ModuleShortcutCard extends StatelessWidget {
   }
 }
 
-class _ComingSoonModule extends StatelessWidget {
-  const _ComingSoonModule({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
-
-  final IconData icon;
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: CostikStudioTheme.primary, size: 34),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: CostikStudioTheme.navy,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              style: const TextStyle(color: CostikStudioTheme.slate),
-            ),
-            const SizedBox(height: 18),
-            const Chip(label: Text('Belum aktif - tahap porting berikutnya')),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _SignageAdminMenuItem {
   const _SignageAdminMenuItem({
     required this.tab,
@@ -792,27 +735,27 @@ const _signageAdminMenuItems = [
     label: 'Media',
     description: 'Upload dan kelola konten gambar/video.',
     icon: Icons.perm_media_rounded,
-    isReady: false,
+    isReady: true,
   ),
   _SignageAdminMenuItem(
     tab: _SignageAdminTab.playlists,
     label: 'Playlist',
     description: 'Susun konten yang akan tampil di layar.',
     icon: Icons.playlist_play_rounded,
-    isReady: false,
+    isReady: true,
   ),
   _SignageAdminMenuItem(
     tab: _SignageAdminTab.eventLists,
     label: 'Event List',
     description: 'Agenda/event hotel untuk tampilan signage.',
     icon: Icons.event_note_rounded,
-    isReady: false,
+    isReady: true,
   ),
   _SignageAdminMenuItem(
     tab: _SignageAdminTab.profileMenu,
     label: 'Profile & Menu',
     description: 'Pengaturan profil tenant dan akses menu.',
     icon: Icons.manage_accounts_rounded,
-    isReady: false,
+    isReady: true,
   ),
 ];

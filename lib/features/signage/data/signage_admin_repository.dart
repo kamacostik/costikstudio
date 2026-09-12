@@ -84,6 +84,138 @@ class SignageDevice extends Equatable {
   ];
 }
 
+class SignageMediaItem extends Equatable {
+  const SignageMediaItem({
+    this.id,
+    required this.fileName,
+    required this.storagePath,
+    this.mediaType = 'image',
+    this.publicUrl,
+  });
+
+  final String? id;
+  final String fileName;
+  final String storagePath;
+  final String mediaType;
+  final String? publicUrl;
+
+  factory SignageMediaItem.fromMap(Map<String, dynamic> map) {
+    return SignageMediaItem(
+      id: map['id'] as String?,
+      fileName: map['file_name'] as String? ?? 'Media',
+      storagePath: map['storage_path'] as String? ?? '',
+      mediaType: map['media_type'] as String? ?? 'image',
+      publicUrl: map['public_url'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toUpsertMap({required String tenantId}) {
+    return {
+      if (id != null && id!.isNotEmpty) 'id': id,
+      'tenant_id': tenantId,
+      'bucket': 'signage-media',
+      'file_name': fileName,
+      'storage_path': storagePath,
+      'media_type': mediaType,
+      'public_url': publicUrl,
+    };
+  }
+
+  @override
+  List<Object?> get props => [id, fileName, storagePath, mediaType, publicUrl];
+}
+
+class SignagePlaylistItem extends Equatable {
+  const SignagePlaylistItem({
+    this.id,
+    required this.name,
+    this.mediaId,
+    this.path,
+    this.isEnabled = true,
+  });
+
+  final String? id;
+  final String name;
+  final String? mediaId;
+  final String? path;
+  final bool isEnabled;
+
+  factory SignagePlaylistItem.fromMap(Map<String, dynamic> map) {
+    return SignagePlaylistItem(
+      id: map['id'] as String?,
+      name: map['nama_playlist'] as String? ?? 'Playlist',
+      mediaId: map['media_id'] as String?,
+      path: map['path_playlist'] as String?,
+      isEnabled: map['is_enabled'] as bool? ?? true,
+    );
+  }
+
+  Map<String, dynamic> toUpsertMap({required String tenantId}) {
+    return {
+      if (id != null && id!.isNotEmpty) 'id': id,
+      'tenant_id': tenantId,
+      'nama_playlist': name,
+      'media_id': mediaId,
+      'path_playlist': path,
+      'is_enabled': isEnabled,
+    };
+  }
+
+  @override
+  List<Object?> get props => [id, name, mediaId, path, isEnabled];
+}
+
+class SignageEventItem extends Equatable {
+  const SignageEventItem({
+    this.id,
+    required this.eventName,
+    required this.meetingRoom,
+    this.floor = '',
+    this.direction = 'right',
+    this.isActive = true,
+  });
+
+  final String? id;
+  final String eventName;
+  final String meetingRoom;
+  final String floor;
+  final String direction;
+  final bool isActive;
+
+  factory SignageEventItem.fromMap(Map<String, dynamic> map) {
+    return SignageEventItem(
+      id: map['id'] as String?,
+      eventName: map['event_name'] as String? ?? 'Event',
+      meetingRoom: map['meeting_room'] as String? ?? '',
+      floor: map['floor'] as String? ?? '',
+      direction: map['direction'] as String? ?? 'right',
+      isActive: map['is_active'] as bool? ?? true,
+    );
+  }
+
+  Map<String, dynamic> toUpsertMap({required String tenantId}) {
+    return {
+      if (id != null && id!.isNotEmpty) 'id': id,
+      'tenant_id': tenantId,
+      'event_name': eventName,
+      'meeting_room': meetingRoom,
+      'floor': floor,
+      'direction': direction,
+      'is_active': isActive,
+    };
+  }
+
+  @override
+  List<Object?> get props => [
+    id,
+    eventName,
+    meetingRoom,
+    floor,
+    direction,
+    isActive,
+  ];
+}
+
 class SignageDevicePairing extends Equatable {
   const SignageDevicePairing({
     required this.deviceId,
@@ -114,6 +246,12 @@ abstract class SignageAdminRepository {
   Future<SignageHotelProfile?> fetchHotelProfile();
   Future<SignageHotelProfile> saveHotelProfile(SignageHotelProfile profile);
   Future<List<SignageDevice>> fetchDevices();
+  Future<List<SignageMediaItem>> fetchMedia();
+  Future<SignageMediaItem> saveMedia(SignageMediaItem item);
+  Future<List<SignagePlaylistItem>> fetchPlaylists();
+  Future<SignagePlaylistItem> savePlaylist(SignagePlaylistItem item);
+  Future<List<SignageEventItem>> fetchEvents();
+  Future<SignageEventItem> saveEvent(SignageEventItem item);
   Future<SignageDevicePairing> createDevicePairing({String? deviceName});
 }
 
@@ -168,6 +306,78 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
         .limit(1);
     if (rows.isEmpty) return profile;
     return SignageHotelProfile.fromMap(rows.first);
+  }
+
+  @override
+  Future<List<SignageMediaItem>> fetchMedia() async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) return const [];
+    final rows = await _supabase
+        .from('sg_media')
+        .select()
+        .eq('tenant_id', tenantId)
+        .order('created_at');
+    return rows.map(SignageMediaItem.fromMap).toList();
+  }
+
+  @override
+  Future<SignageMediaItem> saveMedia(SignageMediaItem item) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    final rows = await _supabase
+        .from('sg_media')
+        .upsert(item.toUpsertMap(tenantId: tenantId))
+        .select()
+        .limit(1);
+    return rows.isEmpty ? item : SignageMediaItem.fromMap(rows.first);
+  }
+
+  @override
+  Future<List<SignagePlaylistItem>> fetchPlaylists() async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) return const [];
+    final rows = await _supabase
+        .from('sg_playlists')
+        .select()
+        .eq('tenant_id', tenantId)
+        .order('created_at');
+    return rows.map(SignagePlaylistItem.fromMap).toList();
+  }
+
+  @override
+  Future<SignagePlaylistItem> savePlaylist(SignagePlaylistItem item) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    final rows = await _supabase
+        .from('sg_playlists')
+        .upsert(item.toUpsertMap(tenantId: tenantId))
+        .select()
+        .limit(1);
+    return rows.isEmpty ? item : SignagePlaylistItem.fromMap(rows.first);
+  }
+
+  @override
+  Future<List<SignageEventItem>> fetchEvents() async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) return const [];
+    final rows = await _supabase
+        .from('sg_event_lists')
+        .select()
+        .eq('tenant_id', tenantId)
+        .order('created_at');
+    return rows.map(SignageEventItem.fromMap).toList();
+  }
+
+  @override
+  Future<SignageEventItem> saveEvent(SignageEventItem item) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    final rows = await _supabase
+        .from('sg_event_lists')
+        .upsert(item.toUpsertMap(tenantId: tenantId))
+        .select()
+        .limit(1);
+    return rows.isEmpty ? item : SignageEventItem.fromMap(rows.first);
   }
 
   @override

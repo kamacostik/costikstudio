@@ -8,6 +8,9 @@ class SignageAdminState extends Equatable {
     this.isSaving = false,
     this.hotelProfile,
     this.devices = const [],
+    this.mediaItems = const [],
+    this.playlists = const [],
+    this.events = const [],
     this.devicePairing,
     this.errorMessage,
     this.successMessage,
@@ -17,6 +20,9 @@ class SignageAdminState extends Equatable {
   final bool isSaving;
   final SignageHotelProfile? hotelProfile;
   final List<SignageDevice> devices;
+  final List<SignageMediaItem> mediaItems;
+  final List<SignagePlaylistItem> playlists;
+  final List<SignageEventItem> events;
   final SignageDevicePairing? devicePairing;
   final String? errorMessage;
   final String? successMessage;
@@ -26,6 +32,9 @@ class SignageAdminState extends Equatable {
     bool? isSaving,
     SignageHotelProfile? hotelProfile,
     List<SignageDevice>? devices,
+    List<SignageMediaItem>? mediaItems,
+    List<SignagePlaylistItem>? playlists,
+    List<SignageEventItem>? events,
     SignageDevicePairing? devicePairing,
     String? errorMessage,
     String? successMessage,
@@ -36,6 +45,9 @@ class SignageAdminState extends Equatable {
       isSaving: isSaving ?? this.isSaving,
       hotelProfile: hotelProfile ?? this.hotelProfile,
       devices: devices ?? this.devices,
+      mediaItems: mediaItems ?? this.mediaItems,
+      playlists: playlists ?? this.playlists,
+      events: events ?? this.events,
       devicePairing: devicePairing ?? this.devicePairing,
       errorMessage: clearMessages ? null : errorMessage ?? this.errorMessage,
       successMessage: clearMessages
@@ -50,6 +62,9 @@ class SignageAdminState extends Equatable {
     isSaving,
     hotelProfile,
     devices,
+    mediaItems,
+    playlists,
+    events,
     devicePairing,
     errorMessage,
     successMessage,
@@ -67,11 +82,17 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     try {
       final hotelProfile = await _repository.fetchHotelProfile();
       final devices = await _repository.fetchDevices();
+      final mediaItems = await _repository.fetchMedia();
+      final playlists = await _repository.fetchPlaylists();
+      final events = await _repository.fetchEvents();
       emit(
         state.copyWith(
           isLoading: false,
           hotelProfile: hotelProfile ?? const SignageHotelProfile(),
           devices: devices,
+          mediaItems: mediaItems,
+          playlists: playlists,
+          events: events,
           clearMessages: true,
         ),
       );
@@ -89,6 +110,57 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           isSaving: false,
           hotelProfile: savedProfile,
           successMessage: 'Profil hotel Signage berhasil disimpan.',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> saveMedia(SignageMediaItem item) async {
+    emit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.saveMedia(item);
+      final mediaItems = await _repository.fetchMedia();
+      emit(
+        state.copyWith(
+          isSaving: false,
+          mediaItems: mediaItems,
+          successMessage: 'Media berhasil disimpan.',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> savePlaylist(SignagePlaylistItem item) async {
+    emit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.savePlaylist(item);
+      final playlists = await _repository.fetchPlaylists();
+      emit(
+        state.copyWith(
+          isSaving: false,
+          playlists: playlists,
+          successMessage: 'Playlist berhasil disimpan.',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> saveEvent(SignageEventItem item) async {
+    emit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.saveEvent(item);
+      final events = await _repository.fetchEvents();
+      emit(
+        state.copyWith(
+          isSaving: false,
+          events: events,
+          successMessage: 'Event berhasil disimpan.',
         ),
       );
     } catch (e) {
