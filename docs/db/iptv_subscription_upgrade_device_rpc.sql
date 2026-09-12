@@ -15,7 +15,7 @@ declare
   v_user_id uuid;
   v_device_count int;
   v_expires_at timestamp with time zone;
-  v_unit_price numeric := 15000;
+  v_unit_price numeric := 20000;
   v_remaining_days int;
   v_total_amount numeric;
   v_wallet_balance numeric;

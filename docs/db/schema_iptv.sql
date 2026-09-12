@@ -83,7 +83,7 @@ create table if not exists public.products (
   id text not null primary key,
   name text not null,
   tagline text null,
-  price_per_device numeric(15, 2) not null default 15000,
+  price_per_device numeric(15, 2) not null default 20000,
   created_at timestamp with time zone default now()
 );
 

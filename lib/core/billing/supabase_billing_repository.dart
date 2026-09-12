@@ -427,7 +427,7 @@ class SupabaseBillingRepository implements BillingRepository {
         id: '${product.id}:monthly',
         productId: product.id,
         name: '${product.name} Monthly',
-        price: 15000,
+        price: 20000,
         durationDays: 30,
         features: const ['Read-only Supabase billing data'],
       );

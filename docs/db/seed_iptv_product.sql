@@ -10,7 +10,7 @@ insert into public.products (
   'costik-iptv',
   'Costik IPTV',
   'Live TV and guest room entertainment flow for hotels and hospitality businesses.',
-  15000
+  20000
 )
 on conflict (id) do update set
   name = excluded.name,

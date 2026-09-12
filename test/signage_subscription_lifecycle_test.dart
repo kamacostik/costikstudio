@@ -101,11 +101,11 @@ void main() {
       );
     });
 
-    test('pricing table keeps signage at 20rb and iptv at 15rb', () {
+    test('pricing table keeps signage and iptv at 20rb', () {
       expect(signagePricePerDevice, 20000);
-      expect(iptvPricePerDevice, 15000);
+      expect(iptvPricePerDevice, 20000);
       expect(unitPriceForProductId('costik-signage'), 20000);
-      expect(unitPriceForProductId('costik-iptv'), 15000);
+      expect(unitPriceForProductId('costik-iptv'), 20000);
       expect(formatRupiah(signagePricePerDevice), contains('20'));
     });
 
