@@ -17,7 +17,7 @@ void main() {
       (subscription) => subscription.id == beforeSubscription.id,
     );
 
-    expect(snapshot.wallet.balance, before.wallet.balance - 75000);
+    expect(snapshot.wallet.balance, before.wallet.balance - 100000);
     expect(
       afterSubscription.expiresAt.isAfter(beforeSubscription.expiresAt),
       isTrue,
@@ -26,7 +26,7 @@ void main() {
       snapshot.transactions.first.referenceId,
       'renew:${beforeSubscription.id}:1',
     );
-    expect(snapshot.invoices.first.amount, 75000);
+    expect(snapshot.invoices.first.amount, 100000);
     expect(snapshot.message, 'Costik IPTV diperpanjang 1 bulan.');
   });
 }
