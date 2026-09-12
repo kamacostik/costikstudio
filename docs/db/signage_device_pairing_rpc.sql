@@ -224,12 +224,6 @@ begin
 end;
 $$;
 
-grant execute on function public.create_signage_device_pairing(text, text) to authenticated;
-grant execute on function public.activate_signage_device(text, jsonb) to anon, authenticated;
-grant execute on function public.regenerate_signage_device_pairing(text) to authenticated;
-grant execute on function public.get_signage_device_quota() to authenticated;
-grant execute on function public.delete_signage_device(text) to authenticated;
-
 create or replace function public.get_signage_device_quota()
 returns table (
   device_limit integer,
@@ -314,3 +308,9 @@ begin
   end if;
 end;
 $$;
+
+grant execute on function public.create_signage_device_pairing(text, text) to authenticated;
+grant execute on function public.activate_signage_device(text, jsonb) to anon, authenticated;
+grant execute on function public.regenerate_signage_device_pairing(text) to authenticated;
+grant execute on function public.get_signage_device_quota() to authenticated;
+grant execute on function public.delete_signage_device(text) to authenticated;
