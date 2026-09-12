@@ -108,7 +108,9 @@ begin
       e.floor,
       e.direction,
       e.start_date,
-      e.end_date
+      e.end_date,
+      to_char(e.start_date at time zone 'Asia/Makassar', 'HH24:MI') as start_time,
+      to_char(e.end_date at time zone 'Asia/Makassar', 'HH24:MI') as end_time
     from public.sg_event_lists as e
     where e.tenant_id = v_device.tenant_id
       and e.is_active = true
