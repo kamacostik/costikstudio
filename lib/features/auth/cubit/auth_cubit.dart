@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:costikstudio/core/supabase/supabase_config.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
@@ -156,6 +157,10 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final launched = await _supabase.auth.signInWithOAuth(
         sb.OAuthProvider.google,
+        // On web Supabase falls back to the dashboard Site URL
+        // (default http://localhost:3000) when redirectTo is omitted,
+        // so always send the running app origin back.
+        redirectTo: kIsWeb ? Uri.base.origin : null,
       );
       if (!launched) {
         emit(
