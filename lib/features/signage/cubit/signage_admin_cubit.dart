@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:costikstudio/features/signage/data/signage_admin_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -128,6 +130,31 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
       );
     } catch (e) {
       emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<String?> uploadHotelLogo({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+  }) async {
+    emit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      final url = await _repository.uploadHotelLogo(
+        bytes: bytes,
+        fileName: fileName,
+        contentType: contentType,
+      );
+      emit(
+        state.copyWith(
+          isSaving: false,
+          successMessage: 'Logo hotel berhasil diupload.',
+        ),
+      );
+      return url;
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      return null;
     }
   }
 

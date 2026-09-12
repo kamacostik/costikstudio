@@ -271,10 +271,10 @@ for all to authenticated
 using (public.sg_is_tenant_member(tenant_id))
 with check (public.sg_is_tenant_member(tenant_id));
 
--- Storage bucket. Private by default; app creates signed URLs during upload.
+-- Storage bucket for public signage assets used by TV/browser clients.
 insert into storage.buckets (id, name, public)
-values ('signage-media', 'signage-media', false)
-on conflict (id) do nothing;
+values ('signage-media', 'signage-media', true)
+on conflict (id) do update set public = true;
 
 -- Storage policies: tenant members can manage objects under <tenant_id>/...
 drop policy if exists sg_media_storage_read on storage.objects;
