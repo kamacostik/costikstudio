@@ -69,7 +69,7 @@ begin
   limit 1;
 
   select coalesce(
-    jsonb_agg(row_to_jsonb(pl) order by pl.sort_order, pl.created_at),
+    jsonb_agg(to_jsonb(pl) order by pl.sort_order, pl.created_at),
     '[]'::jsonb
   )
     into v_playlists
@@ -95,7 +95,7 @@ begin
   ) as pl;
 
   select coalesce(
-    jsonb_agg(row_to_jsonb(ev) order by ev.start_date nulls last),
+    jsonb_agg(to_jsonb(ev) order by ev.start_date nulls last),
     '[]'::jsonb
   )
     into v_events
