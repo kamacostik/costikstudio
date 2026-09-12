@@ -110,6 +110,7 @@ Run/update these in Supabase when testing full backend flows:
 2. `docs/db/signage_event_slide_duration.sql` — adds `event_slide_duration_seconds` for existing databases.
 2b. `docs/db/signage_device_app_mode.sql` — adds `app_mode` (`daily_event`/`video_player`) for existing databases.
 2c. `docs/db/signage_playlist_items.sql` — adds `sg_playlist_items` (multi-video playlist rows) for existing databases.
+2d. `docs/db/signage_media_bucket_public.sql` — makes `signage-media` public so uploaded hotel logos can load on TV/browser clients.
 3. `docs/db/seed_signage_product.sql` — seeds `costik-signage` at Rp20.000/device/month.
 4. `docs/db/signage_subscription_rpc.sql` — checkout Signage + wallet deduction + tenant/profile provisioning.
 5. `docs/db/signage_subscription_lifecycle_rpc.sql` — renew, upgrade device, cancel, reactivate for Signage.

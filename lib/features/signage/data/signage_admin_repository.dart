@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:equatable/equatable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -358,6 +360,11 @@ abstract class SignageAdminRepository {
   Future<String?> currentTenantId();
   Future<SignageHotelProfile?> fetchHotelProfile();
   Future<SignageHotelProfile> saveHotelProfile(SignageHotelProfile profile);
+  Future<String> uploadHotelLogo({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+  });
   Future<List<SignageDevice>> fetchDevices();
   Future<SignageDeviceQuota> fetchDeviceQuota();
   Future<List<SignageMediaItem>> fetchMedia();
@@ -434,6 +441,36 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
         .limit(1);
     if (rows.isEmpty) return profile;
     return SignageHotelProfile.fromMap(rows.first);
+  }
+
+  @override
+  Future<String> uploadHotelLogo({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    final safeName = fileName
+        .replaceAll(RegExp('[^a-zA-Z0-9._-]'), '-')
+        .replaceAll(RegExp('-+'), '-');
+    final extension = safeName.contains('.')
+        ? safeName.split('.').last.toLowerCase()
+        : switch (contentType) {
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            _ => 'jpg',
+          };
+    final path =
+        '$tenantId/hotel-logo/${DateTime.now().millisecondsSinceEpoch}.$extension';
+    await _supabase.storage
+        .from('signage-media')
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(contentType: contentType, upsert: true),
+        );
+    return _supabase.storage.from('signage-media').getPublicUrl(path);
   }
 
   @override
