@@ -20,17 +20,17 @@ const dummyProducts = <ProductItem>[
   ProductItem(
     id: 'digital-signage',
     name: 'Digital Signage',
-    tagline: 'Cloud display management for lobby, outlet, and public screens.',
-    description: 'A digital signage platform for publishing promos, announcements, schedules, and visual content to managed screens from one dashboard.',
+    tagline: 'Event schedule board and fullscreen video signage for hotels.',
+    description: 'A subscription-based digital signage platform for hotels and public screens. Manage hotel profile/logo, Daily Event schedules, media library, multi-video playlists, device pairing, and per-device display mode from CostikStudio Web Admin.',
     category: ProductCategory.business,
     status: ProductStatus.beta,
     accentHex: 0xFF2563EB,
     productUrl: 'https://signage.costikstudio.com',
     adminUrl: 'https://admin.signage.costikstudio.com',
     features: [
-      'Screen playlist and schedule management',
-      'Promo, announcement, and media publishing',
-      'Outlet and device grouping for operations',
+      'Daily Event board with date, start/end time, room, floor, auto-slide, and manual OK refresh',
+      'Fullscreen video player with hotel logo overlay and multi-video playlist order',
+      'TV/browser client pairing with 6-digit code, device quota, online status, and per-device mode',
     ],
   ),
   ProductItem(

@@ -391,7 +391,7 @@ class _DashboardPage extends StatelessWidget {
         return 'Hitung kebutuhan lisensi device IPTV untuk hotel atau bisnis Anda.';
       }
       if (isOrderingSignage) {
-        return 'Hitung kebutuhan lisensi layar Digital Signage sebelum membuka Web Admin.';
+        return 'Pilih jumlah device signage untuk Daily Event board, video playlist, pairing TV/browser, dan Web Admin hotel.';
       }
       if (selectedProduct != null) {
         return selectedProduct!.tagline;
