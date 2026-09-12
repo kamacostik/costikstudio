@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:costikstudio/core/supabase/supabase_config.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 enum AuthRole { customer, admin }
 
@@ -50,11 +52,43 @@ class AuthState extends Equatable {
 }
 
 class AuthCubit extends Cubit<AuthState> {
-  AuthCubit({this.supabaseClient}) : super(const AuthState());
+  AuthCubit({this.supabaseClient}) : super(const AuthState()) {
+    // On web, Google OAuth navigates the whole page away and back;
+    // the session event completes the login in the fresh app instance.
+    if (SupabaseConfig.isConfigured) {
+      _authSubscription = _supabase.auth.onAuthStateChange.listen(
+        _handleAuthEvent,
+      );
+    }
+  }
 
-  final SupabaseClient? supabaseClient;
+  final sb.SupabaseClient? supabaseClient;
 
-  SupabaseClient get _supabase => supabaseClient ?? Supabase.instance.client;
+  sb.SupabaseClient get _supabase =>
+      supabaseClient ?? sb.Supabase.instance.client;
+
+  StreamSubscription<sb.AuthState>? _authSubscription;
+
+  Future<void> _handleAuthEvent(sb.AuthState data) async {
+    final session = data.session;
+    if (data.event == sb.AuthChangeEvent.signedOut || session == null) {
+      if (data.event == sb.AuthChangeEvent.signedOut && !isClosed) {
+        emit(const AuthState(isAuthenticated: false));
+      }
+      return;
+    }
+
+    if (data.event == sb.AuthChangeEvent.signedIn ||
+        data.event == sb.AuthChangeEvent.initialSession ||
+        data.event == sb.AuthChangeEvent.tokenRefreshed) {
+      final user = session.user;
+      await _ensureProfile(user);
+      if (isClosed) return;
+      final role = await _loadRole(user.id);
+      if (isClosed) return;
+      emit(AuthState(isAuthenticated: true, role: role, userEmail: user.email));
+    }
+  }
 
   Future<void> restoreSession() async {
     if (!SupabaseConfig.isConfigured) return;
@@ -62,7 +96,10 @@ class AuthCubit extends Cubit<AuthState> {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
 
+    await _ensureProfile(user);
+    if (isClosed) return;
     final role = await _loadRole(user.id);
+    if (isClosed) return;
     emit(AuthState(isAuthenticated: true, role: role, userEmail: user.email));
   }
 
@@ -86,14 +123,54 @@ class AuthCubit extends Cubit<AuthState> {
         return false;
       }
 
+      await _ensureProfile(user);
       final role = await _loadRole(user.id);
       emit(AuthState(isAuthenticated: true, role: role, userEmail: user.email));
       return true;
-    } on AuthException catch (error) {
+    } on sb.AuthException catch (error) {
       emit(AuthState(errorMessage: error.message));
       return false;
     } on Object {
       emit(const AuthState(errorMessage: 'Login Supabase gagal.'));
+      return false;
+    }
+  }
+
+  /// Starts Google OAuth login on web.
+  ///
+  /// Returns true when the browser was redirected to Google; the actual
+  /// session arrives via [onAuthStateChange] after Supabase redirects back
+  /// to the app, so callers must not navigate on success.
+  Future<bool> loginWithGoogle() async {
+    if (!SupabaseConfig.isConfigured) {
+      emit(
+        const AuthState(
+          errorMessage: 'Login Google membutuhkan konfigurasi Supabase.',
+        ),
+      );
+      return false;
+    }
+
+    emit(state.copyWith(isLoading: true));
+
+    try {
+      final launched = await _supabase.auth.signInWithOAuth(
+        sb.OAuthProvider.google,
+      );
+      if (!launched) {
+        emit(
+          const AuthState(
+            errorMessage: 'Login Google gagal dibuka. Coba lagi.',
+          ),
+        );
+        return false;
+      }
+      return true;
+    } on sb.AuthException catch (error) {
+      emit(AuthState(errorMessage: error.message));
+      return false;
+    } on Object {
+      emit(const AuthState(errorMessage: 'Login Google gagal.'));
       return false;
     }
   }
@@ -113,6 +190,24 @@ class AuthCubit extends Cubit<AuthState> {
         .maybeSingle();
 
     return row?['role'] == 'admin' ? AuthRole.admin : AuthRole.customer;
+  }
+
+  /// Ensures OAuth users (e.g. first-time Google login) have a profile row
+  /// so role lookup and RLS-scoped reads keep working.
+  Future<void> _ensureProfile(sb.User user) async {
+    try {
+      final metadata = user.userMetadata ?? const <String, dynamic>{};
+      final fullName = (metadata['full_name'] ?? metadata['name'] ?? '')
+          .toString()
+          .trim();
+      await _supabase.from('profiles').upsert({
+        'id': user.id,
+        if (fullName.isNotEmpty) 'full_name': fullName,
+      });
+    } on Object {
+      // Never block login on a profile backfill; it retries on the next
+      // session event.
+    }
   }
 
   Future<bool> _loginWithDummyFallback(String email, String password) async {
@@ -146,5 +241,11 @@ class AuthCubit extends Cubit<AuthState> {
 
     emit(const AuthState(errorMessage: 'Email atau password salah.'));
     return false;
+  }
+
+  @override
+  Future<void> close() {
+    _authSubscription?.cancel();
+    return super.close();
   }
 }

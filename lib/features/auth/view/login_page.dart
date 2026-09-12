@@ -52,6 +52,21 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _handleGoogleLogin() async {
+    final authCubit = context.read<AuthCubit>();
+
+    // On web this redirects the whole page to Google; the session arrives
+    // via onAuthStateChange/restoreSession on the fresh app instance.
+    final launched = await authCubit.loginWithGoogle();
+
+    if (!mounted || launched) return;
+
+    setState(() {
+      _errorMessage =
+          authCubit.state.errorMessage ?? 'Login Google gagal. Coba lagi.';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthCubit, AuthState>(
@@ -272,9 +287,26 @@ class _LoginPageState extends State<LoginPage> {
                                         ),
                                       ),
                                     ),
+                                    const SizedBox(height: 12),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 52,
+                                      child: OutlinedButton.icon(
+                                        onPressed: authState.isLoading
+                                            ? null
+                                            : _handleGoogleLogin,
+                                        icon: const Icon(
+                                          Icons.g_mobiledata_rounded,
+                                          size: 24,
+                                        ),
+                                        label: const Text(
+                                          'Masuk dengan Google',
+                                        ),
+                                      ),
+                                    ),
                                     const SizedBox(height: 18),
                                     const Text(
-                                      'Akun dibuat oleh admin Costik Studio. Hubungi support jika belum memiliki akses.',
+                                      'Akun email/password dibuat oleh admin Costik Studio. Akun Google baru otomatis terdaftar sebagai customer.',
                                       style: TextStyle(
                                         color: CostikStudioTheme.slate,
                                         fontSize: 12,

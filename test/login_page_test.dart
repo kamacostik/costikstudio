@@ -22,6 +22,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Masuk ke Dashboard'), findsOneWidget);
+    expect(find.text('Masuk dengan Google'), findsOneWidget);
     expect(find.text('Fill Customer (user@costik.com)'), findsNothing);
     expect(find.text('Fill Admin (admin@costik.com)'), findsNothing);
     expect(find.textContaining('dummy'), findsNothing);

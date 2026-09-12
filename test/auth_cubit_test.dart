@@ -56,5 +56,20 @@ void main() {
       expect(cubit.state.isAuthenticated, isFalse);
       expect(cubit.state.userEmail, isNull);
     });
+
+    test(
+      'google login without supabase config shows configuration error',
+      () async {
+        SupabaseConfig.load(const {});
+        final cubit = AuthCubit();
+
+        final success = await cubit.loginWithGoogle();
+
+        expect(success, isFalse);
+        expect(cubit.state.isAuthenticated, isFalse);
+        expect(cubit.state.errorMessage, contains('Supabase'));
+        await cubit.close();
+      },
+    );
   });
 }
