@@ -1,6 +1,7 @@
 import 'package:costikstudio/app/costik_studio_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 import 'test_login_helper.dart';
 
@@ -27,6 +28,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Produk'), findsWidgets);
+
+    await tester.tap(find.byKey(const ValueKey('dashboard_nav_invoices')));
+    await tester.pumpAndSettle();
+
+    final router = GoRouter.of(tester.element(find.text('Invoice').first));
+    expect(
+      router.routeInformationProvider.value.uri.toString(),
+      '/billing?tab=invoices',
+    );
   });
 
   testWidgets('home hero shows dashboard action after login', (tester) async {

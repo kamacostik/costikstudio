@@ -46,6 +46,31 @@ enum _DashboardTab {
   support,
 }
 
+extension _DashboardTabRoute on _DashboardTab {
+  String get slug => switch (this) {
+    _DashboardTab.apps => 'products',
+    _DashboardTab.signageAdmin => 'signage-admin',
+    _DashboardTab.subscriptions => 'subscriptions',
+    _DashboardTab.billing => 'billing',
+    _DashboardTab.activity => 'activity',
+    _DashboardTab.invoices => 'invoices',
+    _DashboardTab.support => 'support',
+  };
+
+  static _DashboardTab fromSlug(String? slug) {
+    return switch (slug) {
+      'products' || 'apps' => _DashboardTab.apps,
+      'signage-admin' || 'signage' => _DashboardTab.signageAdmin,
+      'subscriptions' || 'subscription' => _DashboardTab.subscriptions,
+      'billing' || 'wallet' => _DashboardTab.billing,
+      'activity' || 'history' => _DashboardTab.activity,
+      'invoices' || 'invoice' => _DashboardTab.invoices,
+      'support' => _DashboardTab.support,
+      _ => _DashboardTab.apps,
+    };
+  }
+}
+
 class _BillingDashboardView extends StatefulWidget {
   const _BillingDashboardView();
 
@@ -58,6 +83,20 @@ class _BillingDashboardViewState extends State<_BillingDashboardView> {
   ProductItem? _selectedProduct;
   bool _isOrderingIptv = false;
   bool _isOrderingSignage = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final routeTab = _DashboardTabRoute.fromSlug(
+      GoRouterState.of(context).uri.queryParameters['tab'],
+    );
+    if (routeTab != _selectedTab) {
+      _selectedTab = routeTab;
+      _selectedProduct = null;
+      _isOrderingIptv = false;
+      _isOrderingSignage = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +206,7 @@ class _BillingDashboardViewState extends State<_BillingDashboardView> {
       _isOrderingIptv = false;
       _isOrderingSignage = false;
     });
+    context.go('${AppRoutes.billing}?tab=${tab.slug}');
   }
 
   void _checkout(BuildContext context, BillingPlan plan) {
