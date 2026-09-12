@@ -332,253 +332,375 @@ class SignageEventListSection extends StatelessWidget {
             icon: const Icon(Icons.add_rounded),
             label: const Text('Tambah Event'),
           ),
-          child: _SimpleList(
-            emptyText: 'Belum ada daily event.',
-            children: [
-              for (final item in state.events)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor: CostikStudioTheme.primary.withValues(
-                      alpha: 0.10,
-                    ),
-                    foregroundColor: CostikStudioTheme.primary,
-                    child: const Icon(Icons.event_available_rounded),
-                  ),
-                  title: Text(item.eventName),
-                  subtitle: Text(
-                    '${_formatDate(item.startDate)} • ${_formatTime(item.startDate)} - ${_formatTime(item.endDate)} • ${item.meetingRoom} • Floor ${item.floor}',
-                  ),
-                  trailing: Chip(label: Text(item.direction)),
-                ),
-            ],
-          ),
+          child: _DailyEventTabs(events: state.events),
         );
       },
     );
   }
+}
 
-  Future<void> _showEventDialog(BuildContext context) async {
-    final eventController = TextEditingController();
-    final roomController = TextEditingController();
-    final floorController = TextEditingController();
-    var direction = 'right';
-    var eventDate = DateTime.now();
-    var startTime = const TimeOfDay(hour: 9, minute: 0);
-    var endTime = const TimeOfDay(hour: 10, minute: 0);
+class _DailyEventTabs extends StatelessWidget {
+  const _DailyEventTabs({required this.events});
 
-    final item = await showDialog<SignageEventItem>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) {
-          Future<void> pickDate() async {
-            final picked = await showDatePicker(
-              context: context,
-              initialDate: eventDate,
-              firstDate: DateTime.now().subtract(const Duration(days: 365)),
-              lastDate: DateTime.now().add(const Duration(days: 730)),
-            );
-            if (picked != null) setState(() => eventDate = picked);
-          }
+  final List<SignageEventItem> events;
 
-          Future<void> pickStartTime() async {
-            final picked = await showTimePicker(
-              context: context,
-              initialTime: startTime,
-            );
-            if (picked != null) setState(() => startTime = picked);
-          }
+  @override
+  Widget build(BuildContext context) {
+    final sorted = [...events]
+      ..sort((a, b) => _eventStart(a).compareTo(_eventStart(b)));
+    final today = DateTime.now();
+    final tomorrow = today.add(const Duration(days: 1));
+    final todayEvents = sorted
+        .where((event) => _isSameDay(_eventStart(event), today))
+        .toList();
+    final tomorrowEvents = sorted
+        .where((event) => _isSameDay(_eventStart(event), tomorrow))
+        .toList();
+    final upcomingEvents = sorted.where((event) {
+      return _dateOnly(_eventStart(event)).isAfter(_dateOnly(tomorrow));
+    }).toList();
+    final pastEvents = sorted
+        .where((event) {
+          return _dateOnly(_eventStart(event)).isBefore(_dateOnly(today));
+        })
+        .toList()
+        .reversed
+        .toList();
 
-          Future<void> pickEndTime() async {
-            final picked = await showTimePicker(
-              context: context,
-              initialTime: endTime,
-            );
-            if (picked != null) setState(() => endTime = picked);
-          }
-
-          return AlertDialog(
-            titlePadding: EdgeInsets.zero,
-            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-            title: Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: CostikStudioTheme.primary.withValues(alpha: 0.10),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(28),
-                ),
-              ),
-              child: const Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    foregroundColor: CostikStudioTheme.primary,
-                    child: Icon(Icons.event_note_rounded),
+    return DefaultTabController(
+      length: 4,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: CostikStudioTheme.primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: TabBar(
+              isScrollable: true,
+              labelColor: CostikStudioTheme.primary,
+              unselectedLabelColor: CostikStudioTheme.slate,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x11000000),
+                    blurRadius: 12,
+                    offset: Offset(0, 6),
                   ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Tambah Daily Event'),
-                        SizedBox(height: 4),
-                        Text(
-                          'Event akan tampil di client sesuai tanggal hari berjalan.',
-                          style: TextStyle(
-                            color: CostikStudioTheme.slate,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w400,
+                ],
+              ),
+              tabs: [
+                Tab(text: 'Hari Ini (${todayEvents.length})'),
+                Tab(text: 'Besok (${tomorrowEvents.length})'),
+                Tab(text: 'Akan Datang (${upcomingEvents.length})'),
+                Tab(text: 'Selesai (${pastEvents.length})'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 360,
+            child: TabBarView(
+              children: [
+                _DailyEventList(
+                  events: todayEvents,
+                  emptyText: 'Belum ada event hari ini.',
+                ),
+                _DailyEventList(
+                  events: tomorrowEvents,
+                  emptyText: 'Belum ada event besok.',
+                ),
+                _DailyEventList(
+                  events: upcomingEvents,
+                  emptyText: 'Belum ada event yang akan datang.',
+                ),
+                _DailyEventList(
+                  events: pastEvents,
+                  emptyText: 'Belum ada event selesai.',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DailyEventList extends StatelessWidget {
+  const _DailyEventList({required this.events, required this.emptyText});
+
+  final List<SignageEventItem> events;
+  final String emptyText;
+
+  @override
+  Widget build(BuildContext context) {
+    if (events.isEmpty) {
+      return Center(
+        child: Text(
+          emptyText,
+          style: const TextStyle(color: CostikStudioTheme.slate),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: events.length,
+      separatorBuilder: (_, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final item = events[index];
+        return ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: CircleAvatar(
+            backgroundColor: CostikStudioTheme.primary.withValues(alpha: 0.10),
+            foregroundColor: CostikStudioTheme.primary,
+            child: const Icon(Icons.event_available_rounded),
+          ),
+          title: Text(item.eventName),
+          subtitle: Text(
+            '${_formatDate(_eventStart(item))} • ${_formatTime(_eventStart(item))} - ${_formatTime(_eventEnd(item))} • ${item.meetingRoom} • Floor ${item.floor}',
+          ),
+          trailing: Chip(label: Text(item.direction)),
+        );
+      },
+    );
+  }
+}
+
+DateTime _eventStart(SignageEventItem item) => item.startDate ?? DateTime.now();
+
+DateTime _eventEnd(SignageEventItem item) => item.endDate ?? _eventStart(item);
+
+DateTime _dateOnly(DateTime value) =>
+    DateTime(value.year, value.month, value.day);
+
+bool _isSameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
+Future<void> _showEventDialog(BuildContext context) async {
+  final eventController = TextEditingController();
+  final roomController = TextEditingController();
+  final floorController = TextEditingController();
+  var direction = 'right';
+  var eventDate = DateTime.now();
+  var startTime = const TimeOfDay(hour: 9, minute: 0);
+  var endTime = const TimeOfDay(hour: 10, minute: 0);
+
+  final item = await showDialog<SignageEventItem>(
+    context: context,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setState) {
+        Future<void> pickDate() async {
+          final picked = await showDatePicker(
+            context: context,
+            initialDate: eventDate,
+            firstDate: DateTime.now().subtract(const Duration(days: 365)),
+            lastDate: DateTime.now().add(const Duration(days: 730)),
+          );
+          if (picked != null) setState(() => eventDate = picked);
+        }
+
+        Future<void> pickStartTime() async {
+          final picked = await showTimePicker(
+            context: context,
+            initialTime: startTime,
+          );
+          if (picked != null) setState(() => startTime = picked);
+        }
+
+        Future<void> pickEndTime() async {
+          final picked = await showTimePicker(
+            context: context,
+            initialTime: endTime,
+          );
+          if (picked != null) setState(() => endTime = picked);
+        }
+
+        return AlertDialog(
+          titlePadding: EdgeInsets.zero,
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+          title: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: CostikStudioTheme.primary.withValues(alpha: 0.10),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
+            ),
+            child: const Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.white,
+                  foregroundColor: CostikStudioTheme.primary,
+                  child: Icon(Icons.event_note_rounded),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Tambah Daily Event'),
+                      SizedBox(height: 4),
+                      Text(
+                        'Event akan tampil di client sesuai tanggal hari berjalan.',
+                        style: TextStyle(
+                          color: CostikStudioTheme.slate,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          content: SizedBox(
+            width: 620,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: eventController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nama event',
+                      prefixIcon: Icon(Icons.title_rounded),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: roomController,
+                          decoration: const InputDecoration(
+                            labelText: 'Meeting room',
+                            prefixIcon: Icon(Icons.meeting_room_rounded),
                           ),
                         ),
-                      ],
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 150,
+                        child: TextField(
+                          controller: floorController,
+                          decoration: const InputDecoration(
+                            labelText: 'Floor',
+                            prefixIcon: Icon(Icons.layers_rounded),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Jadwal Event',
+                    style: TextStyle(
+                      color: CostikStudioTheme.navy,
+                      fontWeight: FontWeight.w900,
                     ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      _PickerChip(
+                        icon: Icons.calendar_today_rounded,
+                        label: 'Tanggal',
+                        value: _formatDate(eventDate),
+                        onTap: pickDate,
+                      ),
+                      _PickerChip(
+                        icon: Icons.play_arrow_rounded,
+                        label: 'Mulai',
+                        value: startTime.format(context),
+                        onTap: pickStartTime,
+                      ),
+                      _PickerChip(
+                        icon: Icons.stop_rounded,
+                        label: 'Selesai',
+                        value: endTime.format(context),
+                        onTap: pickEndTime,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: direction,
+                    decoration: const InputDecoration(
+                      labelText: 'Direction',
+                      prefixIcon: Icon(Icons.assistant_direction_rounded),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'right', child: Text('Right')),
+                      DropdownMenuItem(value: 'left', child: Text('Left')),
+                      DropdownMenuItem(value: 'up', child: Text('Up')),
+                      DropdownMenuItem(value: 'down', child: Text('Down')),
+                    ],
+                    onChanged: (value) =>
+                        setState(() => direction = value ?? 'right'),
                   ),
                 ],
               ),
             ),
-            content: SizedBox(
-              width: 620,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: eventController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nama event',
-                        prefixIcon: Icon(Icons.title_rounded),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: roomController,
-                            decoration: const InputDecoration(
-                              labelText: 'Meeting room',
-                              prefixIcon: Icon(Icons.meeting_room_rounded),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        SizedBox(
-                          width: 150,
-                          child: TextField(
-                            controller: floorController,
-                            decoration: const InputDecoration(
-                              labelText: 'Floor',
-                              prefixIcon: Icon(Icons.layers_rounded),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Jadwal Event',
-                      style: TextStyle(
-                        color: CostikStudioTheme.navy,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        _PickerChip(
-                          icon: Icons.calendar_today_rounded,
-                          label: 'Tanggal',
-                          value: _formatDate(eventDate),
-                          onTap: pickDate,
-                        ),
-                        _PickerChip(
-                          icon: Icons.play_arrow_rounded,
-                          label: 'Mulai',
-                          value: startTime.format(context),
-                          onTap: pickStartTime,
-                        ),
-                        _PickerChip(
-                          icon: Icons.stop_rounded,
-                          label: 'Selesai',
-                          value: endTime.format(context),
-                          onTap: pickEndTime,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      initialValue: direction,
-                      decoration: const InputDecoration(
-                        labelText: 'Direction',
-                        prefixIcon: Icon(Icons.assistant_direction_rounded),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'right', child: Text('Right')),
-                        DropdownMenuItem(value: 'left', child: Text('Left')),
-                        DropdownMenuItem(value: 'up', child: Text('Up')),
-                        DropdownMenuItem(value: 'down', child: Text('Down')),
-                      ],
-                      onChanged: (value) =>
-                          setState(() => direction = value ?? 'right'),
-                    ),
-                  ],
-                ),
-              ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Batal'),
             ),
-            actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Batal'),
-              ),
-              FilledButton.icon(
-                onPressed: () {
-                  final eventName = eventController.text.trim();
-                  final room = roomController.text.trim();
-                  if (eventName.isEmpty || room.isEmpty) return;
-                  final startDateTime = DateTime(
-                    eventDate.year,
-                    eventDate.month,
-                    eventDate.day,
-                    startTime.hour,
-                    startTime.minute,
-                  );
-                  final endDateTime = DateTime(
-                    eventDate.year,
-                    eventDate.month,
-                    eventDate.day,
-                    endTime.hour,
-                    endTime.minute,
-                  );
-                  if (!endDateTime.isAfter(startDateTime)) return;
-                  Navigator.of(dialogContext).pop(
-                    SignageEventItem(
-                      eventName: eventName,
-                      meetingRoom: room,
-                      floor: floorController.text.trim(),
-                      direction: direction,
-                      startDate: startDateTime,
-                      endDate: endDateTime,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.save_rounded),
-                label: const Text('Simpan Event'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-    eventController.dispose();
-    roomController.dispose();
-    floorController.dispose();
-    if (item != null && context.mounted) {
-      await context.read<SignageAdminCubit>().saveEvent(item);
-    }
+            FilledButton.icon(
+              onPressed: () {
+                final eventName = eventController.text.trim();
+                final room = roomController.text.trim();
+                if (eventName.isEmpty || room.isEmpty) return;
+                final startDateTime = DateTime(
+                  eventDate.year,
+                  eventDate.month,
+                  eventDate.day,
+                  startTime.hour,
+                  startTime.minute,
+                );
+                final endDateTime = DateTime(
+                  eventDate.year,
+                  eventDate.month,
+                  eventDate.day,
+                  endTime.hour,
+                  endTime.minute,
+                );
+                if (!endDateTime.isAfter(startDateTime)) return;
+                Navigator.of(dialogContext).pop(
+                  SignageEventItem(
+                    eventName: eventName,
+                    meetingRoom: room,
+                    floor: floorController.text.trim(),
+                    direction: direction,
+                    startDate: startDateTime,
+                    endDate: endDateTime,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.save_rounded),
+              label: const Text('Simpan Event'),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+  eventController.dispose();
+  roomController.dispose();
+  floorController.dispose();
+  if (item != null && context.mounted) {
+    await context.read<SignageAdminCubit>().saveEvent(item);
   }
 }
 
