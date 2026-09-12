@@ -72,6 +72,7 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                   columns: [
                     signageDataColumn('Device'),
                     signageDataColumn('Layout'),
+                    signageDataColumn('Slide Event'),
                     signageDataColumn('Konten'),
                     signageDataColumn('Status'),
                     signageDataColumn('Pairing'),
@@ -93,13 +94,24 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                           ),
                           DataCell(Text('${device.tableColumn} kolom')),
                           DataCell(
+                            Text('${device.eventSlideDurationSeconds} detik'),
+                          ),
+                          DataCell(
                             Text(
                               'Video: ${device.isVideo ? 'On' : 'Off'} • Promo: ${device.isPromo ? 'On' : 'Off'}',
                             ),
                           ),
                           DataCell(_DeviceStatusBadge(device: device)),
                           DataCell(_DevicePairingAction(device: device)),
-                          DataCell(_DeviceDeleteAction(device: device)),
+                          DataCell(
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _DeviceSettingsAction(device: device),
+                                _DeviceDeleteAction(device: device),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                   ],
@@ -270,6 +282,82 @@ class _DeviceQuotaBadge extends StatelessWidget {
           fontSize: 12,
         ),
       ),
+    );
+  }
+}
+
+class _DeviceSettingsAction extends StatelessWidget {
+  const _DeviceSettingsAction({required this.device});
+
+  final SignageDevice device;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'Setting device',
+      icon: const Icon(Icons.tune_rounded),
+      onPressed: () => _showSettingsDialog(context),
+    );
+  }
+
+  Future<void> _showSettingsDialog(BuildContext context) async {
+    var slideDuration = device.eventSlideDurationSeconds.clamp(3, 60);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Setting Device Signage'),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  device.name,
+                  style: const TextStyle(
+                    color: CostikStudioTheme.navy,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text('Durasi slide Daily Event: $slideDuration detik'),
+                Slider(
+                  value: slideDuration.toDouble(),
+                  min: 3,
+                  max: 60,
+                  divisions: 57,
+                  label: '$slideDuration detik',
+                  onChanged: (value) =>
+                      setState(() => slideDuration = value.round()),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Aktif hanya jika event lebih dari 4. Nilai otomatis diambil '
+                  'TV saat refresh data berikutnya.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Batal'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              icon: const Icon(Icons.save_rounded),
+              label: const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (saved != true || !context.mounted) return;
+    await context.read<SignageAdminCubit>().updateDeviceSlideDuration(
+      device.id,
+      durationSeconds: slideDuration,
     );
   }
 }

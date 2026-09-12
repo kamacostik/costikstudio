@@ -197,6 +197,29 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     }
   }
 
+  Future<void> updateDeviceSlideDuration(
+    String deviceId, {
+    required int durationSeconds,
+  }) async {
+    emit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.updateDeviceSlideDuration(
+        deviceId,
+        durationSeconds: durationSeconds,
+      );
+      final devices = await _repository.fetchDevices();
+      emit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          successMessage: 'Durasi slide Daily Event berhasil disimpan.',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
   Future<void> deleteDevice(String deviceId) async {
     emit(state.copyWith(isSaving: true, clearMessages: true));
     try {

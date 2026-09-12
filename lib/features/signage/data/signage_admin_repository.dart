@@ -49,6 +49,7 @@ class SignageDevice extends Equatable {
     required this.isPromo,
     required this.promoDuration,
     required this.tableColumn,
+    this.eventSlideDurationSeconds = 7,
     required this.isActive,
     this.pairingCode,
     this.pairingExpiresAt,
@@ -62,6 +63,7 @@ class SignageDevice extends Equatable {
   final bool isPromo;
   final double promoDuration;
   final int tableColumn;
+  final int eventSlideDurationSeconds;
   final bool isActive;
   final String? pairingCode;
   final DateTime? pairingExpiresAt;
@@ -87,6 +89,8 @@ class SignageDevice extends Equatable {
       isPromo: map['is_promo'] as bool? ?? true,
       promoDuration: (map['promo_duration'] as num?)?.toDouble() ?? 20,
       tableColumn: map['table_column'] as int? ?? 4,
+      eventSlideDurationSeconds:
+          (map['event_slide_duration_seconds'] as num?)?.round() ?? 7,
       isActive: map['is_active'] as bool? ?? true,
       pairingCode: map['pairing_code'] as String?,
       pairingExpiresAt: DateTime.tryParse(
@@ -105,6 +109,7 @@ class SignageDevice extends Equatable {
     isPromo,
     promoDuration,
     tableColumn,
+    eventSlideDurationSeconds,
     isActive,
     pairingCode,
     pairingExpiresAt,
@@ -316,6 +321,10 @@ abstract class SignageAdminRepository {
   Future<SignageEventItem> saveEvent(SignageEventItem item);
   Future<SignageDevicePairing> createDevicePairing({String? deviceName});
   Future<SignageDevicePairing> regenerateDevicePairing(String deviceId);
+  Future<void> updateDeviceSlideDuration(
+    String deviceId, {
+    required int durationSeconds,
+  });
   Future<void> deleteDevice(String deviceId);
 }
 
@@ -481,6 +490,23 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
     return SignageDevicePairing.fromMap(
       Map<String, dynamic>.from(response.first as Map),
     );
+  }
+
+  @override
+  Future<void> updateDeviceSlideDuration(
+    String deviceId, {
+    required int durationSeconds,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    await _supabase
+        .from('sg_devices')
+        .update({
+          'event_slide_duration_seconds': durationSeconds.clamp(3, 60),
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', deviceId)
+        .eq('tenant_id', tenantId);
   }
 
   @override
