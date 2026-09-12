@@ -704,7 +704,15 @@ Future<void> _showEventDialog(BuildContext context) async {
               onPressed: () {
                 final eventName = eventController.text.trim();
                 final room = roomController.text.trim();
-                if (eventName.isEmpty || room.isEmpty) return;
+                if (eventName.isEmpty || room.isEmpty) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Colors.red,
+                      content: Text('Nama event dan meeting room wajib diisi.'),
+                    ),
+                  );
+                  return;
+                }
                 final startDateTime = DateTime(
                   eventDate.year,
                   eventDate.month,
@@ -719,7 +727,17 @@ Future<void> _showEventDialog(BuildContext context) async {
                   endTime.hour,
                   endTime.minute,
                 );
-                if (!endDateTime.isAfter(startDateTime)) return;
+                if (!endDateTime.isAfter(startDateTime)) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Colors.red,
+                      content: Text(
+                        'Jam selesai harus lebih besar dari jam mulai.',
+                      ),
+                    ),
+                  );
+                  return;
+                }
                 Navigator.of(dialogContext).pop(
                   SignageEventItem(
                     eventName: eventName,
