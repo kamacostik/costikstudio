@@ -84,6 +84,29 @@ class SignageDevice extends Equatable {
   ];
 }
 
+class SignageDevicePairing extends Equatable {
+  const SignageDevicePairing({
+    required this.deviceId,
+    required this.pairingCode,
+    required this.expiresAt,
+  });
+
+  final String deviceId;
+  final String pairingCode;
+  final DateTime expiresAt;
+
+  factory SignageDevicePairing.fromMap(Map<String, dynamic> map) {
+    return SignageDevicePairing(
+      deviceId: map['device_id'] as String,
+      pairingCode: map['pairing_code'] as String,
+      expiresAt: DateTime.parse(map['expires_at'] as String),
+    );
+  }
+
+  @override
+  List<Object?> get props => [deviceId, pairingCode, expiresAt];
+}
+
 abstract class SignageAdminRepository {
   const SignageAdminRepository();
 
@@ -91,6 +114,7 @@ abstract class SignageAdminRepository {
   Future<SignageHotelProfile?> fetchHotelProfile();
   Future<SignageHotelProfile> saveHotelProfile(SignageHotelProfile profile);
   Future<List<SignageDevice>> fetchDevices();
+  Future<SignageDevicePairing> createDevicePairing({String? deviceName});
 }
 
 class SupabaseSignageAdminRepository extends SignageAdminRepository {
@@ -144,6 +168,20 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
         .limit(1);
     if (rows.isEmpty) return profile;
     return SignageHotelProfile.fromMap(rows.first);
+  }
+
+  @override
+  Future<SignageDevicePairing> createDevicePairing({String? deviceName}) async {
+    final response = await _supabase.rpc(
+      'create_signage_device_pairing',
+      params: {'p_device_name': deviceName, 'p_platform': 'android-tv'},
+    );
+    if (response is! List || response.isEmpty) {
+      throw StateError('Gagal membuat kode pairing device.');
+    }
+    return SignageDevicePairing.fromMap(
+      Map<String, dynamic>.from(response.first as Map),
+    );
   }
 
   @override

@@ -8,6 +8,7 @@ class SignageAdminState extends Equatable {
     this.isSaving = false,
     this.hotelProfile,
     this.devices = const [],
+    this.devicePairing,
     this.errorMessage,
     this.successMessage,
   });
@@ -16,6 +17,7 @@ class SignageAdminState extends Equatable {
   final bool isSaving;
   final SignageHotelProfile? hotelProfile;
   final List<SignageDevice> devices;
+  final SignageDevicePairing? devicePairing;
   final String? errorMessage;
   final String? successMessage;
 
@@ -24,6 +26,7 @@ class SignageAdminState extends Equatable {
     bool? isSaving,
     SignageHotelProfile? hotelProfile,
     List<SignageDevice>? devices,
+    SignageDevicePairing? devicePairing,
     String? errorMessage,
     String? successMessage,
     bool clearMessages = false,
@@ -33,6 +36,7 @@ class SignageAdminState extends Equatable {
       isSaving: isSaving ?? this.isSaving,
       hotelProfile: hotelProfile ?? this.hotelProfile,
       devices: devices ?? this.devices,
+      devicePairing: devicePairing ?? this.devicePairing,
       errorMessage: clearMessages ? null : errorMessage ?? this.errorMessage,
       successMessage: clearMessages
           ? null
@@ -46,6 +50,7 @@ class SignageAdminState extends Equatable {
     isSaving,
     hotelProfile,
     devices,
+    devicePairing,
     errorMessage,
     successMessage,
   ];
@@ -84,6 +89,26 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           isSaving: false,
           hotelProfile: savedProfile,
           successMessage: 'Profil hotel Signage berhasil disimpan.',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> createDevicePairing({String? deviceName}) async {
+    emit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      final pairing = await _repository.createDevicePairing(
+        deviceName: deviceName,
+      );
+      final devices = await _repository.fetchDevices();
+      emit(
+        state.copyWith(
+          isSaving: false,
+          devicePairing: pairing,
+          devices: devices,
+          successMessage: 'Kode pairing device berhasil dibuat.',
         ),
       );
     } catch (e) {
