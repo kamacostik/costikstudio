@@ -327,7 +327,7 @@ class _LoginIntroPanel extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Image.asset(
-                  'assets/logo/costik-studio-logo.jpg',
+                  'assets/logo/costik-studio-logo.png',
                   width: 48,
                   height: 48,
                   fit: BoxFit.cover,

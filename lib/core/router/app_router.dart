@@ -223,7 +223,7 @@ class CostikStudioShell extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.asset(
-                      'assets/logo/costik-studio-logo.jpg',
+                      'assets/logo/costik-studio-logo.png',
                       width: 32,
                       height: 32,
                       fit: BoxFit.cover,
