@@ -12,6 +12,7 @@ class SignageAdminState extends Equatable {
     this.playlists = const [],
     this.events = const [],
     this.devicePairing,
+    this.deviceQuota = const SignageDeviceQuota(deviceLimit: 0, usedDevices: 0),
     this.errorMessage,
     this.successMessage,
   });
@@ -24,6 +25,7 @@ class SignageAdminState extends Equatable {
   final List<SignagePlaylistItem> playlists;
   final List<SignageEventItem> events;
   final SignageDevicePairing? devicePairing;
+  final SignageDeviceQuota deviceQuota;
   final String? errorMessage;
   final String? successMessage;
 
@@ -36,6 +38,7 @@ class SignageAdminState extends Equatable {
     List<SignagePlaylistItem>? playlists,
     List<SignageEventItem>? events,
     SignageDevicePairing? devicePairing,
+    SignageDeviceQuota? deviceQuota,
     String? errorMessage,
     String? successMessage,
     bool clearMessages = false,
@@ -49,6 +52,7 @@ class SignageAdminState extends Equatable {
       playlists: playlists ?? this.playlists,
       events: events ?? this.events,
       devicePairing: devicePairing ?? this.devicePairing,
+      deviceQuota: deviceQuota ?? this.deviceQuota,
       errorMessage: clearMessages ? null : errorMessage ?? this.errorMessage,
       successMessage: clearMessages
           ? null
@@ -66,6 +70,7 @@ class SignageAdminState extends Equatable {
     playlists,
     events,
     devicePairing,
+    deviceQuota,
     errorMessage,
     successMessage,
   ];
@@ -82,6 +87,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     try {
       final hotelProfile = await _repository.fetchHotelProfile();
       final devices = await _repository.fetchDevices();
+      final deviceQuota = await _repository.fetchDeviceQuota();
       final mediaItems = await _repository.fetchMedia();
       final playlists = await _repository.fetchPlaylists();
       final events = await _repository.fetchEvents();
@@ -90,6 +96,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           isLoading: false,
           hotelProfile: hotelProfile ?? const SignageHotelProfile(),
           devices: devices,
+          deviceQuota: deviceQuota,
           mediaItems: mediaItems,
           playlists: playlists,
           events: events,
@@ -175,12 +182,33 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         deviceName: deviceName,
       );
       final devices = await _repository.fetchDevices();
+      final deviceQuota = await _repository.fetchDeviceQuota();
       emit(
         state.copyWith(
           isSaving: false,
           devicePairing: pairing,
           devices: devices,
+          deviceQuota: deviceQuota,
           successMessage: 'Kode pairing device berhasil dibuat.',
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> deleteDevice(String deviceId) async {
+    emit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.deleteDevice(deviceId);
+      final devices = await _repository.fetchDevices();
+      final deviceQuota = await _repository.fetchDeviceQuota();
+      emit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          deviceQuota: deviceQuota,
+          successMessage: 'Device Signage berhasil dihapus.',
         ),
       );
     } catch (e) {
@@ -193,11 +221,13 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     try {
       final pairing = await _repository.regenerateDevicePairing(deviceId);
       final devices = await _repository.fetchDevices();
+      final deviceQuota = await _repository.fetchDeviceQuota();
       emit(
         state.copyWith(
           isSaving: false,
           devicePairing: pairing,
           devices: devices,
+          deviceQuota: deviceQuota,
           successMessage: 'Kode pairing device berhasil dibuat ulang.',
         ),
       );

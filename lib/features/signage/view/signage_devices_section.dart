@@ -43,8 +43,11 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                       ),
                     ),
                     const Spacer(),
+                    _DeviceQuotaBadge(quota: state.deviceQuota),
+                    const SizedBox(width: 8),
                     FilledButton.icon(
-                      onPressed: state.isSaving
+                      onPressed:
+                          state.isSaving || !state.deviceQuota.canAddDevice
                           ? null
                           : () => _showPairingDialog(context),
                       icon: const Icon(Icons.add_link_rounded),
@@ -72,6 +75,7 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                     signageDataColumn('Konten'),
                     signageDataColumn('Status'),
                     signageDataColumn('Pairing'),
+                    signageDataColumn('Aksi'),
                   ],
                   rows: [
                     for (final device in state.devices)
@@ -95,6 +99,7 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                           ),
                           DataCell(_DeviceStatusBadge(device: device)),
                           DataCell(_DevicePairingAction(device: device)),
+                          DataCell(_DeviceDeleteAction(device: device)),
                         ],
                       ),
                   ],
@@ -149,6 +154,17 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
       ),
     );
     if (confirmed != true || !context.mounted) return;
+    if (!context.read<SignageAdminCubit>().state.deviceQuota.canAddDevice) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Kuota device penuh. Upgrade subscription Signage untuk menambah device.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
     await context.read<SignageAdminCubit>().createDevicePairing(
       deviceName: _deviceNameController.text.trim(),
     );
@@ -227,6 +243,74 @@ class _DevicePairingAction extends StatelessWidget {
 String _formatDeviceTime(DateTime value) {
   final local = value.toLocal();
   return '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')} ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+}
+
+class _DeviceQuotaBadge extends StatelessWidget {
+  const _DeviceQuotaBadge({required this.quota});
+
+  final SignageDeviceQuota quota;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: quota.canAddDevice
+            ? CostikStudioTheme.primary.withValues(alpha: 0.10)
+            : Colors.red.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        'Kuota ${quota.usedDevices}/${quota.deviceLimit}',
+        style: TextStyle(
+          color: quota.canAddDevice
+              ? CostikStudioTheme.primary
+              : Colors.red.shade700,
+          fontWeight: FontWeight.w900,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+class _DeviceDeleteAction extends StatelessWidget {
+  const _DeviceDeleteAction({required this.device});
+
+  final SignageDevice device;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'Hapus device',
+      icon: const Icon(Icons.delete_outline_rounded),
+      color: Colors.red.shade700,
+      onPressed: () async {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Hapus Device?'),
+            content: Text(
+              'Device ${device.name} akan dihapus dari tenant ini. Slot kuotanya akan kembali tersedia.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Batal'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('Hapus'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true || !context.mounted) return;
+        await context.read<SignageAdminCubit>().deleteDevice(device.id);
+      },
+    );
+  }
 }
 
 class _DeviceDialogHeader extends StatelessWidget {

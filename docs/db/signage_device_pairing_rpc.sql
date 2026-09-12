@@ -227,3 +227,90 @@ $$;
 grant execute on function public.create_signage_device_pairing(text, text) to authenticated;
 grant execute on function public.activate_signage_device(text, jsonb) to anon, authenticated;
 grant execute on function public.regenerate_signage_device_pairing(text) to authenticated;
+grant execute on function public.get_signage_device_quota() to authenticated;
+grant execute on function public.delete_signage_device(text) to authenticated;
+
+create or replace function public.get_signage_device_quota()
+returns table (
+  device_limit integer,
+  used_devices integer
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_tenant_id uuid;
+  v_device_limit integer := 0;
+  v_used_devices integer := 0;
+begin
+  if v_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select p.tenant_id
+    into v_tenant_id
+  from public.sg_profiles as p
+  where p.id = v_user_id
+  limit 1;
+
+  select coalesce(max(s.device_count), 0)
+    into v_device_limit
+  from public.subscriptions as s
+  where s.user_id = v_user_id
+    and s.product_id = 'costik-signage'
+    and s.status = 'active'
+    and s.expires_at > now();
+
+  if v_tenant_id is not null then
+    select count(*)
+      into v_used_devices
+    from public.sg_devices as d
+    where d.tenant_id = v_tenant_id
+      and (
+        (d.is_active = true and d.activated_at is not null)
+        or (d.activated_at is null and d.pairing_code is not null and d.pairing_expires_at > now())
+      );
+  end if;
+
+  return query
+  select v_device_limit, v_used_devices;
+end;
+$$;
+
+create or replace function public.delete_signage_device(
+  p_device_id text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_tenant_id uuid;
+begin
+  if v_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select p.tenant_id
+    into v_tenant_id
+  from public.sg_profiles as p
+  where p.id = v_user_id
+  limit 1;
+
+  if v_tenant_id is null then
+    raise exception 'Tenant Signage belum tersedia.';
+  end if;
+
+  delete from public.sg_devices as d
+  where d.id = p_device_id
+    and d.tenant_id = v_tenant_id;
+
+  if not found then
+    raise exception 'Device tidak ditemukan.';
+  end if;
+end;
+$$;

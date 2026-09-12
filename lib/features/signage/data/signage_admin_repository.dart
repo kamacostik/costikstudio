@@ -255,6 +255,28 @@ class SignageEventItem extends Equatable {
   ];
 }
 
+class SignageDeviceQuota extends Equatable {
+  const SignageDeviceQuota({
+    required this.deviceLimit,
+    required this.usedDevices,
+  });
+
+  final int deviceLimit;
+  final int usedDevices;
+
+  bool get canAddDevice => usedDevices < deviceLimit;
+
+  factory SignageDeviceQuota.fromMap(Map<String, dynamic> map) {
+    return SignageDeviceQuota(
+      deviceLimit: map['device_limit'] as int? ?? 0,
+      usedDevices: map['used_devices'] as int? ?? 0,
+    );
+  }
+
+  @override
+  List<Object?> get props => [deviceLimit, usedDevices];
+}
+
 class SignageDevicePairing extends Equatable {
   const SignageDevicePairing({
     required this.deviceId,
@@ -285,6 +307,7 @@ abstract class SignageAdminRepository {
   Future<SignageHotelProfile?> fetchHotelProfile();
   Future<SignageHotelProfile> saveHotelProfile(SignageHotelProfile profile);
   Future<List<SignageDevice>> fetchDevices();
+  Future<SignageDeviceQuota> fetchDeviceQuota();
   Future<List<SignageMediaItem>> fetchMedia();
   Future<SignageMediaItem> saveMedia(SignageMediaItem item);
   Future<List<SignagePlaylistItem>> fetchPlaylists();
@@ -293,6 +316,7 @@ abstract class SignageAdminRepository {
   Future<SignageEventItem> saveEvent(SignageEventItem item);
   Future<SignageDevicePairing> createDevicePairing({String? deviceName});
   Future<SignageDevicePairing> regenerateDevicePairing(String deviceId);
+  Future<void> deleteDevice(String deviceId);
 }
 
 class SupabaseSignageAdminRepository extends SignageAdminRepository {
@@ -346,6 +370,17 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
         .limit(1);
     if (rows.isEmpty) return profile;
     return SignageHotelProfile.fromMap(rows.first);
+  }
+
+  @override
+  Future<SignageDeviceQuota> fetchDeviceQuota() async {
+    final response = await _supabase.rpc('get_signage_device_quota');
+    if (response is! List || response.isEmpty) {
+      return const SignageDeviceQuota(deviceLimit: 0, usedDevices: 0);
+    }
+    return SignageDeviceQuota.fromMap(
+      Map<String, dynamic>.from(response.first as Map),
+    );
   }
 
   @override
@@ -445,6 +480,14 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
     }
     return SignageDevicePairing.fromMap(
       Map<String, dynamic>.from(response.first as Map),
+    );
+  }
+
+  @override
+  Future<void> deleteDevice(String deviceId) async {
+    await _supabase.rpc(
+      'delete_signage_device',
+      params: {'p_device_id': deviceId},
     );
   }
 
