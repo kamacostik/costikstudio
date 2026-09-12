@@ -1,6 +1,7 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/features/signage/cubit/signage_admin_cubit.dart';
 import 'package:costikstudio/features/signage/data/signage_admin_repository.dart';
+import 'package:costikstudio/features/signage/view/widgets/signage_table_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -70,19 +71,31 @@ class SignageMediaSection extends StatelessWidget {
             icon: const Icon(Icons.add_rounded),
             label: const Text('Tambah Media'),
           ),
-          child: _SimpleList(
-            emptyText: 'Belum ada media.',
-            children: [
+          child: SignageDataTable(
+            emptyIcon: Icons.perm_media_rounded,
+            emptyMessage: 'Belum ada media.',
+            columns: [
+              signageDataColumn('Media'),
+              signageDataColumn('Tipe'),
+              signageDataColumn('Path / URL'),
+            ],
+            rows: [
               for (final item in state.mediaItems)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    item.mediaType == 'video'
-                        ? Icons.movie_rounded
-                        : Icons.image_rounded,
-                  ),
-                  title: Text(item.fileName),
-                  subtitle: Text(item.publicUrl ?? item.storagePath),
+                DataRow(
+                  cells: [
+                    DataCell(
+                      SignageReferenceCell(
+                        icon: item.mediaType == 'video'
+                            ? Icons.movie_rounded
+                            : Icons.image_rounded,
+                        iconColor: CostikStudioTheme.primary,
+                        title: item.fileName,
+                        reference: item.id ?? '-',
+                      ),
+                    ),
+                    DataCell(Text(item.mediaType.toUpperCase())),
+                    DataCell(Text(item.publicUrl ?? item.storagePath)),
+                  ],
                 ),
             ],
           ),
@@ -199,19 +212,38 @@ class SignagePlaylistSection extends StatelessWidget {
             icon: const Icon(Icons.add_rounded),
             label: const Text('Tambah Playlist'),
           ),
-          child: _SimpleList(
-            emptyText: 'Belum ada playlist.',
-            children: [
+          child: SignageDataTable(
+            emptyIcon: Icons.playlist_play_rounded,
+            emptyMessage: 'Belum ada playlist.',
+            columns: [
+              signageDataColumn('Playlist'),
+              signageDataColumn('Media / Path'),
+              signageDataColumn('Status'),
+            ],
+            rows: [
               for (final item in state.playlists)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    item.isEnabled
-                        ? Icons.play_circle_fill_rounded
-                        : Icons.pause_circle_outline_rounded,
-                  ),
-                  title: Text(item.name),
-                  subtitle: Text(item.path ?? 'Belum pilih media'),
+                DataRow(
+                  cells: [
+                    DataCell(
+                      SignageReferenceCell(
+                        icon: item.isEnabled
+                            ? Icons.play_circle_fill_rounded
+                            : Icons.pause_circle_outline_rounded,
+                        iconColor: item.isEnabled
+                            ? Colors.green
+                            : Colors.orange,
+                        title: item.name,
+                        reference: item.id ?? '-',
+                      ),
+                    ),
+                    DataCell(Text(item.path ?? 'Belum pilih media')),
+                    DataCell(
+                      SignageStatusBadge(
+                        label: item.isEnabled ? 'Aktif' : 'Nonaktif',
+                        color: item.isEnabled ? Colors.green : Colors.orange,
+                      ),
+                    ),
+                  ],
                 ),
             ],
           ),
@@ -339,14 +371,21 @@ class SignageEventListSection extends StatelessWidget {
   }
 }
 
-class _DailyEventTabs extends StatelessWidget {
+class _DailyEventTabs extends StatefulWidget {
   const _DailyEventTabs({required this.events});
 
   final List<SignageEventItem> events;
 
   @override
+  State<_DailyEventTabs> createState() => _DailyEventTabsState();
+}
+
+class _DailyEventTabsState extends State<_DailyEventTabs> {
+  int _activeIndex = 0;
+
+  @override
   Widget build(BuildContext context) {
-    final sorted = [...events]
+    final sorted = [...widget.events]
       ..sort((a, b) => _eventStart(a).compareTo(_eventStart(b)));
     final today = DateTime.now();
     final tomorrow = today.add(const Duration(days: 1));
@@ -367,106 +406,110 @@ class _DailyEventTabs extends StatelessWidget {
         .reversed
         .toList();
 
-    return DefaultTabController(
-      length: 4,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: CostikStudioTheme.primary.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: TabBar(
-              isScrollable: true,
-              labelColor: CostikStudioTheme.primary,
-              unselectedLabelColor: CostikStudioTheme.slate,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicator: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x11000000),
-                    blurRadius: 12,
-                    offset: Offset(0, 6),
-                  ),
-                ],
-              ),
-              tabs: [
-                Tab(text: 'Hari Ini (${todayEvents.length})'),
-                Tab(text: 'Besok (${tomorrowEvents.length})'),
-                Tab(text: 'Akan Datang (${upcomingEvents.length})'),
-                Tab(text: 'Selesai (${pastEvents.length})'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 360,
-            child: TabBarView(
-              children: [
-                _DailyEventList(
-                  events: todayEvents,
-                  emptyText: 'Belum ada event hari ini.',
-                ),
-                _DailyEventList(
-                  events: tomorrowEvents,
-                  emptyText: 'Belum ada event besok.',
-                ),
-                _DailyEventList(
-                  events: upcomingEvents,
-                  emptyText: 'Belum ada event yang akan datang.',
-                ),
-                _DailyEventList(
-                  events: pastEvents,
-                  emptyText: 'Belum ada event selesai.',
-                ),
-              ],
-            ),
-          ),
-        ],
+    final groups = [
+      _DailyEventGroup(
+        label: 'Hari Ini',
+        icon: Icons.today_rounded,
+        events: todayEvents,
+        emptyText: 'Belum ada event hari ini.',
       ),
+      _DailyEventGroup(
+        label: 'Besok',
+        icon: Icons.next_plan_rounded,
+        events: tomorrowEvents,
+        emptyText: 'Belum ada event besok.',
+      ),
+      _DailyEventGroup(
+        label: 'Akan Datang',
+        icon: Icons.upcoming_rounded,
+        events: upcomingEvents,
+        emptyText: 'Belum ada event yang akan datang.',
+      ),
+      _DailyEventGroup(
+        label: 'Selesai',
+        icon: Icons.history_rounded,
+        events: pastEvents,
+        emptyText: 'Belum ada event selesai.',
+      ),
+    ];
+    final activeGroup = groups[_activeIndex];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SignageTableTabBar(
+          children: [
+            for (var i = 0; i < groups.length; i++)
+              SignageTableTab(
+                label: groups[i].label,
+                icon: groups[i].icon,
+                count: groups[i].events.length,
+                isSelected: _activeIndex == i,
+                onTap: () => setState(() => _activeIndex = i),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _DailyEventTable(group: activeGroup),
+      ],
     );
   }
 }
 
-class _DailyEventList extends StatelessWidget {
-  const _DailyEventList({required this.events, required this.emptyText});
+class _DailyEventGroup {
+  const _DailyEventGroup({
+    required this.label,
+    required this.icon,
+    required this.events,
+    required this.emptyText,
+  });
 
+  final String label;
+  final IconData icon;
   final List<SignageEventItem> events;
   final String emptyText;
+}
+
+class _DailyEventTable extends StatelessWidget {
+  const _DailyEventTable({required this.group});
+
+  final _DailyEventGroup group;
 
   @override
   Widget build(BuildContext context) {
-    if (events.isEmpty) {
-      return Center(
-        child: Text(
-          emptyText,
-          style: const TextStyle(color: CostikStudioTheme.slate),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      itemCount: events.length,
-      separatorBuilder: (_, index) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        final item = events[index];
-        return ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: CircleAvatar(
-            backgroundColor: CostikStudioTheme.primary.withValues(alpha: 0.10),
-            foregroundColor: CostikStudioTheme.primary,
-            child: const Icon(Icons.event_available_rounded),
+    return SignageDataTable(
+      emptyIcon: group.icon,
+      emptyMessage: group.emptyText,
+      columns: [
+        signageDataColumn('Event'),
+        signageDataColumn('Tanggal'),
+        signageDataColumn('Jam'),
+        signageDataColumn('Room / Floor'),
+        signageDataColumn('Direction'),
+      ],
+      rows: [
+        for (final item in group.events)
+          DataRow(
+            cells: [
+              DataCell(
+                SignageReferenceCell(
+                  icon: Icons.event_available_rounded,
+                  iconColor: CostikStudioTheme.primary,
+                  title: item.eventName,
+                  reference: item.id ?? '-',
+                ),
+              ),
+              DataCell(Text(_formatDate(_eventStart(item)))),
+              DataCell(
+                Text(
+                  '${_formatTime(_eventStart(item))} - ${_formatTime(_eventEnd(item))}',
+                ),
+              ),
+              DataCell(Text('${item.meetingRoom} • Floor ${item.floor}')),
+              DataCell(Text(item.direction)),
+            ],
           ),
-          title: Text(item.eventName),
-          subtitle: Text(
-            '${_formatDate(_eventStart(item))} • ${_formatTime(_eventStart(item))} - ${_formatTime(_eventEnd(item))} • ${item.meetingRoom} • Floor ${item.floor}',
-          ),
-          trailing: Chip(label: Text(item.direction)),
-        );
-      },
+      ],
     );
   }
 }
@@ -779,43 +822,57 @@ class SignageProfileMenuSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _SectionCard(
+    const menus = [
+      'Dashboard',
+      'Profil Hotel',
+      'Devices',
+      'Media',
+      'Playlist',
+      'Daily Event',
+    ];
+
+    return _SectionCard(
       icon: Icons.manage_accounts_rounded,
       title: 'Profile & Menu',
       subtitle: 'Pengaturan akses menu admin Signage.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _MenuStatusTile(label: 'Dashboard', enabled: true),
-          _MenuStatusTile(label: 'Profil Hotel', enabled: true),
-          _MenuStatusTile(label: 'Devices', enabled: true),
-          _MenuStatusTile(label: 'Media', enabled: true),
-          _MenuStatusTile(label: 'Playlist', enabled: true),
-          _MenuStatusTile(label: 'Event List', enabled: true),
-          SizedBox(height: 12),
-          Text(
+          SignageDataTable(
+            emptyIcon: Icons.manage_accounts_rounded,
+            emptyMessage: 'Belum ada menu aktif.',
+            columns: [
+              signageDataColumn('Menu'),
+              signageDataColumn('Akses'),
+              signageDataColumn('Status'),
+            ],
+            rows: [
+              for (final menu in menus)
+                DataRow(
+                  cells: [
+                    DataCell(
+                      SignageReferenceCell(
+                        icon: Icons.menu_open_rounded,
+                        iconColor: CostikStudioTheme.primary,
+                        title: menu,
+                        reference: 'Web Admin Signage',
+                      ),
+                    ),
+                    const DataCell(Text('Owner')),
+                    const DataCell(
+                      SignageStatusBadge(label: 'Aktif', color: Colors.green),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
             'Hak akses multi-user akan ditambahkan setelah modul utama stabil.',
             style: TextStyle(color: CostikStudioTheme.slate),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _MenuStatusTile extends StatelessWidget {
-  const _MenuStatusTile({required this.label, required this.enabled});
-
-  final String label;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      value: enabled,
-      onChanged: null,
-      title: Text(label),
     );
   }
 }
@@ -874,26 +931,5 @@ class _SectionCard extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _SimpleList extends StatelessWidget {
-  const _SimpleList({required this.emptyText, required this.children});
-
-  final String emptyText;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    if (children.isEmpty) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          emptyText,
-          style: const TextStyle(color: CostikStudioTheme.slate),
-        ),
-      );
-    }
-    return Column(children: children);
   }
 }

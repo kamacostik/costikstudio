@@ -1,6 +1,7 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/features/signage/cubit/signage_admin_cubit.dart';
 import 'package:costikstudio/features/signage/data/signage_admin_repository.dart';
+import 'package:costikstudio/features/signage/view/widgets/signage_table_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -62,32 +63,47 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                   _PairingCodeCard(pairing: state.devicePairing!),
                   const SizedBox(height: 12),
                 ],
-                if (state.devices.isEmpty)
-                  const Text(
-                    'Belum ada device terdaftar. Device dari Android TV/client akan tampil di sini setelah tersambung ke tenant.',
-                    style: TextStyle(color: CostikStudioTheme.slate),
-                  )
-                else
-                  Column(
-                    children: [
-                      for (final device in state.devices)
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Icon(
-                            device.isActive
-                                ? Icons.check_circle_rounded
-                                : Icons.pause_circle_outline_rounded,
-                            color: device.isActive
-                                ? Colors.green
-                                : Colors.orange,
+                SignageDataTable(
+                  emptyIcon: Icons.tv_rounded,
+                  emptyMessage: 'Belum ada device terdaftar. Device Android TV akan tampil setelah pairing.',
+                  columns: [
+                    signageDataColumn('Device'),
+                    signageDataColumn('Layout'),
+                    signageDataColumn('Konten'),
+                    signageDataColumn('Status'),
+                  ],
+                  rows: [
+                    for (final device in state.devices)
+                      DataRow(
+                        cells: [
+                          DataCell(
+                            SignageReferenceCell(
+                              icon: Icons.tv_rounded,
+                              iconColor: device.isActive
+                                  ? Colors.green
+                                  : Colors.orange,
+                              title: device.name,
+                              reference: device.id,
+                            ),
                           ),
-                          title: Text(device.name),
-                          subtitle: Text(
-                            'Video: ${device.isVideo ? 'on' : 'off'} • Promo: ${device.isPromo ? 'on' : 'off'} • ${device.tableColumn} kolom',
+                          DataCell(Text('${device.tableColumn} kolom')),
+                          DataCell(
+                            Text(
+                              'Video: ${device.isVideo ? 'On' : 'Off'} • Promo: ${device.isPromo ? 'On' : 'Off'}',
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
+                          DataCell(
+                            SignageStatusBadge(
+                              label: device.isActive ? 'Aktif' : 'Nonaktif',
+                              color: device.isActive
+                                  ? Colors.green
+                                  : Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
