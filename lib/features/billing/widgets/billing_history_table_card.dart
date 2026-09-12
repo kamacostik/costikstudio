@@ -43,9 +43,11 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
 
   @override
   Widget build(BuildContext context) {
-    final displayedList = _activeTab == _BillingSubTab.transactions
-        ? <Object>[..._purchaseTransactions]
-        : <Object>[..._failedPaymentOrders, ..._topupTransactions];
+    final displayedList = _sortHistoryEntries(
+      _activeTab == _BillingSubTab.transactions
+          ? <Object>[..._purchaseTransactions]
+          : <Object>[..._failedPaymentOrders, ..._topupTransactions],
+    );
 
     return Card(
       child: Padding(
@@ -147,6 +149,12 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
                           ),
                           DataColumn(
                             label: Text(
+                              'Tanggal',
+                              style: TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
                               'Kategori',
                               style: TextStyle(fontWeight: FontWeight.w800),
                             ),
@@ -213,6 +221,7 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
             reference: tx.referenceId,
           ),
         ),
+        DataCell(_DateCell(date: tx.createdAt)),
         DataCell(
           Text(
             tx.type.name.toUpperCase(),
@@ -256,6 +265,7 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
             reference: order.externalReference,
           ),
         ),
+        DataCell(_DateCell(date: order.createdAt)),
         DataCell(
           Text(
             'TOPUP ${order.provider.toUpperCase()}',
@@ -287,6 +297,20 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
     );
   }
 
+  List<Object> _sortHistoryEntries(List<Object> entries) {
+    final sorted = [...entries];
+    sorted.sort((a, b) => _entryDate(b).compareTo(_entryDate(a)));
+    return sorted;
+  }
+
+  DateTime _entryDate(Object entry) {
+    if (entry is WalletTransaction) {
+      return entry.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+    }
+    if (entry is PaymentOrder) return entry.createdAt;
+    return DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
   bool _isFailedPaymentStatus(String status) {
     final normalized = status.toLowerCase();
     return normalized == 'failed' ||
@@ -301,6 +325,46 @@ class _BillingHistoryTableCardState extends State<BillingHistoryTableCard> {
       'expired' => 'Expired',
       _ => 'Gagal',
     };
+  }
+}
+
+class _DateCell extends StatelessWidget {
+  const _DateCell({required this.date});
+
+  final DateTime? date;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = date;
+    if (value == null) {
+      return const Text('-', style: TextStyle(color: CostikStudioTheme.slate));
+    }
+
+    final local = value.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final year = local.year.toString();
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$day/$month/$year',
+          style: const TextStyle(
+            color: CostikStudioTheme.navy,
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+          ),
+        ),
+        Text(
+          '$hour:$minute',
+          style: const TextStyle(color: CostikStudioTheme.slate, fontSize: 11),
+        ),
+      ],
+    );
   }
 }
 

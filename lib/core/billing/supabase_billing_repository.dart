@@ -31,12 +31,18 @@ class SupabaseBillingRepository implements BillingRepository {
       _loadPaymentOrders(user.id),
     ]);
 
+    final wallet = results[0] as Wallet;
+    final transactions = _withComputedBalances(
+      wallet,
+      results[3] as List<WalletTransaction>,
+    );
+
     return BillingSnapshot(
-      wallet: results[0] as Wallet,
+      wallet: wallet,
       products: results[1] as List<BillingProduct>,
       plans: _buildPlans(results[1] as List<BillingProduct>),
       subscriptions: results[2] as List<Subscription>,
-      transactions: results[3] as List<WalletTransaction>,
+      transactions: transactions,
       invoices: results[4] as List<BillingInvoice>,
       paymentOrders: results[5] as List<PaymentOrder>,
     );
@@ -319,7 +325,7 @@ class SupabaseBillingRepository implements BillingRepository {
   Future<List<WalletTransaction>> _loadTransactions(String userId) async {
     final rows = await _supabase
         .from('wallet_transactions')
-        .select('id, user_id, type, amount')
+        .select('id, user_id, type, amount, created_at')
         .eq('user_id', userId)
         .order('created_at', ascending: false);
 
@@ -331,6 +337,7 @@ class SupabaseBillingRepository implements BillingRepository {
         balanceBefore: 0,
         balanceAfter: 0,
         referenceId: row['id'] as String,
+        createdAt: _date(row['created_at']),
       );
     }).toList();
   }
@@ -421,6 +428,43 @@ class SupabaseBillingRepository implements BillingRepository {
       'suspended' => SubscriptionStatus.suspended,
       _ => SubscriptionStatus.expired,
     };
+  }
+
+  List<WalletTransaction> _withComputedBalances(
+    Wallet wallet,
+    List<WalletTransaction> transactions,
+  ) {
+    var runningBalance = wallet.balance;
+    final enriched = <WalletTransaction>[];
+
+    for (final transaction in transactions) {
+      final balanceAfter = runningBalance;
+      final isCredit = switch (transaction.type) {
+        WalletTransactionType.topup ||
+        WalletTransactionType.refund ||
+        WalletTransactionType.bonus => true,
+        WalletTransactionType.purchase ||
+        WalletTransactionType.adjustment => false,
+      };
+      final balanceBefore = isCredit
+          ? balanceAfter - transaction.amount
+          : balanceAfter + transaction.amount;
+
+      enriched.add(
+        WalletTransaction(
+          userId: transaction.userId,
+          type: transaction.type,
+          amount: transaction.amount,
+          balanceBefore: balanceBefore,
+          balanceAfter: balanceAfter,
+          referenceId: transaction.referenceId,
+          createdAt: transaction.createdAt,
+        ),
+      );
+      runningBalance = balanceBefore;
+    }
+
+    return enriched;
   }
 
   WalletTransactionType _transactionType(String? value) {

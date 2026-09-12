@@ -10,7 +10,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: BillingHistoryTableCard(
-            transactions: const [
+            transactions: [
               WalletTransaction(
                 userId: 'demo-user',
                 type: WalletTransactionType.purchase,
@@ -18,6 +18,7 @@ void main() {
                 balanceBefore: 50000,
                 balanceAfter: 35000,
                 referenceId: 'checkout:ok',
+                createdAt: DateTime(2026, 9, 10, 9, 30),
               ),
             ],
             invoices: const [],
@@ -42,6 +43,9 @@ void main() {
     await tester.tap(find.text('Top Up'));
     await tester.pumpAndSettle();
 
+    expect(find.text('Tanggal'), findsOneWidget);
+    expect(find.text('11/09/2026'), findsOneWidget);
+    expect(find.text('00:00'), findsOneWidget);
     expect(find.text('TOPUP-FAILED-001'), findsOneWidget);
     expect(find.text('Gagal'), findsOneWidget);
     expect(find.text('+ Rp 50.000'), findsOneWidget);

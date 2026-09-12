@@ -34,6 +34,7 @@ class WalletTransaction {
     required this.balanceBefore,
     required this.balanceAfter,
     required this.referenceId,
+    this.createdAt,
   });
 
   final String userId;
@@ -42,6 +43,7 @@ class WalletTransaction {
   final int balanceBefore;
   final int balanceAfter;
   final String referenceId;
+  final DateTime? createdAt;
 }
 
 class WalletMutationResult {
