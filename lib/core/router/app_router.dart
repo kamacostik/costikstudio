@@ -217,7 +217,30 @@ class CostikStudioShell extends StatelessWidget {
               onTap: () => context.go(
                 isAdminApp ? AppRoutes.adminBilling : AppRoutes.home,
               ),
-              child: Text(isAdminApp ? 'CostikStudio Admin' : 'CostikStudio'),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/logo/costik-studio-logo.jpg',
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, _, _) =>
+                          const Icon(Icons.layers_rounded, size: 28),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      isAdminApp ? 'CostikStudio Admin' : 'CostikStudio',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
             actions: [
               for (final item in navItems)
