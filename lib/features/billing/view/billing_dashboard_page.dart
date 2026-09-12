@@ -131,6 +131,7 @@ class _BillingDashboardViewState extends State<_BillingDashboardView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _DashboardNavBar(
+                          snapshot: snapshot,
                           selectedTab: _selectedTab,
                           onChanged: _selectTab,
                         ),
@@ -142,6 +143,7 @@ class _BillingDashboardViewState extends State<_BillingDashboardView> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _DashboardNavBar(
+                          snapshot: snapshot,
                           selectedTab: _selectedTab,
                           onChanged: _selectTab,
                           isCompact: true,
@@ -1232,20 +1234,35 @@ class _MemberTutorialVideo extends StatelessWidget {
 
 class _DashboardNavBar extends StatelessWidget {
   const _DashboardNavBar({
+    required this.snapshot,
     required this.selectedTab,
     required this.onChanged,
     this.isCompact = false,
   });
 
+  final BillingSnapshot snapshot;
   final _DashboardTab selectedTab;
   final ValueChanged<_DashboardTab> onChanged;
   final bool isCompact;
 
+  bool _hasActiveSignageSubscription(BillingSnapshot snapshot) {
+    final now = DateTime.now();
+    return snapshot.subscriptions.any(
+      (subscription) =>
+          subscription.productId == 'costik-signage' &&
+          subscription.status == SubscriptionStatus.active &&
+          subscription.expiresAt.isAfter(now),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    const items = [
-      _DashboardNavSection('SERVICES', [
-        _DashboardNavItem(
+    final hasActiveSignageSubscription = _hasActiveSignageSubscription(
+      snapshot,
+    );
+    final items = [
+      _DashboardNavSection('APPS', [
+        const _DashboardNavItem(
           _DashboardTab.apps,
           'Produk',
           Icons.inventory_2_rounded,
@@ -1254,8 +1271,9 @@ class _DashboardNavBar extends StatelessWidget {
           _DashboardTab.signageAdmin,
           'Web Admin Signage',
           Icons.cast_connected_rounded,
+          enabled: hasActiveSignageSubscription,
         ),
-        _DashboardNavItem(
+        const _DashboardNavItem(
           _DashboardTab.subscriptions,
           'Subscription',
           Icons.verified_rounded,
@@ -1358,18 +1376,21 @@ class _DashboardNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected
+    final isDisabled = !item.enabled;
+    final color = isDisabled
+        ? CostikStudioTheme.slate.withValues(alpha: 0.38)
+        : selected
         ? CostikStudioTheme.primary
         : CostikStudioTheme.slate;
     return Material(
-      color: selected
+      color: selected && !isDisabled
           ? CostikStudioTheme.primary.withValues(alpha: 0.1)
           : Colors.transparent,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         key: ValueKey('dashboard_nav_${item.tab.name}'),
         borderRadius: BorderRadius.circular(10),
-        onTap: onPressed,
+        onTap: isDisabled ? null : onPressed,
         child: Padding(
           padding: EdgeInsets.symmetric(
             horizontal: isCompact ? 12 : 10,
@@ -1408,9 +1429,15 @@ class _DashboardNavSection {
 }
 
 class _DashboardNavItem {
-  const _DashboardNavItem(this.tab, this.label, this.icon);
+  const _DashboardNavItem(
+    this.tab,
+    this.label,
+    this.icon, {
+    this.enabled = true,
+  });
 
   final _DashboardTab tab;
   final String label;
   final IconData icon;
+  final bool enabled;
 }

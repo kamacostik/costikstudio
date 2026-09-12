@@ -76,21 +76,23 @@ class _SignageAdminView extends StatelessWidget {
             final content = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Costik Signage Admin',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: CostikStudioTheme.navy,
-                    fontWeight: FontWeight.w900,
+                if (!isEmbedded) ...[
+                  Text(
+                    'Costik Signage Admin',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: CostikStudioTheme.navy,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Kelola data signage langsung dari CostikStudio. Akses ini hanya aktif untuk subscription Costik Signage yang masih berlaku.',
-                  style: TextStyle(color: CostikStudioTheme.slate),
-                ),
-                const SizedBox(height: 20),
-                _SubscriptionAccessCard(subscription: subscription),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Kelola data signage langsung dari CostikStudio. Akses ini hanya aktif untuk subscription Costik Signage yang masih berlaku.',
+                    style: TextStyle(color: CostikStudioTheme.slate),
+                  ),
+                  const SizedBox(height: 20),
+                  _SubscriptionAccessCard(subscription: subscription),
+                  const SizedBox(height: 16),
+                ],
                 if (signageState.tenant == null)
                   _ProvisionTenantCard(isLoading: signageState.isLoading),
                 if (signageState.errorMessage != null) ...[
@@ -594,14 +596,14 @@ class _SignageAdminDashboard extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         GridView.count(
           crossAxisCount: MediaQuery.sizeOf(context).width >= 1000 ? 3 : 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.45,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 2.25,
           children: [
             for (final item in _signageAdminMenuItems.where(
               (item) => item.tab != _SignageAdminTab.dashboard,
@@ -629,21 +631,36 @@ class _MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(12),
+        child: Row(
           children: [
-            Icon(icon, color: CostikStudioTheme.primary),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: const TextStyle(
-                color: CostikStudioTheme.navy,
-                fontWeight: FontWeight.w900,
-                fontSize: 22,
+            Icon(icon, color: CostikStudioTheme.primary, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      color: CostikStudioTheme.navy,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: CostikStudioTheme.slate,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ),
-            Text(label, style: const TextStyle(color: CostikStudioTheme.slate)),
           ],
         ),
       ),
@@ -664,34 +681,37 @@ class _ModuleShortcutCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.all(12),
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Icon(item.icon, color: CostikStudioTheme.primary),
-                  const Spacer(),
-                  Chip(
-                    label: Text(item.isReady ? 'Aktif' : 'Next'),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                item.label,
-                style: const TextStyle(
-                  color: CostikStudioTheme.navy,
-                  fontWeight: FontWeight.w900,
+              Icon(item.icon, color: CostikStudioTheme.primary, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: CostikStudioTheme.navy,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: CostikStudioTheme.slate,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                item.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: CostikStudioTheme.slate),
               ),
             ],
           ),
