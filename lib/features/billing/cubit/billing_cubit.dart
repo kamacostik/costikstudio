@@ -37,13 +37,19 @@ class BillingCubit extends Cubit<BillingState> {
 
   final BillingRepository repository;
 
+  void _safeEmit(BillingState nextState) {
+    if (!isClosed) emit(nextState);
+  }
+
   Future<void> load() async {
-    emit(state.copyWith(status: BillingStatus.loading));
+    _safeEmit(state.copyWith(status: BillingStatus.loading));
     try {
       final snapshot = await repository.loadSnapshot();
-      emit(BillingState(status: BillingStatus.success, snapshot: snapshot));
+      _safeEmit(
+        BillingState(status: BillingStatus.success, snapshot: snapshot),
+      );
     } catch (error) {
-      emit(
+      _safeEmit(
         BillingState(
           status: BillingStatus.failure,
           snapshot: state.snapshot,
@@ -58,11 +64,11 @@ class BillingCubit extends Cubit<BillingState> {
   }
 
   Future<TopUpOrderResult?> topUp({required int amount}) async {
-    emit(state.copyWith(status: BillingStatus.loading));
+    _safeEmit(state.copyWith(status: BillingStatus.loading));
     try {
       final order = await repository.topUp(amount: amount);
       final snapshot = await repository.loadSnapshot();
-      emit(
+      _safeEmit(
         BillingState(
           status: BillingStatus.success,
           snapshot: BillingSnapshot(
@@ -81,7 +87,7 @@ class BillingCubit extends Cubit<BillingState> {
       );
       return order;
     } catch (error) {
-      emit(
+      _safeEmit(
         BillingState(
           status: BillingStatus.failure,
           snapshot: state.snapshot,
@@ -94,7 +100,7 @@ class BillingCubit extends Cubit<BillingState> {
 
   void clearMessage() {
     if (state.snapshot != null && state.snapshot!.message != null) {
-      emit(
+      _safeEmit(
         state.copyWith(
           snapshot: BillingSnapshot(
             wallet: state.snapshot!.wallet,
@@ -238,12 +244,14 @@ class BillingCubit extends Cubit<BillingState> {
   }
 
   Future<void> _runMutation(Future<BillingSnapshot> Function() action) async {
-    emit(state.copyWith(status: BillingStatus.loading));
+    _safeEmit(state.copyWith(status: BillingStatus.loading));
     try {
       final snapshot = await action();
-      emit(BillingState(status: BillingStatus.success, snapshot: snapshot));
+      _safeEmit(
+        BillingState(status: BillingStatus.success, snapshot: snapshot),
+      );
     } catch (error) {
-      emit(
+      _safeEmit(
         BillingState(
           status: BillingStatus.failure,
           snapshot: state.snapshot,
