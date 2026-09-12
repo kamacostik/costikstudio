@@ -15,7 +15,7 @@ declare
   v_user_id uuid;
   v_device_count int;
   v_expires_at timestamp with time zone;
-  v_unit_price numeric := 20000;
+  v_unit_price numeric;
   v_remaining_days int;
   v_total_amount numeric;
   v_wallet_balance numeric;
@@ -60,6 +60,15 @@ begin
       and status = 'active'
   ) then
     raise exception 'Only active IPTV subscriptions can be upgraded';
+  end if;
+
+  select p.price_per_device
+  into v_unit_price
+  from public.products p
+  where p.id = 'costik-iptv';
+
+  if v_unit_price is null then
+    raise exception 'Costik IPTV product price is not configured';
   end if;
 
   v_remaining_days := greatest(1, ceil(extract(epoch from (v_expires_at - now())) / 86400)::int);

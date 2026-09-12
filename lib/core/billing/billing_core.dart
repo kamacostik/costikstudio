@@ -60,11 +60,13 @@ class BillingProduct {
     required this.id,
     required this.name,
     required this.category,
+    this.pricePerDevice,
   });
 
   final String id;
   final String name;
   final BillingProductCategory category;
+  final int? pricePerDevice;
 }
 
 class BillingPlan {

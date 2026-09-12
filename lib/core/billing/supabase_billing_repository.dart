@@ -306,7 +306,7 @@ class SupabaseBillingRepository implements BillingRepository {
   Future<List<BillingProduct>> _loadProducts() async {
     final rows = await _supabase
         .from('products')
-        .select('id, name')
+        .select('id, name, price_per_device')
         .order('name');
 
     return rows.map<BillingProduct>((row) {
@@ -315,6 +315,7 @@ class SupabaseBillingRepository implements BillingRepository {
         id: id,
         name: row['name'] as String,
         category: _categoryFromProductId(id),
+        pricePerDevice: _moneyToInt(row['price_per_device']),
       );
     }).toList();
   }
@@ -427,7 +428,7 @@ class SupabaseBillingRepository implements BillingRepository {
         id: '${product.id}:monthly',
         productId: product.id,
         name: '${product.name} Monthly',
-        price: 20000,
+        price: product.pricePerDevice ?? 0,
         durationDays: 30,
         features: const ['Read-only Supabase billing data'],
       );

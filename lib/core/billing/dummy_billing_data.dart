@@ -5,11 +5,13 @@ const dummyBillingProducts = <BillingProduct>[
     id: 'costik-signage',
     name: 'Costik Signage',
     category: BillingProductCategory.signage,
+    pricePerDevice: 20000,
   ),
   BillingProduct(
     id: 'costik-iptv',
     name: 'Costik IPTV',
     category: BillingProductCategory.iptv,
+    pricePerDevice: 20000,
   ),
   BillingProduct(
     id: 'costik-hris',

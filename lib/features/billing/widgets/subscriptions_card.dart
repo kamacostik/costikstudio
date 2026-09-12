@@ -152,7 +152,7 @@ class _SubscriptionRow extends StatelessWidget {
   onToggleAutoRenew;
 
   String get _productName => product?.name ?? subscription.productId;
-  int get _unitPrice => unitPriceForProductId(subscription.productId);
+  int get _unitPrice => product?.pricePerDevice ?? 0;
   String get _shortName => shortNameForProductId(subscription.productId);
   int get _remainingDays =>
       subscription.expiresAt.difference(DateTime.now()).inDays;
