@@ -4,6 +4,7 @@ import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/core/platform/external_url.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/billing/billing_dependencies.dart';
 import 'package:costikstudio/features/billing/cubit/billing_cubit.dart';
@@ -775,7 +776,7 @@ class _EmbeddedProductDetail extends StatelessWidget {
                     _SignageAdminAccessButton(subscriptions: subscriptions)
                   else if (product.hasAdmin)
                     OutlinedButton.icon(
-                      onPressed: () => context.go('/support'),
+                      onPressed: () => openExternalUrl(product.adminUrl!),
                       icon: const Icon(Icons.open_in_new_rounded),
                       label: const Text('Open web admin'),
                     ),
