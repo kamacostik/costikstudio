@@ -10,7 +10,6 @@ import 'package:costikstudio/features/billing/cubit/billing_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 class WalletCard extends StatelessWidget {
   const WalletCard({
@@ -180,20 +179,9 @@ class WalletCard extends StatelessWidget {
                               children: [
                                 if (order.hasPaymentUrl)
                                   FilledButton.icon(
-                                    onPressed: () => _showPaymentQrDialog(
+                                    onPressed: () => _redirectToPaymentLink(
                                       context,
-                                      title: 'Bayar Top Up',
-                                      amount: order.amount,
-                                      reference: order.externalReference,
-                                      paymentUrl: order.paymentUrl!,
-                                      order: TopUpOrderResult(
-                                        orderId: order.id,
-                                        externalReference:
-                                            order.externalReference,
-                                        status: order.status,
-                                        amount: order.amount,
-                                        paymentUrl: order.paymentUrl,
-                                      ),
+                                      order.paymentUrl!,
                                     ),
                                     icon: const Icon(
                                       Icons.qr_code_rounded,
@@ -632,102 +620,6 @@ class WalletCard extends StatelessWidget {
             },
             icon: const Icon(Icons.refresh_rounded, size: 16),
             label: const Text('Buat Link Baru'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<_TopUpDialogAction?> _showPaymentQrDialog(
-    BuildContext context, {
-    required String title,
-    required int amount,
-    required String reference,
-    required String paymentUrl,
-    required TopUpOrderResult order,
-  }) {
-    return showDialog<_TopUpDialogAction>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(title),
-        content: SizedBox(
-          width: 400,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: CostikStudioTheme.primary.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: QrImageView(
-                    data: paymentUrl,
-                    version: QrVersions.auto,
-                    size: 220,
-                    backgroundColor: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  formatRupiah(amount),
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: CostikStudioTheme.navy,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Scan QRIS atau buka link pembayaran untuk menyelesaikan top up.',
-                  style: const TextStyle(color: CostikStudioTheme.slate),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 14),
-                _TopUpOrderRow(label: 'Reference', value: reference),
-                _TopUpOrderRow(label: 'Payment URL', value: paymentUrl),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Tutup'),
-          ),
-          TextButton.icon(
-            onPressed: () async {
-              final cancelled = await const PaymentOrderCanceller()
-                  .cancelByExternalReference(order.externalReference);
-              if (!dialogContext.mounted) return;
-              Navigator.of(dialogContext).pop(_TopUpDialogAction.cancelled);
-              if (cancelled && context.mounted) {
-                await context.read<BillingCubit>().load();
-              }
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    cancelled
-                        ? 'Transaksi dibatalkan. Silakan buat top up baru.'
-                        : 'Belum bisa membatalkan transaksi ini.',
-                  ),
-                  backgroundColor: cancelled ? null : Colors.red,
-                ),
-              );
-            },
-            icon: const Icon(Icons.cancel_outlined, size: 16),
-            label: const Text('Batalkan'),
-          ),
-          FilledButton.icon(
-            onPressed: () => navigateToExternalUrl(paymentUrl),
-            icon: const Icon(Icons.open_in_new_rounded, size: 16),
-            label: const Text('Lanjut Bayar'),
           ),
         ],
       ),
