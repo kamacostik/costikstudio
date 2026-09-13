@@ -43,7 +43,6 @@ void main() {
     expect(find.text('Home'), findsNothing);
     expect(find.text('Products'), findsNothing);
     expect(find.text('Apps'), findsNothing);
-    expect(find.text('Billing'), findsNothing);
     expect(find.text('Support'), findsNothing);
     expect(find.text('Masuk ke Costik Studio'), findsOneWidget);
 
@@ -59,6 +58,13 @@ void main() {
       find.widgetWithText(FilledButton, 'Masuk ke Dashboard'),
     );
     await tester.tap(find.widgetWithText(FilledButton, 'Masuk ke Dashboard'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ringkasan Admin'), findsOneWidget);
+    expect(find.text('Billing & Subscription'), findsOneWidget);
+    expect(find.text('Signage Tenants'), findsOneWidget);
+
+    await tester.tap(find.text('Buka Billing'));
     await tester.pumpAndSettle();
 
     expect(find.text('Pending top ups'), findsOneWidget);

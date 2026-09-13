@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'test_login_helper.dart';
 
 void main() {
-  testWidgets('renders dummy admin billing dashboard', (tester) async {
+  testWidgets('admin app lands on summary dashboard after login', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1280, 800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -18,18 +20,13 @@ void main() {
 
     await loginAsAdmin(tester);
 
-    await tester.tap(find.text('Buka Billing'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Admin Billing'), findsWidgets);
-    expect(find.text('Pending top ups'), findsOneWidget);
-    expect(find.text('Kendari Hotel Group'), findsWidgets);
-    expect(find.text('Approve Rp 250.000'), findsOneWidget);
-    expect(find.text('Customer wallets'), findsOneWidget);
-    expect(find.text('Subscription overview'), findsOneWidget);
+    expect(find.text('Ringkasan Admin'), findsOneWidget);
+    expect(find.text('Top Up Pending'), findsOneWidget);
+    expect(find.text('Billing & Subscription'), findsOneWidget);
+    expect(find.text('Signage Tenants'), findsOneWidget);
   });
 
-  testWidgets('approves dummy top up in admin billing dashboard', (
+  testWidgets('admin dashboard navigates to billing and signage modules', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1280, 800);
@@ -45,11 +42,11 @@ void main() {
 
     await tester.tap(find.text('Buka Billing'));
     await tester.pumpAndSettle();
+    expect(find.text('Pending top ups'), findsOneWidget);
 
-    await tester.tap(find.text('Approve Rp 250.000'));
+    await tester.tap(find.byKey(const Key('header_nav_/admin/signage')));
     await tester.pumpAndSettle();
-
-    expect(find.text('Top up Kendari Hotel Group disetujui'), findsOneWidget);
-    expect(find.text('No pending top ups'), findsOneWidget);
+    expect(find.text('Kendari Hotel Group'), findsWidgets);
+    expect(find.text('Demo Customer'), findsOneWidget);
   });
 }

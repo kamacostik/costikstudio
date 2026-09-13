@@ -2,6 +2,7 @@ import 'package:costikstudio/app/app_experience.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/account/view/account_page.dart';
+import 'package:costikstudio/features/admin_dashboard/view/admin_dashboard_page.dart';
 import 'package:costikstudio/features/apps/view/apps_page.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:costikstudio/features/auth/view/login_page.dart';
@@ -11,6 +12,7 @@ import 'package:costikstudio/features/home/view/home_page.dart';
 import 'package:costikstudio/features/payment_return/view/payment_return_page.dart';
 import 'package:costikstudio/features/product_detail/view/product_detail_page.dart';
 import 'package:costikstudio/features/products/view/products_page.dart';
+import 'package:costikstudio/features/signage/view/admin_signage_page.dart';
 import 'package:costikstudio/features/signage/view/signage_admin_page.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
 import 'package:costikstudio/features/subscription/view/signage_subscription_page.dart';
@@ -23,7 +25,7 @@ GoRouter createAppRouter(AppExperience experience) {
   final isAdminApp = experience == AppExperience.admin;
 
   return GoRouter(
-    initialLocation: isAdminApp ? AppRoutes.adminBilling : AppRoutes.home,
+    initialLocation: isAdminApp ? AppRoutes.adminDashboard : AppRoutes.home,
     routes: [
       ShellRoute(
         builder: (context, state, child) =>
@@ -114,6 +116,14 @@ GoRouter createAppRouter(AppExperience experience) {
               redirect: (context, state) => AppRoutes.billing,
             ),
             GoRoute(
+              path: AppRoutes.adminDashboard,
+              redirect: (context, state) => AppRoutes.billing,
+            ),
+            GoRoute(
+              path: AppRoutes.adminSignage,
+              redirect: (context, state) => AppRoutes.billing,
+            ),
+            GoRoute(
               path: AppRoutes.support,
               name: AppRouteNames.support,
               redirect: (context, state) {
@@ -156,6 +166,18 @@ GoRouter createAppRouter(AppExperience experience) {
               builder: (context, state) => const AccountPage(),
             ),
             GoRoute(
+              path: AppRoutes.adminDashboard,
+              name: AppRouteNames.adminDashboard,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAdmin) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
+              builder: (context, state) => const AdminDashboardPage(),
+            ),
+            GoRoute(
               path: AppRoutes.adminBilling,
               name: AppRouteNames.adminBilling,
               redirect: (context, state) {
@@ -168,8 +190,20 @@ GoRouter createAppRouter(AppExperience experience) {
               builder: (context, state) => const AdminBillingPage(),
             ),
             GoRoute(
+              path: AppRoutes.adminSignage,
+              name: AppRouteNames.adminSignage,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAdmin) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
+              builder: (context, state) => const AdminSignagePage(),
+            ),
+            GoRoute(
               path: AppRoutes.home,
-              redirect: (context, state) => AppRoutes.adminBilling,
+              redirect: (context, state) => AppRoutes.adminDashboard,
             ),
           ],
         ],
@@ -199,7 +233,9 @@ class CostikStudioShell extends StatelessWidget {
       builder: (context, authState) {
         final navItems = isAdminApp
             ? const [
-                _NavItem('Admin Billing', AppRoutes.adminBilling),
+                _NavItem('Dashboard', AppRoutes.adminDashboard),
+                _NavItem('Billing', AppRoutes.adminBilling),
+                _NavItem('Signage', AppRoutes.adminSignage),
                 _NavItem('Account', AppRoutes.account),
               ]
             : [
@@ -215,7 +251,7 @@ class CostikStudioShell extends StatelessWidget {
           appBar: AppBar(
             title: InkWell(
               onTap: () => context.go(
-                isAdminApp ? AppRoutes.adminBilling : AppRoutes.home,
+                isAdminApp ? AppRoutes.adminDashboard : AppRoutes.home,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

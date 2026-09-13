@@ -101,6 +101,9 @@ The old Admin Signage repo is now reference/legacy for porting modules only.
 - Admin can set/update device count.
 - Admin management is admin-build/admin-route only.
 - User app must not expose Admin Billing UI.
+- Admin dashboard landing (`/admin/dashboard`) aggregates top-up, customer, subscription, and device metrics with links to Billing and Signage modules.
+- Admin Signage tenant list (`/admin/signage`) is dummy-first; Supabase read via `admin_list_signage_tenants()` RPC in `docs/db/signage_admin_tenants_rpc.sql`.
+- Signage content management (hotel, devices, media, playlist, events) stays per-tenant in the customer Signage web admin, not in the CostikStudio backoffice.
 
 ## SQL/RPC files to remember for Supabase E2E
 

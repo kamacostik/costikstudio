@@ -40,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (success) {
       if (authCubit.state.isAdmin) {
-        context.go(AppRoutes.adminBilling);
+        context.go(AppRoutes.adminDashboard);
       } else {
         context.go(AppRoutes.billing);
       }
