@@ -14,13 +14,16 @@ class CostikStudioApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => AuthCubit()..restoreSession(),
-      child: MaterialApp.router(
-        title: experience == AppExperience.admin
-            ? 'CostikStudio Admin'
-            : 'CostikStudio',
-        debugShowCheckedModeBanner: false,
-        theme: CostikStudioTheme.light,
-        routerConfig: createAppRouter(experience),
+      child: AppExperienceScope(
+        experience: experience,
+        child: MaterialApp.router(
+          title: experience == AppExperience.admin
+              ? 'CostikStudio Admin'
+              : 'CostikStudio',
+          debugShowCheckedModeBanner: false,
+          theme: CostikStudioTheme.light,
+          routerConfig: createAppRouter(experience),
+        ),
       ),
     );
   }
