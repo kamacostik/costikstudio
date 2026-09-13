@@ -899,7 +899,7 @@ class _EmbeddedProductDetail extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Aktifkan Add-on Video IPTV?'),
         content: const Text(
-          'Add-on ini mengaktifkan upload video promo IPTV: 5 video aktif, maksimal 30 MB per video, dan kuota media 1 GB. Biaya akan dipotong dari wallet.',
+          'Add-on Rp50.000/bulan: 2 video promo aktif, maksimal 100 MB per video, durasi maksimal 120 detik, dan kuota media 2 GB. Biaya akan dipotong dari wallet.',
         ),
         actions: [
           TextButton(

@@ -12,7 +12,7 @@ as $$
 declare
   current_user_id uuid := auth.uid();
   v_wallet_balance numeric;
-  v_addon_price numeric := 25000;
+  v_addon_price numeric := 50000;
   v_subscription public.subscriptions%rowtype;
   v_transaction_id uuid;
 begin
@@ -61,12 +61,12 @@ begin
 
   update public.subscriptions
   set media_limits = coalesce(media_limits, '{}'::jsonb) || jsonb_build_object(
-        'media_storage_limit_mb', 1000,
+        'media_storage_limit_mb', 2000,
         'image_upload_enabled', true,
         'video_upload_enabled', true,
-        'video_max_file_size_mb', 30,
-        'video_max_duration_seconds', 30,
-        'video_active_limit', 5
+        'video_max_file_size_mb', 100,
+        'video_max_duration_seconds', 120,
+        'video_active_limit', 2
       ),
       updated_at = now()
   where id = target_subscription_id;

@@ -225,12 +225,12 @@ class DummyBillingRepository implements BillingRepository {
     }
     _subscriptions[index] = _subscriptions[index].copyWith(
       mediaLimits: const {
-        'media_storage_limit_mb': 1000,
+        'media_storage_limit_mb': 2000,
         'image_upload_enabled': true,
         'video_upload_enabled': true,
-        'video_max_file_size_mb': 30,
-        'video_max_duration_seconds': 30,
-        'video_active_limit': 5,
+        'video_max_file_size_mb': 100,
+        'video_max_duration_seconds': 120,
+        'video_active_limit': 2,
       },
     );
     return _snapshot(message: 'Add-on video IPTV berhasil diaktifkan.');
