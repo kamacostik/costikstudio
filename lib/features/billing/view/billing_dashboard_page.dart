@@ -23,6 +23,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+const _signageApkDownloadUrl =
+    'https://drive.google.com/file/d/16bjZ5-hS3NulL_SvAnea52zWCb2ArqAV/view?usp=sharing';
+
 class BillingDashboardPage extends StatelessWidget {
   const BillingDashboardPage({super.key});
 
@@ -818,9 +821,14 @@ class _EmbeddedProductDetail extends StatelessWidget {
                     icon: const Icon(Icons.menu_book_rounded),
                     label: const Text('Lihat Dokumentasi'),
                   ),
-                  if (product.id == 'digital-signage')
-                    _SignageAdminAccessButton(subscriptions: subscriptions)
-                  else if (product.hasAdmin)
+                  if (product.id == 'digital-signage') ...[
+                    OutlinedButton.icon(
+                      onPressed: () => openExternalUrl(_signageApkDownloadUrl),
+                      icon: const Icon(Icons.download_rounded),
+                      label: const Text('Download APK'),
+                    ),
+                    _SignageAdminAccessButton(subscriptions: subscriptions),
+                  ] else if (product.hasAdmin)
                     OutlinedButton.icon(
                       onPressed: () => openExternalUrl(product.adminUrl!),
                       icon: const Icon(Icons.open_in_new_rounded),
