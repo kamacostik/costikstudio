@@ -24,7 +24,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 const _signageApkDownloadUrl =
-    'https://drive.google.com/file/d/16bjZ5-hS3NulL_SvAnea52zWCb2ArqAV/view?usp=sharing';
+    'https://drive.google.com/drive/folders/153-9t8cYYZFX_aOfaVI52KRSjKk1mYOT?usp=sharing';
 
 class BillingDashboardPage extends StatelessWidget {
   const BillingDashboardPage({super.key});
