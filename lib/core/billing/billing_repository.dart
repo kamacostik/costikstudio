@@ -89,6 +89,10 @@ abstract class BillingRepository {
     required int additionalDeviceCount,
   });
 
+  Future<BillingSnapshot> activateIptvVideoAddon({
+    required String subscriptionId,
+  });
+
   Future<BillingSnapshot> upgradeSignageSubscriptionDevices({
     required String subscriptionId,
     required int additionalDeviceCount,

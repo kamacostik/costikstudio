@@ -184,6 +184,20 @@ class SupabaseBillingRepository implements BillingRepository {
   }
 
   @override
+  Future<BillingSnapshot> activateIptvVideoAddon({
+    required String subscriptionId,
+  }) async {
+    await _supabase.rpc<void>(
+      'activate_iptv_video_addon',
+      params: {'target_subscription_id': subscriptionId},
+    );
+
+    return _loadMutationSnapshot(
+      message: 'Add-on video IPTV berhasil diaktifkan.',
+    );
+  }
+
+  @override
   Future<BillingSnapshot> upgradeSignageSubscriptionDevices({
     required String subscriptionId,
     required int additionalDeviceCount,
@@ -324,7 +338,7 @@ class SupabaseBillingRepository implements BillingRepository {
     final rows = await _supabase
         .from('subscriptions')
         .select(
-          'id, user_id, product_id, device_count, billing_cycle_months, auto_renew, status, starts_at, expires_at',
+          'id, user_id, product_id, device_count, billing_cycle_months, auto_renew, status, starts_at, expires_at, media_limits',
         )
         .eq('user_id', userId)
         .order('created_at', ascending: false);
@@ -343,6 +357,7 @@ class SupabaseBillingRepository implements BillingRepository {
         expiresAt:
             _date(row['expires_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
         autoRenew: (row['auto_renew'] as bool?) ?? false,
+        mediaLimits: _jsonMap(row['media_limits']),
       );
     }).toList();
   }
@@ -513,5 +528,11 @@ class SupabaseBillingRepository implements BillingRepository {
   DateTime? _date(Object? value) {
     if (value == null) return null;
     return DateTime.tryParse(value.toString());
+  }
+
+  Map<String, dynamic> _jsonMap(Object? value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return const {};
   }
 }

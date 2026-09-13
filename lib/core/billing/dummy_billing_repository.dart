@@ -210,6 +210,33 @@ class DummyBillingRepository implements BillingRepository {
   }
 
   @override
+  Future<BillingSnapshot> activateIptvVideoAddon({
+    required String subscriptionId,
+  }) async {
+    final index = _subscriptions.indexWhere(
+      (subscription) => subscription.id == subscriptionId,
+    );
+    if (index == -1) {
+      throw ArgumentError.value(
+        subscriptionId,
+        'subscriptionId',
+        'Unknown subscription.',
+      );
+    }
+    _subscriptions[index] = _subscriptions[index].copyWith(
+      mediaLimits: const {
+        'media_storage_limit_mb': 1000,
+        'image_upload_enabled': true,
+        'video_upload_enabled': true,
+        'video_max_file_size_mb': 30,
+        'video_max_duration_seconds': 30,
+        'video_active_limit': 5,
+      },
+    );
+    return _snapshot(message: 'Add-on video IPTV berhasil diaktifkan.');
+  }
+
+  @override
   Future<BillingSnapshot> upgradeSignageSubscriptionDevices({
     required String subscriptionId,
     required int additionalDeviceCount,

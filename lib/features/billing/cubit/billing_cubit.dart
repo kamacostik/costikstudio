@@ -185,6 +185,12 @@ class BillingCubit extends Cubit<BillingState> {
     );
   }
 
+  Future<void> activateIptvVideoAddon({required String subscriptionId}) async {
+    await _runMutation(
+      () => repository.activateIptvVideoAddon(subscriptionId: subscriptionId),
+    );
+  }
+
   Future<void> upgradeSignageSubscriptionDevices({
     required String subscriptionId,
     required int additionalDeviceCount,

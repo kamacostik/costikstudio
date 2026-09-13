@@ -798,13 +798,29 @@ class _EmbeddedProductDetail extends StatelessWidget {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  if (isManagedActive)
+                  if (isManagedActive) ...[
                     FilledButton.icon(
                       onPressed: onUpgradeDevice,
                       icon: const Icon(Icons.add_to_queue_rounded),
                       label: const Text('Upgrade Device'),
-                    )
-                  else if (isManagedCancelled)
+                    ),
+                    if (product.id == 'costik-iptv')
+                      OutlinedButton.icon(
+                        onPressed:
+                            existingManagedSubscription!.videoUploadEnabled
+                            ? null
+                            : () => _confirmActivateIptvVideoAddon(
+                                context,
+                                existingManagedSubscription,
+                              ),
+                        icon: const Icon(Icons.video_settings_rounded),
+                        label: Text(
+                          existingManagedSubscription.videoUploadEnabled
+                              ? 'Add-on Video Aktif'
+                              : 'Aktifkan Add-on Video',
+                        ),
+                      ),
+                  ] else if (isManagedCancelled)
                     FilledButton.icon(
                       onPressed: onUpgradeDevice,
                       icon: const Icon(Icons.replay_rounded),
@@ -870,6 +886,38 @@ class _EmbeddedProductDetail extends StatelessWidget {
         const SizedBox(height: 24),
         _MemberHowToStart(product: product),
       ],
+    );
+  }
+
+  Future<void> _confirmActivateIptvVideoAddon(
+    BuildContext context,
+    Subscription subscription,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Aktifkan Add-on Video IPTV?'),
+        content: const Text(
+          'Add-on ini mengaktifkan upload video promo IPTV: 5 video aktif, maksimal 30 MB per video, dan kuota media 1 GB. Biaya akan dipotong dari wallet.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            icon: const Icon(Icons.video_settings_rounded),
+            label: const Text('Aktifkan Add-on'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+    await context.read<BillingCubit>().activateIptvVideoAddon(
+      subscriptionId: subscription.id,
     );
   }
 

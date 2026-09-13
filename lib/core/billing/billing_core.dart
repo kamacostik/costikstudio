@@ -108,6 +108,7 @@ class Subscription {
     required this.autoRenew,
     this.deviceCount = 1,
     this.billingCycleMonths = 1,
+    this.mediaLimits = const {},
   });
 
   final String id;
@@ -120,6 +121,19 @@ class Subscription {
   final bool autoRenew;
   final int deviceCount;
   final int billingCycleMonths;
+  final Map<String, dynamic> mediaLimits;
+
+  bool get videoUploadEnabled =>
+      (mediaLimits['video_upload_enabled'] as bool?) ?? false;
+
+  int get mediaStorageLimitMb =>
+      (mediaLimits['media_storage_limit_mb'] as num?)?.toInt() ?? 500;
+
+  int get videoMaxFileSizeMb =>
+      (mediaLimits['video_max_file_size_mb'] as num?)?.toInt() ?? 30;
+
+  int get videoActiveLimit =>
+      (mediaLimits['video_active_limit'] as num?)?.toInt() ?? 0;
 
   Subscription copyWith({
     String? id,
@@ -132,6 +146,7 @@ class Subscription {
     bool? autoRenew,
     int? deviceCount,
     int? billingCycleMonths,
+    Map<String, dynamic>? mediaLimits,
   }) {
     return Subscription(
       id: id ?? this.id,
@@ -144,6 +159,7 @@ class Subscription {
       autoRenew: autoRenew ?? this.autoRenew,
       deviceCount: deviceCount ?? this.deviceCount,
       billingCycleMonths: billingCycleMonths ?? this.billingCycleMonths,
+      mediaLimits: mediaLimits ?? this.mediaLimits,
     );
   }
 }
