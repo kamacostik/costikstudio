@@ -214,3 +214,66 @@ revoke all on function public.touch_iptv_device(text, text, jsonb) from public;
 grant execute on function public.create_iptv_device_pairing(text, text) to authenticated;
 grant execute on function public.activate_iptv_device(text, text, jsonb) to anon, authenticated;
 grant execute on function public.touch_iptv_device(text, text, jsonb) to anon, authenticated;
+
+create or replace function public.regenerate_iptv_device_pairing(
+  p_device_row_id integer
+)
+returns table (
+  id integer,
+  pairing_code text,
+  expires_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_device public.devices%rowtype;
+  v_pairing_code text;
+begin
+  if v_user_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if p_device_row_id is null then
+    raise exception 'Device tidak valid.';
+  end if;
+
+  select d.*
+    into v_device
+  from public.devices as d
+  where d.id = p_device_row_id
+    and d.client_id = v_user_id
+  limit 1;
+
+  if v_device.id is null then
+    raise exception 'Device tidak ditemukan.';
+  end if;
+
+  v_pairing_code := lpad((floor(random() * 1000000))::int::text, 6, '0');
+
+  while exists (
+    select 1 from public.devices as d
+    where d.activation_code = v_pairing_code
+      and d.pairing_expires_at > now()
+  ) loop
+    v_pairing_code := lpad((floor(random() * 1000000))::int::text, 6, '0');
+  end loop;
+
+  update public.devices
+  set activation_code = v_pairing_code,
+      pairing_expires_at = now() + interval '10 minutes',
+      activated = false,
+      activated_at = null,
+      device_token_hash = null,
+      device_id = null
+  where devices.id = v_device.id;
+
+  return query
+  select v_device.id, v_pairing_code, now() + interval '10 minutes';
+end;
+$$;
+
+revoke all on function public.regenerate_iptv_device_pairing(integer) from public;
+grant execute on function public.regenerate_iptv_device_pairing(integer) to authenticated;
