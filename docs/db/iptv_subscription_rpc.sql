@@ -28,6 +28,14 @@ declare
   inserted_transaction_id uuid;
   inserted_invoice_id uuid;
   subscription_expires_at timestamp with time zone;
+  iptv_media_limits jsonb := jsonb_build_object(
+    'media_storage_limit_mb', 500,
+    'image_upload_enabled', true,
+    'video_upload_enabled', false,
+    'video_max_file_size_mb', 30,
+    'video_max_duration_seconds', 30,
+    'video_active_limit', 0
+  );
 begin
   if current_user_id is null then
     raise exception 'Authentication required';
@@ -49,6 +57,8 @@ begin
   if product.id is null then
     raise exception 'Costik IPTV product is not configured';
   end if;
+
+  iptv_media_limits := iptv_media_limits || coalesce(product.metadata, '{}'::jsonb);
 
   insert into public.wallets (user_id, balance)
   values (current_user_id, 0)
@@ -95,7 +105,8 @@ begin
     total_amount,
     status,
     starts_at,
-    expires_at
+    expires_at,
+    media_limits
   ) values (
     current_user_id,
     product.id,
@@ -105,7 +116,8 @@ begin
     total_amount,
     'active',
     now(),
-    subscription_expires_at
+    subscription_expires_at,
+    iptv_media_limits
   ) returning id into inserted_subscription_id;
 
   insert into public.wallet_transactions (
