@@ -343,6 +343,8 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                                     color: CostikStudioTheme.slate,
                                   ),
                                 ),
+                                const SizedBox(height: 16),
+                                const _IptvBasicMediaLimitNotice(),
                                 const SizedBox(height: 24),
 
                                 // Input Device
@@ -639,6 +641,57 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
     }
 
     return SingleChildScrollView(child: ResponsiveSection(child: content));
+  }
+}
+
+class _IptvBasicMediaLimitNotice extends StatelessWidget {
+  const _IptvBasicMediaLimitNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.video_settings_rounded,
+            color: Colors.orange,
+            size: 22,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'Batasan media paket IPTV basic',
+                  style: TextStyle(
+                    color: CostikStudioTheme.navy,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Termasuk upload gambar dan kuota media 500 MB. Upload video promo belum aktif di paket ini; video tersedia melalui paket/add-on agar biaya storage dan bandwidth tetap terkendali.',
+                  style: TextStyle(
+                    color: CostikStudioTheme.slate,
+                    fontSize: 12,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
