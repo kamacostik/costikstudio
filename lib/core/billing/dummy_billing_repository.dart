@@ -76,8 +76,11 @@ class DummyBillingRepository implements BillingRepository {
     required int deviceCount,
     required int billingCycleMonths,
     bool autoRenew = false,
+    bool includeVideoAddon = false,
   }) async {
-    final amount = deviceCount * iptvPricePerDevice * billingCycleMonths;
+    final amount =
+        deviceCount * iptvPricePerDevice * billingCycleMonths +
+        (includeVideoAddon ? iptvVideoAddonPrice : 0);
     final plan = BillingPlan(
       id: 'costik-iptv:custom',
       productId: 'costik-iptv',
@@ -86,7 +89,21 @@ class DummyBillingRepository implements BillingRepository {
       durationDays: 30 * billingCycleMonths,
       features: const ['Custom IPTV device licence'],
     );
-    return _checkout(plan: plan, autoRenew: autoRenew);
+    final snapshot = await _checkout(plan: plan, autoRenew: autoRenew);
+    if (includeVideoAddon) {
+      final index = _subscriptions.indexWhere(
+        (subscription) => subscription.productId == 'costik-iptv',
+      );
+      if (index != -1) {
+        _subscriptions[index] = _subscriptions[index].copyWith(
+          mediaLimits: iptvVideoAddonMediaLimits,
+        );
+        return _snapshot(
+          message: 'Langganan Costik IPTV + add-on video berhasil aktif.',
+        );
+      }
+    }
+    return snapshot;
   }
 
   @override
@@ -224,14 +241,7 @@ class DummyBillingRepository implements BillingRepository {
       );
     }
     _subscriptions[index] = _subscriptions[index].copyWith(
-      mediaLimits: const {
-        'media_storage_limit_mb': 2000,
-        'image_upload_enabled': true,
-        'video_upload_enabled': true,
-        'video_max_file_size_mb': 100,
-        'video_max_duration_seconds': 120,
-        'video_active_limit': 2,
-      },
+      mediaLimits: iptvVideoAddonMediaLimits,
     );
     return _snapshot(message: 'Add-on video IPTV berhasil diaktifkan.');
   }

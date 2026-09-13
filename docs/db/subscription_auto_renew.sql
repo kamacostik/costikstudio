@@ -12,7 +12,8 @@ alter table public.subscriptions
 create or replace function public.checkout_iptv_subscription(
   device_count integer,
   billing_cycle_months integer default 1,
-  p_auto_renew boolean default false
+  p_auto_renew boolean default false,
+  p_include_video_addon boolean default false
 )
 returns table (
   subscription_id uuid,
@@ -30,12 +31,23 @@ declare
   current_user_id uuid := auth.uid();
   product public.products%rowtype;
   current_balance numeric;
+  base_amount numeric;
+  addon_amount numeric := 0;
+  addon_price numeric := 50000;
   total_amount numeric;
   inserted_licence_id uuid;
   inserted_subscription_id uuid;
   inserted_transaction_id uuid;
   inserted_invoice_id uuid;
   subscription_expires_at timestamp with time zone;
+  iptv_media_limits jsonb := jsonb_build_object(
+    'media_storage_limit_mb', 500,
+    'image_upload_enabled', true,
+    'video_upload_enabled', false,
+    'video_max_file_size_mb', 30,
+    'video_max_duration_seconds', 30,
+    'video_active_limit', 0
+  );
 begin
   if current_user_id is null then
     raise exception 'Authentication required';
@@ -58,6 +70,20 @@ begin
     raise exception 'Costik IPTV product is not configured';
   end if;
 
+  iptv_media_limits := iptv_media_limits || coalesce(product.metadata, '{}'::jsonb);
+
+  if coalesce(p_include_video_addon, false) then
+    addon_amount := addon_price * billing_cycle_months;
+    iptv_media_limits := iptv_media_limits || jsonb_build_object(
+      'media_storage_limit_mb', 2000,
+      'image_upload_enabled', true,
+      'video_upload_enabled', true,
+      'video_max_file_size_mb', 100,
+      'video_max_duration_seconds', 120,
+      'video_active_limit', 2
+    );
+  end if;
+
   insert into public.wallets (user_id, balance)
   values (current_user_id, 0)
   on conflict (user_id) do nothing;
@@ -68,7 +94,8 @@ begin
   where wallets.user_id = current_user_id
   for update;
 
-  total_amount := product.price_per_device * device_count * billing_cycle_months;
+  base_amount := product.price_per_device * device_count * billing_cycle_months;
+  total_amount := base_amount + addon_amount;
 
   if current_balance < total_amount then
     raise exception 'Insufficient wallet balance';
@@ -104,7 +131,8 @@ begin
     auto_renew,
     status,
     starts_at,
-    expires_at
+    expires_at,
+    media_limits
   ) values (
     current_user_id,
     product.id,
@@ -115,7 +143,8 @@ begin
     coalesce(p_auto_renew, false),
     'active',
     now(),
-    subscription_expires_at
+    subscription_expires_at,
+    iptv_media_limits
   ) returning id into inserted_subscription_id;
 
   insert into public.wallet_transactions (
@@ -128,7 +157,11 @@ begin
     current_user_id,
     'purchase',
     total_amount,
-    'Costik IPTV subscription checkout',
+    case
+      when coalesce(p_include_video_addon, false)
+        then 'Costik IPTV subscription checkout + video add-on'
+      else 'Costik IPTV subscription checkout'
+    end,
     'completed'
   ) returning id into inserted_transaction_id;
 
@@ -182,6 +215,7 @@ begin
   from public.checkout_iptv_subscription(
     checkout_iptv_subscription.device_count,
     checkout_iptv_subscription.billing_cycle_months,
+    false,
     false
   );
 end;
@@ -422,6 +456,8 @@ begin
 end;
 $$;
 
+revoke all on function public.checkout_iptv_subscription(integer, integer, boolean, boolean) from public;
+grant execute on function public.checkout_iptv_subscription(integer, integer, boolean, boolean) to authenticated;
 revoke all on function public.checkout_iptv_subscription(integer, integer, boolean) from public;
 grant execute on function public.checkout_iptv_subscription(integer, integer, boolean) to authenticated;
 revoke all on function public.checkout_iptv_subscription(integer, integer) from public;

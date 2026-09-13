@@ -66,6 +66,7 @@ abstract class BillingRepository {
     required int deviceCount,
     required int billingCycleMonths,
     bool autoRenew = false,
+    bool includeVideoAddon = false,
   });
 
   Future<BillingSnapshot> checkoutSignageSubscription({

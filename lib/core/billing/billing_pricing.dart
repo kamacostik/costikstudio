@@ -7,6 +7,17 @@
 const int iptvPricePerDevice = 20000;
 const int signagePricePerDevice = 20000;
 
+/// IPTV video promo add-on: Rp50.000/month for 2 active videos.
+const int iptvVideoAddonPrice = 50000;
+const Map<String, dynamic> iptvVideoAddonMediaLimits = {
+  'media_storage_limit_mb': 2000,
+  'image_upload_enabled': true,
+  'video_upload_enabled': true,
+  'video_max_file_size_mb': 100,
+  'video_max_duration_seconds': 120,
+  'video_active_limit': 2,
+};
+
 int unitPriceForProductId(String productId) {
   if (productId == 'costik-signage') return signagePricePerDevice;
   return iptvPricePerDevice;

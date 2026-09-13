@@ -1,5 +1,6 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
+import 'package:costikstudio/core/billing/billing_pricing.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/models/product_item.dart';
@@ -29,6 +30,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
   int _deviceCount = 10;
   int _billingCycleMonths = 1; // 1, 3, 6, 12 bulan
   bool _autoRenew = false;
+  bool _includeVideoAddon = false;
   int? _pricePerDevice;
 
   ProductItem get _product => dummyProducts.firstWhere(
@@ -59,8 +61,12 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
 
   int get _effectivePricePerDevice => _pricePerDevice ?? 0;
 
+  int get _addonTotal =>
+      _includeVideoAddon ? iptvVideoAddonPrice * _billingCycleMonths : 0;
+
   int get _totalPrice =>
-      _deviceCount * _effectivePricePerDevice * _billingCycleMonths;
+      _deviceCount * _effectivePricePerDevice * _billingCycleMonths +
+      _addonTotal;
 
   void _syncPriceFromSnapshot(BillingSnapshot? snapshot) {
     if (snapshot == null) return;
@@ -106,6 +112,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
       deviceCount: _deviceCount,
       billingCycleMonths: _billingCycleMonths,
       autoRenew: _autoRenew,
+      includeVideoAddon: _includeVideoAddon,
     );
 
     if (!mounted) return;
@@ -141,6 +148,12 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
             _SummaryRow(label: 'Produk', value: 'Costik IPTV'),
             _SummaryRow(label: 'Jumlah Device', value: '$_deviceCount Device'),
             _SummaryRow(label: 'Durasi', value: '$_billingCycleMonths Bulan'),
+            _SummaryRow(
+              label: 'Add-on Video',
+              value: _includeVideoAddon
+                  ? 'Aktif (+${formatRupiah(_addonTotal)})'
+                  : 'Tidak aktif',
+            ),
             _SummaryRow(
               label: 'Total Tagihan',
               value: formatRupiah(_totalPrice),
@@ -438,6 +451,54 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                                 const Divider(),
                                 const SizedBox(height: 18),
 
+                                // Video add-on
+                                Text(
+                                  'Add-on Video Promo (Opsional)',
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 6),
+                                const Text(
+                                  'Aktifkan upload video promo sejak awal: 2 video aktif, maksimal 100 MB per video, durasi maksimal 120 detik, kuota media 2 GB. Rp50.000/bulan mengikuti durasi langganan.',
+                                  style: TextStyle(
+                                    color: CostikStudioTheme.slate,
+                                    fontSize: 12,
+                                    height: 1.45,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                SwitchListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    'Tambah Add-on Video — ${formatRupiah(iptvVideoAddonPrice)}/bulan',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    _includeVideoAddon
+                                        ? 'Aktif: +${formatRupiah(_addonTotal)} untuk $_billingCycleMonths bulan'
+                                        : 'Tidak aktif: paket hanya gambar + kuota 500 MB',
+                                    style: const TextStyle(
+                                      color: CostikStudioTheme.slate,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  secondary: const Icon(
+                                    Icons.video_settings_rounded,
+                                    color: CostikStudioTheme.primary,
+                                  ),
+                                  value: _includeVideoAddon,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _includeVideoAddon = value;
+                                    });
+                                  },
+                                ),
+                                const SizedBox(height: 26),
+                                const Divider(),
+                                const SizedBox(height: 18),
+
                                 // Auto renew
                                 SwitchListTile(
                                   contentPadding: EdgeInsets.zero,
@@ -541,6 +602,12 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                             _OrderSummaryRow(
                               label: 'Durasi Berlangganan',
                               value: '$_billingCycleMonths Bulan',
+                            ),
+                            _OrderSummaryRow(
+                              label: 'Add-on Video',
+                              value: _includeVideoAddon
+                                  ? '+${formatRupiah(_addonTotal)} (2 video aktif)'
+                                  : 'Tidak aktif',
                             ),
                             _OrderSummaryRow(
                               label: 'Auto-Renew',

@@ -86,6 +86,7 @@ class SupabaseBillingRepository implements BillingRepository {
     required int deviceCount,
     required int billingCycleMonths,
     bool autoRenew = false,
+    bool includeVideoAddon = false,
   }) async {
     await _supabase.rpc<void>(
       'checkout_iptv_subscription',
@@ -93,6 +94,7 @@ class SupabaseBillingRepository implements BillingRepository {
         'device_count': deviceCount,
         'billing_cycle_months': billingCycleMonths,
         'p_auto_renew': autoRenew,
+        'p_include_video_addon': includeVideoAddon,
       },
     );
 
