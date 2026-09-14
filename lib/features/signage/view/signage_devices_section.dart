@@ -31,20 +31,13 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    const Icon(Icons.tv_rounded),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Devices',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: CostikStudioTheme.navy,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const Spacer(),
                     _DeviceQuotaBadge(quota: state.deviceQuota),
-                    const SizedBox(width: 8),
                     FilledButton.icon(
                       onPressed:
                           state.isSaving || !state.deviceQuota.canAddDevice
@@ -53,7 +46,6 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                       icon: const Icon(Icons.add_link_rounded),
                       label: const Text('Tambah Device'),
                     ),
-                    const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: () => context.read<SignageAdminCubit>().load(),
                       icon: const Icon(Icons.refresh_rounded),

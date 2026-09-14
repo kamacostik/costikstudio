@@ -1265,39 +1265,18 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final semanticLabel = '$title. $subtitle. ${icon.codePoint}';
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(icon, color: CostikStudioTheme.primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: CostikStudioTheme.navy,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(color: CostikStudioTheme.slate),
-                      ),
-                    ],
-                  ),
-                ),
-                if (action != null) ...[const SizedBox(width: 12), action!],
-              ],
-            ),
-            const SizedBox(height: 18),
-            child,
+            if (action != null) ...[
+              Align(alignment: Alignment.centerRight, child: action!),
+              const SizedBox(height: 16),
+            ],
+            Semantics(label: semanticLabel, child: child),
           ],
         ),
       ),
