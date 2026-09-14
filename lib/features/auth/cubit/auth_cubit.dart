@@ -14,6 +14,7 @@ class AuthState extends Equatable {
     this.role = AuthRole.customer,
     this.userEmail,
     this.isLoading = false,
+    this.isSessionRestored = true,
     this.errorMessage,
   });
 
@@ -21,6 +22,7 @@ class AuthState extends Equatable {
   final AuthRole role;
   final String? userEmail;
   final bool isLoading;
+  final bool isSessionRestored;
   final String? errorMessage;
 
   bool get isCustomer => role == AuthRole.customer;
@@ -31,6 +33,7 @@ class AuthState extends Equatable {
     AuthRole? role,
     String? userEmail,
     bool? isLoading,
+    bool? isSessionRestored,
     String? errorMessage,
   }) {
     return AuthState(
@@ -38,6 +41,7 @@ class AuthState extends Equatable {
       role: role ?? this.role,
       userEmail: userEmail ?? this.userEmail,
       isLoading: isLoading ?? this.isLoading,
+      isSessionRestored: isSessionRestored ?? this.isSessionRestored,
       errorMessage: errorMessage,
     );
   }
@@ -48,12 +52,14 @@ class AuthState extends Equatable {
     role,
     userEmail,
     isLoading,
+    isSessionRestored,
     errorMessage,
   ];
 }
 
 class AuthCubit extends Cubit<AuthState> {
-  AuthCubit({this.supabaseClient}) : super(const AuthState()) {
+  AuthCubit({this.supabaseClient})
+    : super(AuthState(isSessionRestored: !SupabaseConfig.isConfigured)) {
     // On web, Google OAuth navigates the whole page away and back;
     // the session event completes the login in the fresh app instance.
     if (SupabaseConfig.isConfigured) {
@@ -74,7 +80,9 @@ class AuthCubit extends Cubit<AuthState> {
     final session = data.session;
     if (data.event == sb.AuthChangeEvent.signedOut || session == null) {
       if (data.event == sb.AuthChangeEvent.signedOut && !isClosed) {
-        emit(const AuthState(isAuthenticated: false));
+        emit(const AuthState(isAuthenticated: false, isSessionRestored: true));
+      } else if (data.event == sb.AuthChangeEvent.initialSession && !isClosed) {
+        emit(state.copyWith(isSessionRestored: true));
       }
       return;
     }
@@ -87,7 +95,14 @@ class AuthCubit extends Cubit<AuthState> {
       if (isClosed) return;
       final role = await _loadRole(user.id);
       if (isClosed) return;
-      emit(AuthState(isAuthenticated: true, role: role, userEmail: user.email));
+      emit(
+        AuthState(
+          isAuthenticated: true,
+          role: role,
+          userEmail: user.email,
+          isSessionRestored: true,
+        ),
+      );
     }
   }
 
@@ -95,13 +110,23 @@ class AuthCubit extends Cubit<AuthState> {
     if (!SupabaseConfig.isConfigured) return;
 
     final user = _supabase.auth.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      if (!isClosed) emit(state.copyWith(isSessionRestored: true));
+      return;
+    }
 
     await _ensureProfile(user);
     if (isClosed) return;
     final role = await _loadRole(user.id);
     if (isClosed) return;
-    emit(AuthState(isAuthenticated: true, role: role, userEmail: user.email));
+    emit(
+      AuthState(
+        isAuthenticated: true,
+        role: role,
+        userEmail: user.email,
+        isSessionRestored: true,
+      ),
+    );
   }
 
   Future<bool> login(String email, String password) async {
@@ -126,7 +151,14 @@ class AuthCubit extends Cubit<AuthState> {
 
       await _ensureProfile(user);
       final role = await _loadRole(user.id);
-      emit(AuthState(isAuthenticated: true, role: role, userEmail: user.email));
+      emit(
+        AuthState(
+          isAuthenticated: true,
+          role: role,
+          userEmail: user.email,
+          isSessionRestored: true,
+        ),
+      );
       return true;
     } on sb.AuthException catch (error) {
       emit(AuthState(errorMessage: error.message));

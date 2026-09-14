@@ -16,15 +16,39 @@ class CostikStudioApp extends StatelessWidget {
       create: (_) => AuthCubit()..restoreSession(),
       child: AppExperienceScope(
         experience: experience,
-        child: MaterialApp.router(
-          title: experience == AppExperience.admin
-              ? 'CostikStudio Admin'
-              : 'CostikStudio',
-          debugShowCheckedModeBanner: false,
-          theme: CostikStudioTheme.light,
-          routerConfig: createAppRouter(experience),
+        child: BlocBuilder<AuthCubit, AuthState>(
+          buildWhen: (previous, current) =>
+              previous.isSessionRestored != current.isSessionRestored,
+          builder: (context, authState) {
+            final title = experience == AppExperience.admin
+                ? 'CostikStudio Admin'
+                : 'CostikStudio';
+            if (!authState.isSessionRestored) {
+              return MaterialApp(
+                title: title,
+                debugShowCheckedModeBanner: false,
+                theme: CostikStudioTheme.light,
+                home: const _SessionRestoreSplash(),
+              );
+            }
+            return MaterialApp.router(
+              title: title,
+              debugShowCheckedModeBanner: false,
+              theme: CostikStudioTheme.light,
+              routerConfig: createAppRouter(experience),
+            );
+          },
         ),
       ),
     );
+  }
+}
+
+class _SessionRestoreSplash extends StatelessWidget {
+  const _SessionRestoreSplash();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
