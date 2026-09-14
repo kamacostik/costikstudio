@@ -1134,16 +1134,16 @@ class _EmbeddedProductDetail extends StatelessWidget {
                       flex: 2,
                       child: FilledButton.icon(
                         style: FilledButton.styleFrom(
-                          backgroundColor: CostikStudioTheme.primary,
+                          backgroundColor: CostikStudioTheme.softSlate,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        onPressed: () => Navigator.of(ctx).pop(true),
-                        icon: const Icon(Icons.bolt_rounded),
+                        onPressed: null,
+                        icon: const Icon(Icons.lock_clock_rounded),
                         label: const Text(
-                          'Aktifkan Sekarang',
+                          'Belum Tersedia',
                           style: TextStyle(fontWeight: FontWeight.w800),
                         ),
                       ),

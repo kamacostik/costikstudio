@@ -24,13 +24,15 @@ class IptvSubscriptionPage extends StatefulWidget {
 }
 
 class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
+  static const _isVideoAddonEnabled = false;
+
   final _formKey = GlobalKey<FormState>();
   final _deviceCountController = TextEditingController(text: '10');
 
   int _deviceCount = 10;
   int _billingCycleMonths = 1; // 1, 3, 6, 12 bulan
   bool _autoRenew = false;
-  bool _includeVideoAddon = false;
+  final bool _includeVideoAddon = false;
   int? _pricePerDevice;
 
   ProductItem get _product => dummyProducts.firstWhere(
@@ -112,7 +114,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
       deviceCount: _deviceCount,
       billingCycleMonths: _billingCycleMonths,
       autoRenew: _autoRenew,
-      includeVideoAddon: _includeVideoAddon,
+      includeVideoAddon: _isVideoAddonEnabled && _includeVideoAddon,
     );
 
     if (!mounted) return;
@@ -459,7 +461,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                                 ),
                                 const SizedBox(height: 6),
                                 const Text(
-                                  'Aktifkan upload video promo sejak awal: 2 video aktif, maksimal 100 MB per video, durasi maksimal 120 detik, kuota media 2 GB. Rp50.000/bulan mengikuti durasi langganan.',
+                                  'Sementara dinonaktifkan karena Cloudflare R2 untuk penyimpanan video belum disetting. Paket IPTV saat ini hanya gambar + kuota media 500 MB.',
                                   style: TextStyle(
                                     color: CostikStudioTheme.slate,
                                     fontSize: 12,
@@ -475,25 +477,19 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                  subtitle: Text(
-                                    _includeVideoAddon
-                                        ? 'Aktif: +${formatRupiah(_addonTotal)} untuk $_billingCycleMonths bulan'
-                                        : 'Tidak aktif: paket hanya gambar + kuota 500 MB',
-                                    style: const TextStyle(
+                                  subtitle: const Text(
+                                    'Belum tersedia: menunggu setup Cloudflare R2',
+                                    style: TextStyle(
                                       color: CostikStudioTheme.slate,
                                       fontSize: 12,
                                     ),
                                   ),
                                   secondary: const Icon(
-                                    Icons.video_settings_rounded,
-                                    color: CostikStudioTheme.primary,
+                                    Icons.lock_clock_rounded,
+                                    color: CostikStudioTheme.softSlate,
                                   ),
-                                  value: _includeVideoAddon,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _includeVideoAddon = value;
-                                    });
-                                  },
+                                  value: false,
+                                  onChanged: null,
                                 ),
                                 const SizedBox(height: 26),
                                 const Divider(),
