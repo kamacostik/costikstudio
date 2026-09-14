@@ -143,7 +143,9 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
         contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
         title: const _DeviceDialogHeader(),
         content: SizedBox(
-          width: 520,
+          width: (MediaQuery.sizeOf(context).width - 48)
+              .clamp(280, 520)
+              .toDouble(),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,7 +321,9 @@ class _DeviceSettingsAction extends StatelessWidget {
         builder: (context, setState) => AlertDialog(
           title: const Text('Setting Device Signage'),
           content: SizedBox(
-            width: 420,
+            width: (MediaQuery.sizeOf(context).width - 48)
+                .clamp(280, 420)
+                .toDouble(),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,

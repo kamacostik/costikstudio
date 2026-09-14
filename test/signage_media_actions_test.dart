@@ -11,36 +11,59 @@ void main() {
   testWidgets('media section shows edit and delete actions for saved media', (
     tester,
   ) async {
-    final repository = _FakeSignageAdminRepository(
-      mediaItems: const [
-        SignageMediaItem(
-          id: 'media-1',
-          fileName: 'Lobby Video',
-          storagePath: 'https://example.com/lobby.mp4',
-          publicUrl: 'https://example.com/lobby.mp4',
-          mediaType: 'video',
-        ),
-      ],
-    );
-    final cubit = SignageAdminCubit(repository: repository);
-
-    await cubit.load();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: BlocProvider.value(
-            value: cubit,
-            child: const SingleChildScrollView(child: SignageMediaSection()),
-          ),
-        ),
-      ),
-    );
+    final cubit = await _pumpMediaSection(tester);
+    addTearDown(cubit.close);
 
     expect(find.text('Lobby Video'), findsOneWidget);
     expect(find.byTooltip('Edit media'), findsOneWidget);
     expect(find.byTooltip('Hapus media'), findsOneWidget);
   });
+
+  testWidgets('media section renders as usable cards on phone width', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final cubit = await _pumpMediaSection(tester);
+    addTearDown(cubit.close);
+
+    expect(find.text('Media'), findsWidgets);
+    expect(find.text('Path / URL'), findsOneWidget);
+    expect(find.text('Aksi'), findsOneWidget);
+    expect(find.byTooltip('Edit media'), findsOneWidget);
+    expect(find.byTooltip('Hapus media'), findsOneWidget);
+  });
+}
+
+Future<SignageAdminCubit> _pumpMediaSection(WidgetTester tester) async {
+  final repository = _FakeSignageAdminRepository(
+    mediaItems: const [
+      SignageMediaItem(
+        id: 'media-1',
+        fileName: 'Lobby Video',
+        storagePath: 'https://example.com/lobby.mp4',
+        publicUrl: 'https://example.com/lobby.mp4',
+        mediaType: 'video',
+      ),
+    ],
+  );
+  final cubit = SignageAdminCubit(repository: repository);
+
+  await cubit.load();
+
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(
+        body: BlocProvider.value(
+          value: cubit,
+          child: const SingleChildScrollView(child: SignageMediaSection()),
+        ),
+      ),
+    ),
+  );
+
+  return cubit;
 }
 
 class _FakeSignageAdminRepository extends SignageAdminRepository {

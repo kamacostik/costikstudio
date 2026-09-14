@@ -168,7 +168,9 @@ class SignageMediaSection extends StatelessWidget {
                 'Tambahkan URL gambar atau video untuk bahan playlist signage.',
           ),
           content: SizedBox(
-            width: 560,
+            width: (MediaQuery.sizeOf(context).width - 48)
+                .clamp(280, 560)
+                .toDouble(),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -409,7 +411,9 @@ class SignagePlaylistSection extends StatelessWidget {
             subtitle: 'Pilih beberapa video sesuai urutan putar, lalu aktifkan untuk layar Android TV.',
           ),
           content: SizedBox(
-            width: 560,
+            width: (MediaQuery.sizeOf(context).width - 48)
+                .clamp(280, 560)
+                .toDouble(),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -918,7 +922,9 @@ Future<void> _showEventDialog(
             ),
           ),
           content: SizedBox(
-            width: 620,
+            width: (MediaQuery.sizeOf(context).width - 48)
+                .clamp(280, 620)
+                .toDouble(),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

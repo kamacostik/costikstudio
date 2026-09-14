@@ -118,9 +118,14 @@ class _SignageAdminView extends StatelessWidget {
               return content;
             }
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: content,
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final padding = constraints.maxWidth < 640 ? 12.0 : 24.0;
+                return SingleChildScrollView(
+                  padding: EdgeInsets.all(padding),
+                  child: content,
+                );
+              },
             );
           },
         );
