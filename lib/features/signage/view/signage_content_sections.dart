@@ -1273,7 +1273,7 @@ class _SectionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (action != null) ...[
-              Align(alignment: Alignment.centerRight, child: action!),
+              Align(alignment: Alignment.centerLeft, child: action!),
               const SizedBox(height: 16),
             ],
             Semantics(label: semanticLabel, child: child),
