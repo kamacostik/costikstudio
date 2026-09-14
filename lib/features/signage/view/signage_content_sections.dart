@@ -95,29 +95,38 @@ class SignageMediaSection extends StatelessWidget {
                       ),
                     ),
                     DataCell(Text(item.mediaType.toUpperCase())),
-                    DataCell(Text(item.publicUrl ?? item.storagePath)),
                     DataCell(
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 280),
+                        child: Tooltip(
+                          message: item.publicUrl ?? item.storagePath,
+                          child: Text(
+                            item.publicUrl ?? item.storagePath,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          OutlinedButton.icon(
-                            icon: const Icon(Icons.edit_rounded, size: 18),
-                            label: const Text('Edit'),
+                          IconButton(
+                            tooltip: 'Edit media',
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.edit_rounded, size: 20),
                             onPressed: state.isSaving
                                 ? null
                                 : () => _showMediaDialog(context, item),
                           ),
-                          OutlinedButton.icon(
+                          IconButton(
+                            tooltip: 'Hapus media',
+                            visualDensity: VisualDensity.compact,
                             icon: const Icon(
                               Icons.delete_outline_rounded,
-                              size: 18,
+                              size: 20,
                               color: Colors.red,
-                            ),
-                            label: const Text('Hapus'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red.shade700,
-                              side: BorderSide(color: Colors.red.shade200),
                             ),
                             onPressed: state.isSaving || item.id == null
                                 ? null

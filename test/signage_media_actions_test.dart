@@ -38,8 +38,8 @@ void main() {
     );
 
     expect(find.text('Lobby Video'), findsOneWidget);
-    expect(find.text('Edit'), findsOneWidget);
-    expect(find.text('Hapus'), findsOneWidget);
+    expect(find.byTooltip('Edit media'), findsOneWidget);
+    expect(find.byTooltip('Hapus media'), findsOneWidget);
   });
 }
 
