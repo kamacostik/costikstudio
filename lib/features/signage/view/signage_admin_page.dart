@@ -473,19 +473,32 @@ class _SignageAdminDashboard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: MediaQuery.sizeOf(context).width >= 1000 ? 3 : 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 2.25,
-          children: [
-            for (final item in _signageAdminMenuItems.where(
-              (item) => item.tab != _SignageAdminTab.dashboard,
-            ))
-              _ModuleShortcutCard(item: item, onTap: () => onOpenTab(item.tab)),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final crossAxisCount = width >= 1100
+                ? 3
+                : width >= 680
+                ? 2
+                : 1;
+            return GridView.count(
+              crossAxisCount: crossAxisCount,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: crossAxisCount == 1 ? 3.2 : 2.1,
+              children: [
+                for (final item in _signageAdminMenuItems.where(
+                  (item) => item.tab != _SignageAdminTab.dashboard,
+                ))
+                  _ModuleShortcutCard(
+                    item: item,
+                    onTap: () => onOpenTab(item.tab),
+                  ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -553,15 +566,34 @@ class _ModuleShortcutCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(
+          color: CostikStudioTheme.primary.withValues(alpha: 0.10),
+        ),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              Icon(item.icon, color: CostikStudioTheme.primary, size: 22),
-              const SizedBox(width: 10),
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: CostikStudioTheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(
+                  item.icon,
+                  color: CostikStudioTheme.primary,
+                  size: 34,
+                ),
+              ),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -574,20 +606,28 @@ class _ModuleShortcutCard extends StatelessWidget {
                       style: const TextStyle(
                         color: CostikStudioTheme.navy,
                         fontWeight: FontWeight.w900,
+                        fontSize: 18,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 6),
                     Text(
                       item.description,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: CostikStudioTheme.slate,
-                        fontSize: 12,
+                        fontSize: 13,
+                        height: 1.35,
                       ),
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(width: 10),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: CostikStudioTheme.slate.withValues(alpha: 0.45),
+                size: 18,
               ),
             ],
           ),
