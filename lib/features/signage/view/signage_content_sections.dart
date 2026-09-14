@@ -97,21 +97,27 @@ class SignageMediaSection extends StatelessWidget {
                     DataCell(Text(item.mediaType.toUpperCase())),
                     DataCell(Text(item.publicUrl ?? item.storagePath)),
                     DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          IconButton(
-                            tooltip: 'Ubah media',
-                            icon: const Icon(Icons.edit_rounded),
+                          OutlinedButton.icon(
+                            icon: const Icon(Icons.edit_rounded, size: 18),
+                            label: const Text('Edit'),
                             onPressed: state.isSaving
                                 ? null
                                 : () => _showMediaDialog(context, item),
                           ),
-                          IconButton(
-                            tooltip: 'Hapus media',
+                          OutlinedButton.icon(
                             icon: const Icon(
                               Icons.delete_outline_rounded,
+                              size: 18,
                               color: Colors.red,
+                            ),
+                            label: const Text('Hapus'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red.shade700,
+                              side: BorderSide(color: Colors.red.shade200),
                             ),
                             onPressed: state.isSaving || item.id == null
                                 ? null
