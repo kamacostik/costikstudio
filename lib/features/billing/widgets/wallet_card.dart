@@ -340,7 +340,7 @@ class WalletCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Masukkan nominal top-up. Saldo akan masuk setelah payment gateway mengirim webhook sukses.',
+                'Masukkan nominal top-up. Saldo akan masuk setelah pembayaran berhasil.',
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -444,7 +444,9 @@ class WalletCard extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            errorMsg != null && errorMsg.isNotEmpty ? 'Gagal: $errorMsg' : 'Gagal membuat payment order. Periksa koneksi/kredensial Supabase.',
+            errorMsg != null && errorMsg.isNotEmpty
+                ? 'Gagal: $errorMsg'
+                : 'Gagal membuat link pembayaran.',
           ),
           backgroundColor: Colors.red,
         ),
@@ -505,10 +507,7 @@ class WalletCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              order.paymentErrorMessage ??
-                  'n8n belum berhasil membuat link pembayaran.',
-            ),
+            Text(order.paymentErrorMessage ?? 'Gagal membuat link pembayaran.'),
             const SizedBox(height: 16),
             _TopUpOrderRow(label: 'Reference', value: order.externalReference),
             _TopUpOrderRow(label: 'Nominal', value: formatRupiah(order.amount)),
