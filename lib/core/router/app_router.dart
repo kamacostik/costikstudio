@@ -178,6 +178,10 @@ GoRouter createAppRouter(AppExperience experience) {
               builder: (context, state) => const AdminDashboardPage(),
             ),
             GoRoute(
+              path: AppRoutes.billing,
+              redirect: (context, state) => AppRoutes.adminBilling,
+            ),
+            GoRoute(
               path: AppRoutes.adminBilling,
               name: AppRouteNames.adminBilling,
               redirect: (context, state) {
