@@ -461,7 +461,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                                 ),
                                 const SizedBox(height: 6),
                                 const Text(
-                                  'Sementara dinonaktifkan karena Cloudflare R2 untuk penyimpanan video belum disetting. Paket IPTV saat ini hanya gambar + kuota media 500 MB.',
+                                  'Fitur add-on video promo belum tersedia. Paket IPTV saat ini hanya gambar + kuota media 500 MB.',
                                   style: TextStyle(
                                     color: CostikStudioTheme.slate,
                                     fontSize: 12,
@@ -478,7 +478,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                                     ),
                                   ),
                                   subtitle: const Text(
-                                    'Belum tersedia: menunggu setup Cloudflare R2',
+                                    'Belum tersedia saat ini',
                                     style: TextStyle(
                                       color: CostikStudioTheme.slate,
                                       fontSize: 12,

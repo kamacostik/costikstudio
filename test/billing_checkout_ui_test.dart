@@ -12,7 +12,7 @@ void main() {
     expect(find.text('Auto-Renew per Bulan'), findsOneWidget);
   });
 
-  testWidgets('keeps IPTV video add-on disabled until R2 is configured', (
+  testWidgets('keeps IPTV video add-on disabled while unavailable', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -22,7 +22,7 @@ void main() {
 
     expect(find.text('Add-on Video Promo (Opsional)'), findsOneWidget);
     expect(
-      find.text('Belum tersedia: menunggu setup Cloudflare R2'),
+      find.text('Belum tersedia saat ini'),
       findsOneWidget,
     );
 
