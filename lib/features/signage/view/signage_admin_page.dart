@@ -320,53 +320,23 @@ class _SignageAdminModulesState extends State<_SignageAdminModules> {
         }
       },
       builder: (context, state) {
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= 900;
-            final content = Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (state.isLoading)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 12),
-                    child: LinearProgressIndicator(),
-                  ),
-                _SignageAdminSectionHeader(tab: _selectedTab),
-                const SizedBox(height: 14),
-                _buildContent(state),
-              ],
-            );
-
-            if (!isWide) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _SignageAdminMobileMenu(
-                    selectedTab: _selectedTab,
-                    onChanged: (tab) => setState(() => _selectedTab = tab),
-                  ),
-                  const SizedBox(height: 16),
-                  content,
-                ],
-              );
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 260,
-                  child: _SignageAdminSidebar(
-                    selectedTab: _selectedTab,
-                    subscription: widget.subscription,
-                    onChanged: (tab) => setState(() => _selectedTab = tab),
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(child: content),
-              ],
-            );
-          },
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (state.isLoading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: LinearProgressIndicator(),
+              ),
+            _SignageAdminTopMenu(
+              selectedTab: _selectedTab,
+              onChanged: (tab) => setState(() => _selectedTab = tab),
+            ),
+            const SizedBox(height: 16),
+            _SignageAdminSectionHeader(tab: _selectedTab),
+            const SizedBox(height: 14),
+            _buildContent(state),
+          ],
         );
       },
     );
@@ -389,54 +359,8 @@ class _SignageAdminModulesState extends State<_SignageAdminModules> {
   }
 }
 
-class _SignageAdminSidebar extends StatelessWidget {
-  const _SignageAdminSidebar({
-    required this.selectedTab,
-    required this.subscription,
-    required this.onChanged,
-  });
-
-  final _SignageAdminTab selectedTab;
-  final Subscription subscription;
-  final ValueChanged<_SignageAdminTab> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Web Admin',
-              style: TextStyle(
-                color: CostikStudioTheme.navy,
-                fontWeight: FontWeight.w900,
-                fontSize: 18,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '${subscription.deviceCount} device aktif',
-              style: const TextStyle(color: CostikStudioTheme.slate),
-            ),
-            const Divider(height: 28),
-            for (final item in _signageAdminMenuItems)
-              _SignageAdminMenuTile(
-                item: item,
-                selected: selectedTab == item.tab,
-                onTap: () => onChanged(item.tab),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SignageAdminMobileMenu extends StatelessWidget {
-  const _SignageAdminMobileMenu({
+class _SignageAdminTopMenu extends StatelessWidget {
+  const _SignageAdminTopMenu({
     required this.selectedTab,
     required this.onChanged,
   });
@@ -461,59 +385,6 @@ class _SignageAdminMobileMenu extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _SignageAdminMenuTile extends StatelessWidget {
-  const _SignageAdminMenuTile({
-    required this.item,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final _SignageAdminMenuItem item;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Material(
-        color: selected
-            ? CostikStudioTheme.primary.withValues(alpha: 0.10)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
-        child: ListTile(
-          dense: true,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          leading: Icon(
-            item.icon,
-            color: selected
-                ? CostikStudioTheme.primary
-                : CostikStudioTheme.slate,
-          ),
-          title: Text(
-            item.label,
-            style: TextStyle(
-              color: selected
-                  ? CostikStudioTheme.primary
-                  : CostikStudioTheme.navy,
-              fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
-            ),
-          ),
-          trailing: item.isReady
-              ? null
-              : const Tooltip(
-                  message: 'Segera dipindahkan',
-                  child: Icon(Icons.schedule_rounded, size: 18),
-                ),
-          onTap: onTap,
-        ),
       ),
     );
   }
