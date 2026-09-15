@@ -73,6 +73,7 @@ class _AdminProductGalleryPageState extends State<AdminProductGalleryPage> {
       _loading = true;
       _message = 'Mengupload image...';
     });
+    await Future<void>.delayed(Duration.zero);
     try {
       await _repository.uploadImage(
         productId: _selectedProductId,
@@ -113,123 +114,176 @@ class _AdminProductGalleryPageState extends State<AdminProductGalleryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: ResponsiveSection(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 56),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'ADMIN · PRODUCT GALLERY',
-              style: TextStyle(
-                color: CostikStudioTheme.primary,
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.8,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Product Gallery',
-              style: Theme.of(context).textTheme.displaySmall
-                  ?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -1),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Upload dan kelola screenshot aplikasi yang tampil di card produk member.',
-              style: TextStyle(color: CostikStudioTheme.slate, height: 1.5),
-            ),
-            const SizedBox(height: 20),
-            _GalleryControlCard(
-              loading: _loading,
-              message: _message,
-              product: _selectedProduct,
-              selectedProductId: _selectedProductId,
-              totalImages: _images.length,
-              hasCover: _coverImage != null,
-              onProductChanged: (value) {
-                if (value == null) return;
-                setState(() => _selectedProductId = value);
-                _loadImages();
-              },
-              onUpload: _uploadImage,
-            ),
-            const SizedBox(height: 18),
-            if (_images.isEmpty && !_loading)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(28),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: CostikStudioTheme.primary.withValues(
-                            alpha: 0.10,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(
-                          Icons.image_outlined,
-                          color: CostikStudioTheme.primary,
-                          size: 26,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Belum ada image untuk produk ini.',
-                              style: TextStyle(
-                                color: CostikStudioTheme.navy,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 16,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Upload screenshot pertama, otomatis menjadi cover produk.',
-                              style: TextStyle(
-                                color: CostikStudioTheme.slate,
-                                height: 1.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          child: ResponsiveSection(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 56),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'ADMIN · PRODUCT GALLERY',
+                  style: TextStyle(
+                    color: CostikStudioTheme.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.8,
                   ),
                 ),
-              )
-            else
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final isWide = constraints.maxWidth > 720;
-                  final cardWidth = isWide
-                      ? (constraints.maxWidth - 14) / 2
-                      : constraints.maxWidth;
-                  return Wrap(
-                    spacing: 14,
-                    runSpacing: 14,
-                    children: [
-                      for (final image in _images)
-                        SizedBox(
-                          width: cardWidth,
-                          child: _ProductGalleryImageCard(
-                            image: image,
-                            onSetCover: () => _setCover(image),
-                            onToggleActive: () => _toggleImageActive(image),
+                const SizedBox(height: 8),
+                Text(
+                  'Product Gallery',
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Upload dan kelola screenshot aplikasi yang tampil di card produk member.',
+                  style: TextStyle(color: CostikStudioTheme.slate, height: 1.5),
+                ),
+                const SizedBox(height: 20),
+                _GalleryControlCard(
+                  loading: _loading,
+                  message: _message,
+                  product: _selectedProduct,
+                  selectedProductId: _selectedProductId,
+                  totalImages: _images.length,
+                  hasCover: _coverImage != null,
+                  onProductChanged: (value) {
+                    if (value == null) return;
+                    setState(() => _selectedProductId = value);
+                    _loadImages();
+                  },
+                  onUpload: _uploadImage,
+                ),
+                const SizedBox(height: 18),
+                if (_images.isEmpty && !_loading)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(28),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: CostikStudioTheme.primary.withValues(
+                                alpha: 0.10,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              Icons.image_outlined,
+                              color: CostikStudioTheme.primary,
+                              size: 26,
+                            ),
                           ),
-                        ),
-                    ],
-                  );
-                },
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Belum ada image untuk produk ini.',
+                                  style: TextStyle(
+                                    color: CostikStudioTheme.navy,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Upload screenshot pertama, otomatis menjadi cover produk.',
+                                  style: TextStyle(
+                                    color: CostikStudioTheme.slate,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth > 720;
+                      final cardWidth = isWide
+                          ? (constraints.maxWidth - 14) / 2
+                          : constraints.maxWidth;
+                      return Wrap(
+                        spacing: 14,
+                        runSpacing: 14,
+                        children: [
+                          for (final image in _images)
+                            SizedBox(
+                              width: cardWidth,
+                              child: _ProductGalleryImageCard(
+                                image: image,
+                                onSetCover: () => _setCover(image),
+                                onToggleActive: () => _toggleImageActive(image),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (_loading) const _GalleryLoadingOverlay(),
+      ],
+    );
+  }
+}
+
+class _GalleryLoadingOverlay extends StatelessWidget {
+  const _GalleryLoadingOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Container(
+          color: Colors.white.withValues(alpha: 0.62),
+          alignment: Alignment.center,
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  SizedBox(
+                    width: 34,
+                    height: 34,
+                    child: CircularProgressIndicator(strokeWidth: 3),
+                  ),
+                  SizedBox(height: 14),
+                  Text(
+                    'Memproses...',
+                    style: TextStyle(
+                      color: CostikStudioTheme.navy,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Mohon tunggu, proses gallery sedang berjalan.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: CostikStudioTheme.slate),
+                  ),
+                ],
               ),
-          ],
+            ),
+          ),
         ),
       ),
     );

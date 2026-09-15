@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:costikstudio/core/models/product_item.dart';
@@ -24,27 +25,55 @@ void main() {
     expect(find.text('Nonaktifkan'), findsOneWidget);
     expect(find.text('Aktifkan'), findsOneWidget);
   });
+
+  testWidgets('admin product gallery shows blocking loading overlay', (
+    tester,
+  ) async {
+    final repository = _FakeGalleryRepository();
+    final completer = Completer<List<ProductImage>>();
+    repository.listCompleter = completer;
+
+    await tester.pumpWidget(
+      MaterialApp(home: AdminProductGalleryPage(repository: repository)),
+    );
+    await tester.pump();
+
+    expect(find.text('Memproses...'), findsOneWidget);
+    expect(
+      find.text('Mohon tunggu, proses gallery sedang berjalan.'),
+      findsOneWidget,
+    );
+
+    completer.complete(repository.images);
+    await tester.pump();
+  });
 }
 
 class _FakeGalleryRepository implements ProductGalleryRepository {
+  Completer<List<ProductImage>>? listCompleter;
+
+  List<ProductImage> get images => const [
+    ProductImage(
+      id: 'image-1',
+      productId: 'costik-iptv',
+      imageUrl: 'https://example.com/cover.png',
+      title: 'Cover preview',
+      isCover: true,
+    ),
+    ProductImage(
+      id: 'image-2',
+      productId: 'costik-iptv',
+      imageUrl: 'https://example.com/hidden.png',
+      title: 'Hidden preview',
+      isActive: false,
+    ),
+  ];
+
   @override
   Future<List<ProductImage>> listImages(String productId) async {
-    return [
-      ProductImage(
-        id: 'image-1',
-        productId: productId,
-        imageUrl: 'https://example.com/cover.png',
-        title: 'Cover preview',
-        isCover: true,
-      ),
-      ProductImage(
-        id: 'image-2',
-        productId: productId,
-        imageUrl: 'https://example.com/hidden.png',
-        title: 'Hidden preview',
-        isActive: false,
-      ),
-    ];
+    final completer = listCompleter;
+    if (completer != null) return completer.future;
+    return images;
   }
 
   @override
