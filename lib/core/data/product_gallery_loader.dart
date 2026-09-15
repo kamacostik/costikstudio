@@ -12,14 +12,9 @@ class ProductGalleryLoader {
   });
 
   final PublicProductImageRepository repository;
-  static Map<String, List<ProductImage>> _imageCache = const {};
-
-  static void clearCacheForTests() {
-    _imageCache = const {};
-  }
 
   Future<List<ProductItem>> attachImages(List<ProductItem> products) async {
-    final imagesByProductId = await _loadImagesPreservingCache();
+    final imagesByProductId = await repository.loadImagesByProductId();
     return products
         .map(
           (product) => product.copyWith(
@@ -32,7 +27,7 @@ class ProductGalleryLoader {
   }
 
   Future<List<ProductItem>> attachAllImages(List<ProductItem> products) async {
-    final imagesByProductId = await _loadImagesPreservingCache();
+    final imagesByProductId = await repository.loadImagesByProductId();
     return products
         .map(
           (product) => product.copyWith(
@@ -40,21 +35,6 @@ class ProductGalleryLoader {
           ),
         )
         .toList(growable: false);
-  }
-
-  Future<Map<String, List<ProductImage>>> _loadImagesPreservingCache() async {
-    final loaded = await repository.loadImagesByProductId();
-    if (_hasAnyImages(loaded)) {
-      _imageCache = loaded;
-      return loaded;
-    }
-    return _imageCache;
-  }
-
-  bool _hasAnyImages(Map<String, List<ProductImage>> imagesByProductId) {
-    return imagesByProductId.values.any(
-      (images) => images.any((image) => image.isActive),
-    );
   }
 
   List<ProductImage> _catalogImagesFor(List<ProductImage> images) {

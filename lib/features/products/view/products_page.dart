@@ -36,7 +36,7 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Katalog produk CostikStudio dengan cover gallery aktif, detail produk, portal admin, dan akses berlangganan.',
+              'Dummy catalog for CostikStudio products, admin portals, and active project access points.',
               style: Theme.of(context).textTheme.titleMedium
                   ?.copyWith(color: const Color(0xFF64748B), height: 1.5),
             ),
