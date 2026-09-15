@@ -1,5 +1,6 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -38,10 +39,9 @@ class ProductCard extends StatelessWidget {
                       SizedBox(
                         height: compact ? 118 : 180,
                         width: double.infinity,
-                        child: Image.network(
-                          coverImage.imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _ProductImageFallback(
+                        child: CachedGalleryImage(
+                          imageUrl: coverImage.imageUrl,
+                          fallback: _ProductImageFallback(
                             accent: accent,
                             category: product.category,
                           ),

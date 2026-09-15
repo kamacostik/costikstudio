@@ -1,4 +1,5 @@
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
 import 'package:flutter/material.dart';
 
 /// Public gallery strip: cover + tap-to-switch thumbnails.
@@ -25,10 +26,9 @@ class _ProductGalleryStripState extends State<ProductGalleryStrip> {
           borderRadius: BorderRadius.circular(20),
           child: AspectRatio(
             aspectRatio: 16 / 9,
-            child: Image.network(
-              current.imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
+            child: CachedGalleryImage(
+              imageUrl: current.imageUrl,
+              fallback: Container(
                 color: Colors.black.withValues(alpha: 0.06),
                 alignment: Alignment.center,
                 child: const Icon(
@@ -65,10 +65,9 @@ class _ProductGalleryStripState extends State<ProductGalleryStrip> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(11),
-                      child: Image.network(
-                        images[i].imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => Container(
+                      child: CachedGalleryImage(
+                        imageUrl: images[i].imageUrl,
+                        fallback: Container(
                           color: Colors.black.withValues(alpha: 0.06),
                           alignment: Alignment.center,
                           child: const Icon(

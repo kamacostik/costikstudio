@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -489,10 +490,12 @@ class _ProductGalleryImageCard extends StatelessWidget {
             children: [
               AspectRatio(
                 aspectRatio: 16 / 9,
-                child: Image.network(
-                  image.imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
+                child: CachedGalleryImage(
+                  imageUrl: image.imageUrl,
+                  placeholderColor: CostikStudioTheme.primary.withValues(
+                    alpha: 0.08,
+                  ),
+                  fallback: Container(
                     color: CostikStudioTheme.primary.withValues(alpha: 0.08),
                     alignment: Alignment.center,
                     child: const Icon(

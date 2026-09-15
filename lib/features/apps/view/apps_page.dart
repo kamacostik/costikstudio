@@ -2,6 +2,7 @@ import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/data/product_gallery_loader.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -147,10 +148,10 @@ class _AppProductCard extends StatelessWidget {
                   child: SizedBox(
                     height: 170,
                     width: double.infinity,
-                    child: Image.network(
-                      coverImage.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Container(
+                    child: CachedGalleryImage(
+                      imageUrl: coverImage.imageUrl,
+                      placeholderColor: accent.withValues(alpha: 0.1),
+                      fallback: Container(
                         color: accent.withValues(alpha: 0.1),
                         alignment: Alignment.center,
                         child: Icon(Icons.tv_rounded, color: accent, size: 42),

@@ -5,6 +5,7 @@ import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/core/router/app_router.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
+import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -317,10 +318,10 @@ class _FocusProductCard extends StatelessWidget {
                   child: SizedBox(
                     height: 160,
                     width: double.infinity,
-                    child: Image.network(
-                      coverImage.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Container(
+                    child: CachedGalleryImage(
+                      imageUrl: coverImage.imageUrl,
+                      placeholderColor: accent.withValues(alpha: 0.1),
+                      fallback: Container(
                         color: accent.withValues(alpha: 0.1),
                         alignment: Alignment.center,
                         child: Icon(
