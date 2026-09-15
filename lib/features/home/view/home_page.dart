@@ -1,5 +1,6 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
+import 'package:costikstudio/core/data/product_gallery_loader.dart';
 import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/core/router/app_router.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
@@ -31,7 +32,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<ProductItem> get _focusProducts => dummyProducts
+  late final Future<List<ProductItem>> _productsFuture =
+      const ProductGalleryLoader().attachImages(dummyProducts);
+
+  List<ProductItem> _focusProducts(List<ProductItem> products) => products
       .where(
         (product) => const {
           'costik-iptv',
@@ -111,9 +115,17 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 54),
                     const _MinimalPortalPreview(),
                     const SizedBox(height: 92),
-                    _ProductSection(
-                      key: _productsKey,
-                      products: _focusProducts,
+                    FutureBuilder<List<ProductItem>>(
+                      future: _productsFuture,
+                      initialData: dummyProducts,
+                      builder: (context, snapshot) {
+                        return _ProductSection(
+                          key: _productsKey,
+                          products: _focusProducts(
+                            snapshot.data ?? dummyProducts,
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 92),
                     const _HowItWorksSection(),

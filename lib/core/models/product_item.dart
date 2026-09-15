@@ -72,4 +72,22 @@ class ProductItem {
     }
     return active.first;
   }
+
+  ProductItem copyWith({List<ProductImage>? images}) {
+    return ProductItem(
+      id: id,
+      name: name,
+      tagline: tagline,
+      description: description,
+      category: category,
+      status: status,
+      accentHex: accentHex,
+      features: features,
+      adminUrl: adminUrl,
+      downloadUrl: downloadUrl,
+      productUrl: productUrl,
+      images: images ?? this.images,
+      isFree: isFree,
+    );
+  }
 }
