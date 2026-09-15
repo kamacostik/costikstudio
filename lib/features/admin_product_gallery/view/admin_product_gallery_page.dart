@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/admin_product_gallery/data/gallery_image_compressor.dart';
 import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:file_picker/file_picker.dart';
@@ -415,12 +416,16 @@ class SupabaseProductGalleryRepository implements ProductGalleryRepository {
     final safeName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '-');
     final path =
         '$productId/${DateTime.now().millisecondsSinceEpoch}-$safeName';
+    final compressedBytes = compressGalleryImageBytes(bytes);
     await _supabase.storage
         .from(bucket)
         .uploadBinary(
           path,
-          bytes,
-          fileOptions: const FileOptions(upsert: true),
+          compressedBytes,
+          fileOptions: const FileOptions(
+            upsert: true,
+            contentType: 'image/jpeg',
+          ),
         );
     final publicUrl = _supabase.storage.from(bucket).getPublicUrl(path);
     await _supabase.from('product_images').insert({
