@@ -7,6 +7,10 @@ void main() {
   testWidgets('product card shows cover image and gallery count', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(420, 350);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
     const product = ProductItem(
       id: 'costik-iptv',
       name: 'Costik IPTV',
@@ -41,6 +45,6 @@ void main() {
 
     expect(find.byType(Image), findsOneWidget);
     expect(find.text('2 images'), findsOneWidget);
-    expect(find.text('Dashboard preview'), findsOneWidget);
+    expect(find.text('Dashboard preview'), findsNothing);
   });
 }

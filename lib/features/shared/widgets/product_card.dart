@@ -37,7 +37,7 @@ class ProductCard extends StatelessWidget {
                   child: Stack(
                     children: [
                       SizedBox(
-                        height: compact ? 118 : 180,
+                        height: compact ? 72 : 96,
                         width: double.infinity,
                         child: CachedGalleryImage(
                           imageUrl: coverImage.imageUrl,
@@ -72,21 +72,7 @@ class ProductCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (coverImage.title != null &&
-                    coverImage.title!.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    coverImage.title!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: accent,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 16),
+                SizedBox(height: compact ? 10 : 14),
               ],
               Row(
                 children: [
@@ -124,7 +110,7 @@ class ProductCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium
                     ?.copyWith(color: CostikStudioTheme.slate, height: 1.5),
               ),
-              if (!compact) ...[
+              if (!compact && coverImage == null) ...[
                 const SizedBox(height: 18),
                 Expanded(
                   child: Column(
