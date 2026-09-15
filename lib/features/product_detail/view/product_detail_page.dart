@@ -143,13 +143,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           label: const Text('Login untuk berlangganan'),
                         ),
                       ],
-
-                      if (item.hasDownload)
-                        OutlinedButton.icon(
-                          onPressed: () => context.go(AppRoutes.apps),
-                          icon: const Icon(Icons.download_rounded),
-                          label: const Text('Download app'),
-                        ),
                     ],
                   ),
                 ],

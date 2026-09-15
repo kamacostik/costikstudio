@@ -39,6 +39,10 @@ GoRouter createAppRouter(AppExperience experience) {
               builder: (context, state) => const HomePage(),
             ),
             GoRoute(
+              path: '/produk',
+              redirect: (context, state) => AppRoutes.products,
+            ),
+            GoRoute(
               path: AppRoutes.products,
               name: AppRouteNames.products,
               builder: (context, state) => const ProductsPage(),
@@ -46,11 +50,25 @@ GoRouter createAppRouter(AppExperience experience) {
             GoRoute(
               path: AppRoutes.subscribeIptv,
               name: AppRouteNames.subscribeIptv,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAuthenticated) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
               builder: (context, state) => const IptvSubscriptionPage(),
             ),
             GoRoute(
               path: AppRoutes.subscribeSignage,
               name: AppRouteNames.subscribeSignage,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAuthenticated) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
               builder: (context, state) => const SignageSubscriptionPage(),
             ),
             GoRoute(

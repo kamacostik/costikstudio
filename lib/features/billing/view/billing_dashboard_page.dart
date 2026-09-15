@@ -839,11 +839,13 @@ class _EmbeddedProductDetail extends StatelessWidget {
                     label: const Text('Lihat Dokumentasi'),
                   ),
                   if (product.id == 'digital-signage') ...[
-                    OutlinedButton.icon(
-                      onPressed: () => openExternalUrl(_signageApkDownloadUrl),
-                      icon: const Icon(Icons.download_rounded),
-                      label: const Text('Download APK'),
-                    ),
+                    if (isManagedActive)
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            openExternalUrl(_signageApkDownloadUrl),
+                        icon: const Icon(Icons.download_rounded),
+                        label: const Text('Download APK'),
+                      ),
                     _SignageAdminAccessButton(subscriptions: subscriptions),
                   ] else if (product.hasAdmin)
                     OutlinedButton.icon(
@@ -851,7 +853,7 @@ class _EmbeddedProductDetail extends StatelessWidget {
                       icon: const Icon(Icons.open_in_new_rounded),
                       label: const Text('Open web admin'),
                     ),
-                  if (product.hasDownload)
+                  if (product.hasDownload && isManagedActive)
                     OutlinedButton.icon(
                       onPressed: () => context.go(AppRoutes.apps),
                       icon: const Icon(Icons.download_rounded),
