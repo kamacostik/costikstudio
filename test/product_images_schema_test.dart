@@ -15,7 +15,8 @@ void main() {
     expect(sql, contains('product_images_product_id_sort_order_idx'));
     expect(sql, contains('product_images_single_cover_idx'));
     expect(sql, contains('enable row level security'));
-    expect(sql, contains('product images are readable'));
+    expect(sql, contains('product images are publicly readable'));
+    expect(sql, contains('to anon, authenticated'));
     expect(sql, contains('product images are admin manageable'));
     expect(sql, contains('from public.profiles p'));
     expect(sql, contains("p.role = 'admin'"));

@@ -28,10 +28,11 @@ create unique index if not exists product_images_single_cover_idx
 alter table public.product_images enable row level security;
 
 drop policy if exists "product images are readable" on public.product_images;
-create policy "product images are readable"
+drop policy if exists "product images are publicly readable" on public.product_images;
+create policy "product images are publicly readable"
   on public.product_images
   for select
-  to authenticated
+  to anon, authenticated
   using (is_active = true);
 
 -- Admin accounts are identified by public.profiles.role = 'admin'.
@@ -75,10 +76,11 @@ create trigger product_images_set_updated_at
 
 -- Storage policies for the public product image bucket.
 drop policy if exists "product images storage is readable" on storage.objects;
-create policy "product images storage is readable"
+drop policy if exists "product images storage is publicly readable" on storage.objects;
+create policy "product images storage is publicly readable"
   on storage.objects
   for select
-  to authenticated
+  to anon, authenticated
   using (bucket_id = 'product-images');
 
 drop policy if exists "product images storage is admin insertable" on storage.objects;
