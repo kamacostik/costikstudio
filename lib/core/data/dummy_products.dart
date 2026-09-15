@@ -12,9 +12,14 @@ const dummyProducts = <ProductItem>[
     productUrl: 'https://iptv.costikstudio.com',
     adminUrl: 'https://admin-ip-tv.pages.dev/',
     features: [
-      'Live TV and guest room entertainment flow',
-      'Hotel information, menu, and content management',
-      'Online/offline device visibility for rooms',
+      'Live TV channel and video playlist management',
+      'Room, device, and guest profile management',
+      'Restaurant menu, category, and incoming order workflow',
+      'Hotel information modules for facilities, dining, convention, maps, Wi-Fi, and about pages',
+      'Guest request tools: service call, reviews, promo, and message/content menus',
+      'App menu management for IPTV home shortcuts and digital services',
+      'Company profile, about hotel, and in-room information pages',
+      'ADB/device operations support for managed IPTV deployments',
     ],
   ),
   ProductItem(

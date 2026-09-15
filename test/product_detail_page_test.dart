@@ -23,7 +23,7 @@ void main() {
       expect(find.text('Costik IPTV'), findsOneWidget);
       expect(find.text('Key features'), findsOneWidget);
       expect(
-        find.text('Live TV and guest room entertainment flow'),
+        find.text('Live TV channel and video playlist management'),
         findsOneWidget,
       );
       expect(find.text('Tampilan Aplikasi'), findsNothing);
