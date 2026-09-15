@@ -11,6 +11,8 @@ class AppRoutes {
   static const paymentSuccess = '/payment/success';
   static const paymentCancel = '/payment/cancel';
   static const adminBilling = '/admin/billing';
+  static const adminDashboard = '/admin/dashboard';
+  static const adminSignage = '/admin/signage';
   static const support = '/support';
   static const signageAdmin = '/signage/admin';
   static const subscribeIptv = '/products/costik-iptv/subscribe';
@@ -32,6 +34,8 @@ class AppRouteNames {
   static const paymentSuccess = 'payment-success';
   static const paymentCancel = 'payment-cancel';
   static const adminBilling = 'admin-billing';
+  static const adminDashboard = 'admin-dashboard';
+  static const adminSignage = 'admin-signage';
   static const support = 'support';
   static const signageAdmin = 'signage-admin';
 }

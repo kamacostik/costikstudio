@@ -8,6 +8,8 @@ import 'package:http/http.dart' as http;
 class PaymentLinkTrigger {
   const PaymentLinkTrigger({this.client});
 
+  static const _customerPaymentLinkError = 'Gagal membuat link pembayaran.';
+
   final http.Client? client;
 
   bool get isConfigured =>
@@ -37,9 +39,7 @@ class PaymentLinkTrigger {
       final responseBody = _decodeResponse(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         return order.copyWith(
-          paymentErrorMessage:
-              _errorMessage(responseBody) ??
-              'Gagal membuat link pembayaran dari n8n (${response.statusCode}).',
+          paymentErrorMessage: _customerPaymentLinkError,
           paymentLinkRequested: true,
         );
       }
@@ -47,9 +47,7 @@ class PaymentLinkTrigger {
       final paymentUrl = responseBody['payment_url'] as String?;
       if (paymentUrl == null || paymentUrl.isEmpty) {
         return order.copyWith(
-          paymentErrorMessage:
-              _errorMessage(responseBody) ??
-              'n8n belum mengembalikan link pembayaran.',
+          paymentErrorMessage: _customerPaymentLinkError,
           paymentLinkRequested: true,
         );
       }
@@ -63,18 +61,17 @@ class PaymentLinkTrigger {
       );
     } on TimeoutException {
       return order.copyWith(
-        paymentErrorMessage: 'n8n terlalu lama merespon. Coba buat link baru atau batalkan transaksi.',
+        paymentErrorMessage: _customerPaymentLinkError,
         paymentLinkRequested: true,
       );
     } on FormatException {
       return order.copyWith(
-        paymentErrorMessage: 'Response n8n tidak valid.',
+        paymentErrorMessage: _customerPaymentLinkError,
         paymentLinkRequested: true,
       );
     } catch (_) {
       return order.copyWith(
-        paymentErrorMessage:
-            'Gagal menghubungi n8n. Periksa workflow create payment.',
+        paymentErrorMessage: _customerPaymentLinkError,
         paymentLinkRequested: true,
       );
     } finally {
@@ -87,18 +84,5 @@ class PaymentLinkTrigger {
     final decoded = jsonDecode(body);
     if (decoded is Map<String, dynamic>) return decoded;
     return const {};
-  }
-
-  String? _errorMessage(Map<String, dynamic> body) {
-    for (final key in [
-      'message',
-      'error',
-      'errorMessage',
-      'error_description',
-    ]) {
-      final value = body[key];
-      if (value is String && value.trim().isNotEmpty) return value.trim();
-    }
-    return null;
   }
 }

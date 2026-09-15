@@ -1,3 +1,4 @@
+import 'package:costikstudio/app/app_experience.dart';
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
@@ -39,8 +40,15 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (success) {
+      final isAdminApp = AppExperienceScope.of(context) == AppExperience.admin;
       if (authCubit.state.isAdmin) {
-        context.go(AppRoutes.adminBilling);
+        context.go(isAdminApp ? AppRoutes.adminDashboard : AppRoutes.billing);
+      } else if (isAdminApp) {
+        await authCubit.logout();
+        if (!mounted) return;
+        setState(() {
+          _errorMessage = 'Akun ini bukan admin. Gunakan akun admin.';
+        });
       } else {
         context.go(AppRoutes.billing);
       }

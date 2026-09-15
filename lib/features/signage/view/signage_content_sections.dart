@@ -95,22 +95,37 @@ class SignageMediaSection extends StatelessWidget {
                       ),
                     ),
                     DataCell(Text(item.mediaType.toUpperCase())),
-                    DataCell(Text(item.publicUrl ?? item.storagePath)),
+                    DataCell(
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 280),
+                        child: Tooltip(
+                          message: item.publicUrl ?? item.storagePath,
+                          child: Text(
+                            item.publicUrl ?? item.storagePath,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ),
                     DataCell(
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            tooltip: 'Ubah media',
-                            icon: const Icon(Icons.edit_rounded),
+                            tooltip: 'Edit media',
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.edit_rounded, size: 20),
                             onPressed: state.isSaving
                                 ? null
                                 : () => _showMediaDialog(context, item),
                           ),
                           IconButton(
                             tooltip: 'Hapus media',
+                            visualDensity: VisualDensity.compact,
                             icon: const Icon(
                               Icons.delete_outline_rounded,
+                              size: 20,
                               color: Colors.red,
                             ),
                             onPressed: state.isSaving || item.id == null
@@ -153,7 +168,9 @@ class SignageMediaSection extends StatelessWidget {
                 'Tambahkan URL gambar atau video untuk bahan playlist signage.',
           ),
           content: SizedBox(
-            width: 560,
+            width: (MediaQuery.sizeOf(context).width - 48)
+                .clamp(280, 560)
+                .toDouble(),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -394,7 +411,9 @@ class SignagePlaylistSection extends StatelessWidget {
             subtitle: 'Pilih beberapa video sesuai urutan putar, lalu aktifkan untuk layar Android TV.',
           ),
           content: SizedBox(
-            width: 560,
+            width: (MediaQuery.sizeOf(context).width - 48)
+                .clamp(280, 560)
+                .toDouble(),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -903,7 +922,9 @@ Future<void> _showEventDialog(
             ),
           ),
           content: SizedBox(
-            width: 620,
+            width: (MediaQuery.sizeOf(context).width - 48)
+                .clamp(280, 620)
+                .toDouble(),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1244,39 +1265,18 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final semanticLabel = '$title. $subtitle. ${icon.codePoint}';
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(icon, color: CostikStudioTheme.primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: CostikStudioTheme.navy,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(color: CostikStudioTheme.slate),
-                      ),
-                    ],
-                  ),
-                ),
-                if (action != null) ...[const SizedBox(width: 12), action!],
-              ],
-            ),
-            const SizedBox(height: 18),
-            child,
+            if (action != null) ...[
+              Align(alignment: Alignment.centerLeft, child: action!),
+              const SizedBox(height: 16),
+            ],
+            Semantics(label: semanticLabel, child: child),
           ],
         ),
       ),

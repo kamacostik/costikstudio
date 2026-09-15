@@ -11,4 +11,25 @@ void main() {
     expect(find.text('Informasi Bisnis / Hotel'), findsNothing);
     expect(find.text('Auto-Renew per Bulan'), findsOneWidget);
   });
+
+  testWidgets('keeps IPTV video add-on disabled while unavailable', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: IptvSubscriptionPage())),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Add-on Video Promo (Opsional)'), findsOneWidget);
+    expect(
+      find.text('Belum tersedia saat ini'),
+      findsOneWidget,
+    );
+
+    final addOnSwitch = tester.widget<SwitchListTile>(
+      find.byType(SwitchListTile).first,
+    );
+    expect(addOnSwitch.value, isFalse);
+    expect(addOnSwitch.onChanged, isNull);
+  });
 }

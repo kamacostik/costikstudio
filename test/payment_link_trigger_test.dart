@@ -86,7 +86,7 @@ void main() {
     final result = await trigger.triggerTopUpOrder(_order());
 
     expect(result?.hasPaymentError, isTrue);
-    expect(result?.paymentErrorMessage, 'No API key found in request');
+    expect(result?.paymentErrorMessage, 'Gagal membuat link pembayaran.');
     expect(result?.paymentLinkRequested, isTrue);
   });
 }

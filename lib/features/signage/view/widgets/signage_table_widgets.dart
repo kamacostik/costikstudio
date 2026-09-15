@@ -192,6 +192,13 @@ class _SignageDataTableState extends State<SignageDataTable> {
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
+            if (constraints.maxWidth < 640) {
+              return _MobileDataCards(
+                columns: widget.columns,
+                rows: visibleRows,
+              );
+            }
+
             return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: ConstrainedBox(
@@ -223,6 +230,92 @@ class _SignageDataTableState extends State<SignageDataTable> {
                 : () => setState(() => _pageIndex = safePageIndex + 1),
           ),
         ],
+      ],
+    );
+  }
+}
+
+class _MobileDataCards extends StatelessWidget {
+  const _MobileDataCards({required this.columns, required this.rows});
+
+  final List<DataColumn> columns;
+  final List<DataRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) ...[
+          _MobileDataCard(columns: columns, row: rows[rowIndex]),
+          if (rowIndex < rows.length - 1) const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
+}
+
+class _MobileDataCard extends StatelessWidget {
+  const _MobileDataCard({required this.columns, required this.row});
+
+  final List<DataColumn> columns;
+  final DataRow row;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var i = 0; i < row.cells.length; i++) ...[
+            _MobileDataField(
+              label: i < columns.length ? columns[i].label : const SizedBox(),
+              child: row.cells[i].child,
+            ),
+            if (i < row.cells.length - 1)
+              const Divider(height: 18, color: Color(0xFFE2E8F0)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MobileDataField extends StatelessWidget {
+  const _MobileDataField({required this.label, required this.child});
+
+  final Widget label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DefaultTextStyle.merge(
+          style: const TextStyle(
+            color: CostikStudioTheme.slate,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.2,
+          ),
+          child: label,
+        ),
+        const SizedBox(height: 6),
+        child,
       ],
     );
   }

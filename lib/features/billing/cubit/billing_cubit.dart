@@ -80,7 +80,7 @@ class BillingCubit extends Cubit<BillingState> {
             invoices: snapshot.invoices,
             paymentOrders: snapshot.paymentOrders,
             message: order == null
-                ? 'Top up request dibuat. Saldo masuk setelah webhook sukses.'
+                ? 'Top up request dibuat. Saldo masuk setelah pembayaran berhasil.'
                 : 'Payment order ${order.externalReference} dibuat untuk ${order.amount}.',
           ),
         ),

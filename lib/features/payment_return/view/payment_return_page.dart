@@ -68,7 +68,7 @@ class _PaymentReturnPageState extends State<PaymentReturnPage> {
       if (!mounted) return;
       setState(() {
         _checkingStatus = false;
-        _statusMessage = 'Status billing sudah dicek. Jika webhook sudah masuk, saldo akan terlihat di dashboard.';
+        _statusMessage = 'Status billing sudah dicek. Jika pembayaran sudah berhasil, saldo akan terlihat di dashboard.';
       });
     } catch (_) {
       if (!mounted) return;

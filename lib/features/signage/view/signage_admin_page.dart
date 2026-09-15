@@ -118,9 +118,14 @@ class _SignageAdminView extends StatelessWidget {
               return content;
             }
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: content,
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final padding = constraints.maxWidth < 640 ? 12.0 : 24.0;
+                return SingleChildScrollView(
+                  padding: EdgeInsets.all(padding),
+                  child: content,
+                );
+              },
             );
           },
         );
@@ -315,53 +320,23 @@ class _SignageAdminModulesState extends State<_SignageAdminModules> {
         }
       },
       builder: (context, state) {
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= 900;
-            final content = Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (state.isLoading)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 12),
-                    child: LinearProgressIndicator(),
-                  ),
-                _SignageAdminSectionHeader(tab: _selectedTab),
-                const SizedBox(height: 14),
-                _buildContent(state),
-              ],
-            );
-
-            if (!isWide) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _SignageAdminMobileMenu(
-                    selectedTab: _selectedTab,
-                    onChanged: (tab) => setState(() => _selectedTab = tab),
-                  ),
-                  const SizedBox(height: 16),
-                  content,
-                ],
-              );
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 260,
-                  child: _SignageAdminSidebar(
-                    selectedTab: _selectedTab,
-                    subscription: widget.subscription,
-                    onChanged: (tab) => setState(() => _selectedTab = tab),
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(child: content),
-              ],
-            );
-          },
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (state.isLoading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: LinearProgressIndicator(),
+              ),
+            _SignageAdminTopMenu(
+              selectedTab: _selectedTab,
+              onChanged: (tab) => setState(() => _selectedTab = tab),
+            ),
+            const SizedBox(height: 16),
+            _SignageAdminSectionHeader(tab: _selectedTab),
+            const SizedBox(height: 14),
+            _buildContent(state),
+          ],
         );
       },
     );
@@ -384,54 +359,8 @@ class _SignageAdminModulesState extends State<_SignageAdminModules> {
   }
 }
 
-class _SignageAdminSidebar extends StatelessWidget {
-  const _SignageAdminSidebar({
-    required this.selectedTab,
-    required this.subscription,
-    required this.onChanged,
-  });
-
-  final _SignageAdminTab selectedTab;
-  final Subscription subscription;
-  final ValueChanged<_SignageAdminTab> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Web Admin',
-              style: TextStyle(
-                color: CostikStudioTheme.navy,
-                fontWeight: FontWeight.w900,
-                fontSize: 18,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '${subscription.deviceCount} device aktif',
-              style: const TextStyle(color: CostikStudioTheme.slate),
-            ),
-            const Divider(height: 28),
-            for (final item in _signageAdminMenuItems)
-              _SignageAdminMenuTile(
-                item: item,
-                selected: selectedTab == item.tab,
-                onTap: () => onChanged(item.tab),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SignageAdminMobileMenu extends StatelessWidget {
-  const _SignageAdminMobileMenu({
+class _SignageAdminTopMenu extends StatelessWidget {
+  const _SignageAdminTopMenu({
     required this.selectedTab,
     required this.onChanged,
   });
@@ -456,59 +385,6 @@ class _SignageAdminMobileMenu extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _SignageAdminMenuTile extends StatelessWidget {
-  const _SignageAdminMenuTile({
-    required this.item,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final _SignageAdminMenuItem item;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Material(
-        color: selected
-            ? CostikStudioTheme.primary.withValues(alpha: 0.10)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
-        child: ListTile(
-          dense: true,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          leading: Icon(
-            item.icon,
-            color: selected
-                ? CostikStudioTheme.primary
-                : CostikStudioTheme.slate,
-          ),
-          title: Text(
-            item.label,
-            style: TextStyle(
-              color: selected
-                  ? CostikStudioTheme.primary
-                  : CostikStudioTheme.navy,
-              fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
-            ),
-          ),
-          trailing: item.isReady
-              ? null
-              : const Tooltip(
-                  message: 'Segera dipindahkan',
-                  child: Icon(Icons.schedule_rounded, size: 18),
-                ),
-          onTap: onTap,
-        ),
       ),
     );
   }
@@ -597,19 +473,32 @@ class _SignageAdminDashboard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: MediaQuery.sizeOf(context).width >= 1000 ? 3 : 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 2.25,
-          children: [
-            for (final item in _signageAdminMenuItems.where(
-              (item) => item.tab != _SignageAdminTab.dashboard,
-            ))
-              _ModuleShortcutCard(item: item, onTap: () => onOpenTab(item.tab)),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final crossAxisCount = width >= 1100
+                ? 3
+                : width >= 680
+                ? 2
+                : 1;
+            return GridView.count(
+              crossAxisCount: crossAxisCount,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: crossAxisCount == 1 ? 3.2 : 2.1,
+              children: [
+                for (final item in _signageAdminMenuItems.where(
+                  (item) => item.tab != _SignageAdminTab.dashboard,
+                ))
+                  _ModuleShortcutCard(
+                    item: item,
+                    onTap: () => onOpenTab(item.tab),
+                  ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -677,15 +566,34 @@ class _ModuleShortcutCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(
+          color: CostikStudioTheme.primary.withValues(alpha: 0.10),
+        ),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              Icon(item.icon, color: CostikStudioTheme.primary, size: 22),
-              const SizedBox(width: 10),
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: CostikStudioTheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(
+                  item.icon,
+                  color: CostikStudioTheme.primary,
+                  size: 34,
+                ),
+              ),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -698,20 +606,28 @@ class _ModuleShortcutCard extends StatelessWidget {
                       style: const TextStyle(
                         color: CostikStudioTheme.navy,
                         fontWeight: FontWeight.w900,
+                        fontSize: 18,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 6),
                     Text(
                       item.description,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: CostikStudioTheme.slate,
-                        fontSize: 12,
+                        fontSize: 13,
+                        height: 1.35,
                       ),
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(width: 10),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: CostikStudioTheme.slate.withValues(alpha: 0.45),
+                size: 18,
               ),
             ],
           ),
