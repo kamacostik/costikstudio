@@ -1,5 +1,7 @@
 import 'package:costikstudio/core/data/dummy_products.dart';
+import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
+import 'package:costikstudio/features/support/data/feature_request_repository.dart';
 import 'package:flutter/material.dart';
 
 enum SupportPageMode { support, featureRequest }
@@ -9,16 +11,20 @@ class SupportPage extends StatelessWidget {
     super.key,
     this.isEmbedded = false,
     this.mode = SupportPageMode.support,
-  });
+    FeatureRequestRepository? repository,
+  }) : repository = repository ?? const SupabaseFeatureRequestRepository();
 
   final bool isEmbedded;
   final SupportPageMode mode;
+  final FeatureRequestRepository repository;
 
   @override
   Widget build(BuildContext context) {
     final content = switch (mode) {
       SupportPageMode.support => _buildSupportContent(context),
-      SupportPageMode.featureRequest => const _FeatureRequestContent(),
+      SupportPageMode.featureRequest => _FeatureRequestContent(
+        repository: repository,
+      ),
     };
 
     if (isEmbedded) {
@@ -77,14 +83,16 @@ class SupportPage extends StatelessWidget {
 }
 
 class _FeatureRequestContent extends StatefulWidget {
-  const _FeatureRequestContent();
+  const _FeatureRequestContent({required this.repository});
+
+  final FeatureRequestRepository repository;
 
   @override
   State<_FeatureRequestContent> createState() => _FeatureRequestContentState();
 }
 
 class _FeatureRequestContentState extends State<_FeatureRequestContent> {
-  String _selectedProduct = dummyProducts.first.name;
+  ProductItem _selectedProduct = dummyProducts.first;
   final _titleController = TextEditingController();
   final _detailController = TextEditingController();
 
@@ -95,10 +103,23 @@ class _FeatureRequestContentState extends State<_FeatureRequestContent> {
     super.dispose();
   }
 
-  void _submitRequest() {
+  Future<void> _submitRequest() async {
     FocusScope.of(context).unfocus();
+
+    await widget.repository.submit(
+      FeatureRequestDraft(
+        productId: _selectedProduct.id,
+        productName: _selectedProduct.name,
+        title: _titleController.text,
+        description: _detailController.text,
+      ),
+    );
+
+    if (!mounted) return;
+    _titleController.clear();
+    _detailController.clear();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Request fitur berhasil disiapkan.')),
+      const SnackBar(content: Text('Request fitur berhasil dikirim.')),
     );
   }
 
@@ -122,7 +143,7 @@ class _FeatureRequestContentState extends State<_FeatureRequestContent> {
                   ?.copyWith(color: const Color(0xFF64748B), height: 1.45),
             ),
             const SizedBox(height: 24),
-            DropdownButtonFormField<String>(
+            DropdownButtonFormField<ProductItem>(
               key: const Key('feature_request_product_dropdown'),
               initialValue: _selectedProduct,
               decoration: const InputDecoration(
@@ -131,10 +152,7 @@ class _FeatureRequestContentState extends State<_FeatureRequestContent> {
               ),
               items: [
                 for (final product in dummyProducts)
-                  DropdownMenuItem(
-                    value: product.name,
-                    child: Text(product.name),
-                  ),
+                  DropdownMenuItem(value: product, child: Text(product.name)),
               ],
               onChanged: (value) {
                 if (value == null) return;

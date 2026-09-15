@@ -68,7 +68,7 @@ void main() {
     );
     await tester.tap(find.widgetWithText(FilledButton, 'Kirim Request'));
     await tester.pumpAndSettle();
-    expect(find.text('Request fitur berhasil disiapkan.'), findsOneWidget);
+    expect(find.text('Request fitur berhasil dikirim.'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('dashboard_nav_subscriptions')));
     await tester.pumpAndSettle();
