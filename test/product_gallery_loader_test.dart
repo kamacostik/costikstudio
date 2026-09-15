@@ -3,7 +3,7 @@ import 'package:costikstudio/core/models/product_item.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('attaches public product images to matching products', () async {
+  test('attaches only cover images to catalog products', () async {
     final loader = ProductGalleryLoader(
       repository: _FakePublicProductImageRepository({
         'costik-iptv': const [
@@ -12,6 +12,11 @@ void main() {
             productId: 'costik-iptv',
             imageUrl: 'https://example.com/iptv.png',
             isCover: true,
+          ),
+          ProductImage(
+            id: 'img-2',
+            productId: 'costik-iptv',
+            imageUrl: 'https://example.com/iptv-gallery.png',
           ),
         ],
       }),
@@ -30,10 +35,46 @@ void main() {
       ),
     ]);
 
+    expect(products.single.images, hasLength(1));
     expect(
       products.single.coverImage?.imageUrl,
       'https://example.com/iptv.png',
     );
+  });
+
+  test('attaches all active images to detail products', () async {
+    final loader = ProductGalleryLoader(
+      repository: _FakePublicProductImageRepository({
+        'costik-iptv': const [
+          ProductImage(
+            id: 'img-1',
+            productId: 'costik-iptv',
+            imageUrl: 'https://example.com/iptv.png',
+            isCover: true,
+          ),
+          ProductImage(
+            id: 'img-2',
+            productId: 'costik-iptv',
+            imageUrl: 'https://example.com/iptv-gallery.png',
+          ),
+        ],
+      }),
+    );
+
+    final products = await loader.attachAllImages(const [
+      ProductItem(
+        id: 'costik-iptv',
+        name: 'Costik IPTV',
+        tagline: 'IPTV',
+        description: 'IPTV',
+        category: ProductCategory.hospitality,
+        status: ProductStatus.beta,
+        accentHex: 0xFF0EA5E9,
+        features: [],
+      ),
+    ]);
+
+    expect(products.single.images, hasLength(2));
   });
 }
 

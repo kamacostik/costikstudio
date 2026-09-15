@@ -18,10 +18,34 @@ class ProductGalleryLoader {
     return products
         .map(
           (product) => product.copyWith(
+            images: _catalogImagesFor(
+              imagesByProductId[product.id] ?? product.images,
+            ),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  Future<List<ProductItem>> attachAllImages(List<ProductItem> products) async {
+    final imagesByProductId = await repository.loadImagesByProductId();
+    return products
+        .map(
+          (product) => product.copyWith(
             images: imagesByProductId[product.id] ?? product.images,
           ),
         )
         .toList(growable: false);
+  }
+
+  List<ProductImage> _catalogImagesFor(List<ProductImage> images) {
+    if (images.isEmpty) return images;
+    for (final image in images) {
+      if (image.isCover && image.isActive) return [image];
+    }
+    for (final image in images) {
+      if (image.isActive) return [image];
+    }
+    return const [];
   }
 }
 

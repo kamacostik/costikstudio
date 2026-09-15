@@ -33,7 +33,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     _productFuture = item == null
         ? Future.value(null)
         : widget.galleryLoader
-              .attachImages([item])
+              .attachAllImages([item])
               .then((list) => list.isEmpty ? item : list.first);
   }
 
