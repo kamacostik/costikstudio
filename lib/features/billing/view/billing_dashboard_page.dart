@@ -93,10 +93,15 @@ class _BillingDashboardViewState extends State<_BillingDashboardView> {
   ProductItem? _selectedProduct;
   bool _isOrderingIptv = false;
   bool _isOrderingSignage = false;
+  bool _catalogLoadRequested = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_catalogLoadRequested) {
+      _catalogLoadRequested = true;
+      context.read<ProductCatalogCubit>().load();
+    }
     final routeTab = _DashboardTabRoute.fromSlug(
       GoRouterState.of(context).uri.queryParameters['tab'],
     );
@@ -405,8 +410,11 @@ class _DashboardPage extends StatelessWidget {
     }
 
     if (selectedProduct != null) {
+      final catalogProduct = context.select<ProductCatalogCubit, ProductItem?>(
+        (cubit) => cubit.state.productById(selectedProduct!.id),
+      );
       return _EmbeddedProductDetail(
-        product: selectedProduct!,
+        product: catalogProduct ?? selectedProduct!,
         subscriptions: snapshot.subscriptions,
         onBack: onBackToProductCatalog,
         onSubscribe: () {
