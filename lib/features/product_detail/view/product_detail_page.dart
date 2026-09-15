@@ -1,6 +1,6 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
-import 'package:costikstudio/core/data/product_gallery_loader.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:costikstudio/features/shared/widgets/product_gallery_strip.dart';
@@ -9,42 +9,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class ProductDetailPage extends StatefulWidget {
-  const ProductDetailPage({
-    super.key,
-    required this.product,
-    this.galleryLoader = const ProductGalleryLoader(),
-  });
+class ProductDetailPage extends StatelessWidget {
+  const ProductDetailPage({super.key, required this.product});
 
   final ProductItem? product;
-  final ProductGalleryLoader galleryLoader;
-
-  @override
-  State<ProductDetailPage> createState() => _ProductDetailPageState();
-}
-
-class _ProductDetailPageState extends State<ProductDetailPage> {
-  late final Future<ProductItem?> _productFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    final item = widget.product;
-    _productFuture = item == null
-        ? Future.value(null)
-        : widget.galleryLoader
-              .attachAllImages([item])
-              .then((list) => list.isEmpty ? item : list.first);
-  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<ProductItem?>(
-      future: _productFuture,
-      initialData: widget.product,
-      builder: (context, snapshot) {
-        final item = snapshot.data ?? widget.product;
-        return _DetailBody(item: item);
+    return BlocBuilder<ProductCatalogCubit, ProductCatalogState>(
+      builder: (context, state) {
+        final item = product == null ? null : state.productById(product!.id);
+        return _DetailBody(item: item ?? product);
       },
     );
   }

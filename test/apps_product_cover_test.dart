@@ -1,7 +1,9 @@
 import 'package:costikstudio/core/data/product_gallery_loader.dart';
 import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/features/apps/view/apps_page.dart';
+import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -21,9 +23,13 @@ void main() {
       }),
     );
 
+    final catalogCubit = ProductCatalogCubit(galleryLoader: loader);
+    await catalogCubit.load();
+
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: AppsPage(galleryLoader: loader)),
+      BlocProvider<ProductCatalogCubit>.value(
+        value: catalogCubit,
+        child: const MaterialApp(home: Scaffold(body: AppsPage())),
       ),
     );
     await tester.pump();

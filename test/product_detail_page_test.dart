@@ -1,6 +1,7 @@
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:costikstudio/features/product_detail/view/product_detail_page.dart';
+import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,8 +13,13 @@ void main() {
       final product = findProductById('costik-iptv');
 
       await tester.pumpWidget(
-        BlocProvider<AuthCubit>(
-          create: (_) => AuthCubit(),
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<AuthCubit>(create: (_) => AuthCubit()),
+            BlocProvider<ProductCatalogCubit>(
+              create: (_) => ProductCatalogCubit(),
+            ),
+          ],
           child: MaterialApp(
             home: Scaffold(body: ProductDetailPage(product: product)),
           ),
@@ -37,8 +43,13 @@ void main() {
     final product = findProductById('smart-inv');
 
     await tester.pumpWidget(
-      BlocProvider<AuthCubit>(
-        create: (_) => AuthCubit(),
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthCubit>(create: (_) => AuthCubit()),
+          BlocProvider<ProductCatalogCubit>(
+            create: (_) => ProductCatalogCubit(),
+          ),
+        ],
         child: MaterialApp(
           home: Scaffold(body: ProductDetailPage(product: product)),
         ),

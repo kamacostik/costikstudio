@@ -1,34 +1,14 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
-import 'package:costikstudio/core/data/dummy_products.dart';
-import 'package:costikstudio/core/data/product_gallery_loader.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart';
 import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class AppsPage extends StatefulWidget {
-  const AppsPage({
-    super.key,
-    this.galleryLoader = const ProductGalleryLoader(),
-  });
-
-  final ProductGalleryLoader galleryLoader;
-
-  @override
-  State<AppsPage> createState() => _AppsPageState();
-}
-
-class _AppsPageState extends State<AppsPage> {
-  late final Future<List<ProductItem>> _productsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _productsFuture = widget.galleryLoader.attachImages(
-      dummyProducts.where((product) => product.id == 'costik-iptv').toList(),
-    );
-  }
+class AppsPage extends StatelessWidget {
+  const AppsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -85,17 +65,11 @@ class _AppsPageState extends State<AppsPage> {
               ),
             ),
             const SizedBox(height: 28),
-            FutureBuilder<List<ProductItem>>(
-              future: _productsFuture,
-              initialData: dummyProducts
-                  .where((product) => product.id == 'costik-iptv')
-                  .toList(),
-              builder: (context, snapshot) {
-                final products =
-                    snapshot.data ??
-                    dummyProducts
-                        .where((product) => product.id == 'costik-iptv')
-                        .toList();
+            BlocBuilder<ProductCatalogCubit, ProductCatalogState>(
+              builder: (context, state) {
+                final products = state.products
+                    .where((product) => product.id == 'costik-iptv')
+                    .toList(growable: false);
                 return LayoutBuilder(
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 760;

@@ -1,7 +1,6 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
-import 'package:costikstudio/core/data/dummy_products.dart';
-import 'package:costikstudio/core/data/product_gallery_loader.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart';
 import 'package:costikstudio/core/router/app_router.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
@@ -11,12 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({
-    super.key,
-    this.galleryLoader = const ProductGalleryLoader(),
-  });
-
-  final ProductGalleryLoader galleryLoader;
+  const HomePage({super.key});
 
   static void scrollToProducts() => _HomePageState.scrollToProducts();
 
@@ -36,14 +30,6 @@ class _HomePageState extends State<HomePage> {
       curve: Curves.easeOutCubic,
       alignment: 0.05,
     );
-  }
-
-  late final Future<List<ProductItem>> _productsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _productsFuture = widget.galleryLoader.attachImages(dummyProducts);
   }
 
   List<ProductItem> _focusProducts(List<ProductItem> products) => products
@@ -126,15 +112,11 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 54),
                     const _MinimalPortalPreview(),
                     const SizedBox(height: 92),
-                    FutureBuilder<List<ProductItem>>(
-                      future: _productsFuture,
-                      initialData: dummyProducts,
-                      builder: (context, snapshot) {
+                    BlocBuilder<ProductCatalogCubit, ProductCatalogState>(
+                      builder: (context, state) {
                         return _ProductSection(
                           key: _productsKey,
-                          products: _focusProducts(
-                            snapshot.data ?? dummyProducts,
-                          ),
+                          products: _focusProducts(state.products),
                         );
                       },
                     ),

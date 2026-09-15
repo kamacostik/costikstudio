@@ -3,8 +3,7 @@ import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_pricing.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
-import 'package:costikstudio/core/data/dummy_products.dart';
-import 'package:costikstudio/core/data/product_gallery_loader.dart';
+import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart';
 import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/core/platform/external_url.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
@@ -421,10 +420,7 @@ class _DashboardPage extends StatelessWidget {
       );
     }
 
-    return _MemberProductGrid(
-      galleryLoader: const ProductGalleryLoader(),
-      onSelectProduct: onSelectProduct,
-    );
+    return _MemberProductGrid(onSelectProduct: onSelectProduct);
   }
 
   String _titleFor(_DashboardTab tab) {
@@ -655,35 +651,16 @@ class _DashboardSummaryCard extends StatelessWidget {
   }
 }
 
-class _MemberProductGrid extends StatefulWidget {
-  const _MemberProductGrid({
-    required this.galleryLoader,
-    required this.onSelectProduct,
-  });
+class _MemberProductGrid extends StatelessWidget {
+  const _MemberProductGrid({required this.onSelectProduct});
 
-  final ProductGalleryLoader galleryLoader;
   final ValueChanged<ProductItem> onSelectProduct;
 
   @override
-  State<_MemberProductGrid> createState() => _MemberProductGridState();
-}
-
-class _MemberProductGridState extends State<_MemberProductGrid> {
-  late final Future<List<ProductItem>> _productsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _productsFuture = widget.galleryLoader.attachImages(dummyProducts);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<ProductItem>>(
-      future: _productsFuture,
-      initialData: dummyProducts,
-      builder: (context, snapshot) {
-        final products = snapshot.data ?? dummyProducts;
+    return BlocBuilder<ProductCatalogCubit, ProductCatalogState>(
+      builder: (context, state) {
+        final products = state.products;
         return GridView.builder(
           itemCount: products.length,
           shrinkWrap: true,
@@ -699,7 +676,7 @@ class _MemberProductGridState extends State<_MemberProductGrid> {
             return ProductCard(
               product: product,
               compact: true,
-              onTap: () => widget.onSelectProduct(product),
+              onTap: () => onSelectProduct(product),
             );
           },
         );
