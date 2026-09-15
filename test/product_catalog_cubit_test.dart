@@ -4,6 +4,21 @@ import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart'
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('keeps cached product images when refresh returns empty', () async {
+    final repository = _SwitchingGalleryRepository();
+    final cubit = ProductCatalogCubit(
+      galleryLoader: ProductGalleryLoader(repository: repository),
+    );
+
+    await cubit.load();
+    expect(cubit.state.productById('costik-iptv')?.activeImages, hasLength(1));
+
+    repository.returnEmpty = true;
+    await cubit.load(forceRefresh: true);
+
+    expect(cubit.state.productById('costik-iptv')?.activeImages, hasLength(1));
+  });
+
   test('keeps cached product images when refresh fails', () async {
     final repository = _SwitchingGalleryRepository();
     final cubit = ProductCatalogCubit(
@@ -23,10 +38,12 @@ void main() {
 
 class _SwitchingGalleryRepository implements PublicProductImageRepository {
   bool shouldFail = false;
+  bool returnEmpty = false;
 
   @override
   Future<Map<String, List<ProductImage>>> loadImagesByProductId() async {
     if (shouldFail) throw StateError('network failed');
+    if (returnEmpty) return const {};
     return {
       'costik-iptv': const [
         ProductImage(
