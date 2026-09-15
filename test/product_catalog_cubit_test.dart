@@ -4,6 +4,21 @@ import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart'
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('retries when first load returns no images', () async {
+    final repository = _SwitchingGalleryRepository()..returnEmpty = true;
+    final cubit = ProductCatalogCubit(
+      galleryLoader: ProductGalleryLoader(repository: repository),
+    );
+
+    await cubit.load();
+    expect(cubit.state.productById('costik-iptv')?.activeImages, isEmpty);
+
+    repository.returnEmpty = false;
+    await cubit.load();
+
+    expect(cubit.state.productById('costik-iptv')?.activeImages, hasLength(1));
+  });
+
   test('keeps cached product images when refresh returns empty', () async {
     final repository = _SwitchingGalleryRepository();
     final cubit = ProductCatalogCubit(

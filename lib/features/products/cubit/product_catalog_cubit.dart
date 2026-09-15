@@ -53,7 +53,7 @@ class ProductCatalogCubit extends Cubit<ProductCatalogState> {
       final products = _preserveExistingImages(
         await galleryLoader.attachAllImages(dummyProducts),
       );
-      _hasLoaded = true;
+      _hasLoaded = _hasAnyImages(products);
       emit(ProductCatalogState(products: products));
     } catch (error) {
       emit(state.copyWith(isLoading: false, errorMessage: error.toString()));
@@ -69,5 +69,9 @@ class ProductCatalogCubit extends Cubit<ProductCatalogState> {
           return next.copyWith(images: current.images);
         })
         .toList(growable: false);
+  }
+
+  bool _hasAnyImages(List<ProductItem> products) {
+    return products.any((product) => product.activeImages.isNotEmpty);
   }
 }
