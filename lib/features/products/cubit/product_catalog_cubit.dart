@@ -5,11 +5,12 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProductCatalogState extends Equatable {
-  const ProductCatalogState({
-    this.products = dummyProducts,
+  ProductCatalogState({
+    List<ProductItem>? products,
     this.isLoading = false,
     this.errorMessage,
-  });
+  }) : products =
+           products ?? ProductGalleryLoader.attachCachedImages(dummyProducts);
 
   final List<ProductItem> products;
   final bool isLoading;
@@ -41,7 +42,7 @@ class ProductCatalogState extends Equatable {
 
 class ProductCatalogCubit extends Cubit<ProductCatalogState> {
   ProductCatalogCubit({this.galleryLoader = const ProductGalleryLoader()})
-    : super(const ProductCatalogState());
+    : super(ProductCatalogState());
 
   final ProductGalleryLoader galleryLoader;
   bool _hasLoaded = false;

@@ -107,6 +107,56 @@ void main() {
       );
     },
   );
+
+  test(
+    'merges partial refresh rows without dropping cached product images',
+    () async {
+      final firstLoader = ProductGalleryLoader(
+        repository: _FakePublicProductImageRepository({
+          'costik-iptv': const [
+            ProductImage(
+              id: 'img-1',
+              productId: 'costik-iptv',
+              imageUrl: 'https://example.com/iptv.png',
+              isCover: true,
+            ),
+          ],
+          'digital-signage': const [
+            ProductImage(
+              id: 'img-2',
+              productId: 'digital-signage',
+              imageUrl: 'https://example.com/signage.png',
+              isCover: true,
+            ),
+          ],
+        }),
+      );
+      await firstLoader.attachAllImages(_twoProducts());
+
+      final partialLoader = ProductGalleryLoader(
+        repository: _FakePublicProductImageRepository({
+          'costik-iptv': const [
+            ProductImage(
+              id: 'img-1b',
+              productId: 'costik-iptv',
+              imageUrl: 'https://example.com/iptv-new.png',
+              isCover: true,
+            ),
+          ],
+        }),
+      );
+      final products = await partialLoader.attachAllImages(_twoProducts());
+
+      expect(
+        products[0].coverImage?.imageUrl,
+        'https://example.com/iptv-new.png',
+      );
+      expect(
+        products[1].coverImage?.imageUrl,
+        'https://example.com/signage.png',
+      );
+    },
+  );
 }
 
 List<ProductItem> _singleProduct() {
@@ -116,6 +166,31 @@ List<ProductItem> _singleProduct() {
       name: 'Costik IPTV',
       tagline: 'IPTV',
       description: 'IPTV',
+      category: ProductCategory.hospitality,
+      status: ProductStatus.beta,
+      accentHex: 0xFF0EA5E9,
+      features: [],
+    ),
+  ];
+}
+
+List<ProductItem> _twoProducts() {
+  return const [
+    ProductItem(
+      id: 'costik-iptv',
+      name: 'Costik IPTV',
+      tagline: 'IPTV',
+      description: 'IPTV',
+      category: ProductCategory.hospitality,
+      status: ProductStatus.beta,
+      accentHex: 0xFF0EA5E9,
+      features: [],
+    ),
+    ProductItem(
+      id: 'digital-signage',
+      name: 'Digital Signage',
+      tagline: 'Signage',
+      description: 'Signage',
       category: ProductCategory.hospitality,
       status: ProductStatus.beta,
       accentHex: 0xFF0EA5E9,
