@@ -11,7 +11,7 @@ create table if not exists public.product_images (
   image_url text not null,
   title text,
   alt_text text,
-  sort_order integer not null default 0,
+  sort_order bigint not null default 0,
   is_cover boolean not null default false,
   is_active boolean not null default true,
   created_at timestamp with time zone not null default now(),
@@ -20,6 +20,11 @@ create table if not exists public.product_images (
 
 create index if not exists product_images_product_id_sort_order_idx
   on public.product_images (product_id, sort_order, created_at);
+
+-- Migration for databases created before sort_order became bigint:
+-- upload timestamps (milliseconds since epoch) exceed integer range.
+alter table public.product_images
+  alter column sort_order type bigint;
 
 create unique index if not exists product_images_single_cover_idx
   on public.product_images (product_id)

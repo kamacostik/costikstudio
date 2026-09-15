@@ -11,7 +11,8 @@ void main() {
     expect(sql, contains('product_id text not null'));
     expect(sql, contains('image_url text not null'));
     expect(sql, contains('is_cover boolean not null default false'));
-    expect(sql, contains('sort_order integer not null default 0'));
+    expect(sql, contains('sort_order bigint not null default 0'));
+    expect(sql, contains('alter column sort_order type bigint'));
     expect(sql, contains('product_images_product_id_sort_order_idx'));
     expect(sql, contains('product_images_single_cover_idx'));
     expect(sql, contains('enable row level security'));
