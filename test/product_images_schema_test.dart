@@ -17,5 +17,8 @@ void main() {
     expect(sql, contains('enable row level security'));
     expect(sql, contains('product images are readable'));
     expect(sql, contains('product images are admin manageable'));
+    expect(sql, contains('from public.profiles p'));
+    expect(sql, contains("p.role = 'admin'"));
+    expect(sql, isNot(contains('admin_profiles')));
   });
 }

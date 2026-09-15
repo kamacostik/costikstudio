@@ -34,8 +34,7 @@ create policy "product images are readable"
   to authenticated
   using (is_active = true);
 
--- Assumes existing admin role helper/table policies are enforced by the admin app.
--- Adjust the predicate if the production project uses a different admin-role helper.
+-- Admin accounts are identified by public.profiles.role = 'admin'.
 drop policy if exists "product images are admin manageable" on public.product_images;
 create policy "product images are admin manageable"
   on public.product_images
@@ -44,15 +43,17 @@ create policy "product images are admin manageable"
   using (
     exists (
       select 1
-      from public.admin_profiles ap
-      where ap.user_id = auth.uid()
+      from public.profiles p
+      where p.id = auth.uid()
+        and p.role = 'admin'
     )
   )
   with check (
     exists (
       select 1
-      from public.admin_profiles ap
-      where ap.user_id = auth.uid()
+      from public.profiles p
+      where p.id = auth.uid()
+        and p.role = 'admin'
     )
   );
 
@@ -89,8 +90,9 @@ create policy "product images storage is admin insertable"
     bucket_id = 'product-images'
     and exists (
       select 1
-      from public.admin_profiles ap
-      where ap.user_id = auth.uid()
+      from public.profiles p
+      where p.id = auth.uid()
+        and p.role = 'admin'
     )
   );
 
@@ -103,15 +105,17 @@ create policy "product images storage is admin updatable"
     bucket_id = 'product-images'
     and exists (
       select 1
-      from public.admin_profiles ap
-      where ap.user_id = auth.uid()
+      from public.profiles p
+      where p.id = auth.uid()
+        and p.role = 'admin'
     )
   )
   with check (
     bucket_id = 'product-images'
     and exists (
       select 1
-      from public.admin_profiles ap
-      where ap.user_id = auth.uid()
+      from public.profiles p
+      where p.id = auth.uid()
+        and p.role = 'admin'
     )
   );
