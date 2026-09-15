@@ -322,7 +322,32 @@ class _FocusProductCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium
                     ?.copyWith(color: CostikStudioTheme.slate, height: 1.55),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
+              for (final feature in product.features.take(3))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.check_circle_rounded, color: accent, size: 17),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          feature,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: CostikStudioTheme.slate,
+                                height: 1.35,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 10),
               Text(
                 'View details',
                 style: TextStyle(color: accent, fontWeight: FontWeight.w900),
