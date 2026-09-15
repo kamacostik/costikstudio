@@ -1,14 +1,34 @@
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
 
+enum SupportPageMode { support, featureRequest }
+
 class SupportPage extends StatelessWidget {
-  const SupportPage({super.key, this.isEmbedded = false});
+  const SupportPage({
+    super.key,
+    this.isEmbedded = false,
+    this.mode = SupportPageMode.support,
+  });
 
   final bool isEmbedded;
+  final SupportPageMode mode;
 
   @override
   Widget build(BuildContext context) {
-    final content = Column(
+    final content = switch (mode) {
+      SupportPageMode.support => _buildSupportContent(context),
+      SupportPageMode.featureRequest => const _FeatureRequestContent(),
+    };
+
+    if (isEmbedded) {
+      return content;
+    }
+
+    return SingleChildScrollView(child: ResponsiveSection(child: content));
+  }
+
+  Widget _buildSupportContent(BuildContext context) {
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (!isEmbedded) ...[
@@ -52,14 +72,87 @@ class SupportPage extends StatelessWidget {
         ),
       ],
     );
+  }
+}
 
-    if (isEmbedded) {
-      return content;
-    }
+class _FeatureRequestContent extends StatefulWidget {
+  const _FeatureRequestContent();
 
-    return SingleChildScrollView(
-      child: ResponsiveSection(
-        child: content,
+  @override
+  State<_FeatureRequestContent> createState() => _FeatureRequestContentState();
+}
+
+class _FeatureRequestContentState extends State<_FeatureRequestContent> {
+  String _selectedProduct = 'Costik IPTV';
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Request Fitur',
+              style: Theme.of(context).textTheme.headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Kirim ide fitur baru agar bisa diprioritaskan sesuai aplikasi yang dipakai.',
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: const Color(0xFF64748B), height: 1.45),
+            ),
+            const SizedBox(height: 24),
+            DropdownButtonFormField<String>(
+              key: const Key('feature_request_product_dropdown'),
+              initialValue: _selectedProduct,
+              decoration: const InputDecoration(
+                labelText: 'Pilih Aplikasi',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'Costik IPTV',
+                  child: Text('Costik IPTV'),
+                ),
+                DropdownMenuItem(
+                  value: 'Digital Signage',
+                  child: Text('Digital Signage'),
+                ),
+              ],
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() => _selectedProduct = value);
+              },
+            ),
+            const SizedBox(height: 16),
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'Judul Fitur',
+                hintText: 'Contoh: Jadwal reboot perangkat otomatis',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const TextField(
+              maxLines: 5,
+              decoration: InputDecoration(
+                labelText: 'Detail Request',
+                hintText: 'Jelaskan kebutuhan, alur kerja, dan manfaat fitur.',
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: null,
+              icon: const Icon(Icons.send_rounded),
+              label: const Text('Kirim Request'),
+            ),
+          ],
+        ),
       ),
     );
   }

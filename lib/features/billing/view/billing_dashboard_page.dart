@@ -49,6 +49,7 @@ enum _DashboardTab {
   billing,
   activity,
   invoices,
+  requestFeature,
   support,
 }
 
@@ -60,6 +61,7 @@ extension _DashboardTabRoute on _DashboardTab {
     _DashboardTab.billing => 'billing',
     _DashboardTab.activity => 'activity',
     _DashboardTab.invoices => 'invoices',
+    _DashboardTab.requestFeature => 'request-feature',
     _DashboardTab.support => 'support',
   };
 
@@ -71,6 +73,9 @@ extension _DashboardTabRoute on _DashboardTab {
       'billing' || 'wallet' => _DashboardTab.billing,
       'activity' || 'history' => _DashboardTab.activity,
       'invoices' || 'invoice' => _DashboardTab.invoices,
+      'request-feature' ||
+      'request-fitur' ||
+      'feature-request' => _DashboardTab.requestFeature,
       'support' => _DashboardTab.support,
       _ => _DashboardTab.apps,
     };
@@ -377,6 +382,10 @@ class _DashboardPage extends StatelessWidget {
         transactions: snapshot.transactions,
       ),
       _DashboardTab.invoices => InvoicesCard(invoices: snapshot.invoices),
+      _DashboardTab.requestFeature => const SupportPage(
+        isEmbedded: true,
+        mode: SupportPageMode.featureRequest,
+      ),
       _DashboardTab.support => const SupportPage(isEmbedded: true),
     };
   }
@@ -432,6 +441,7 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.billing => 'Billing Wallet',
       _DashboardTab.activity => 'Aktivitas Wallet',
       _DashboardTab.invoices => 'Invoice',
+      _DashboardTab.requestFeature => 'Request Fitur',
       _DashboardTab.support => 'Support',
     };
   }
@@ -460,6 +470,8 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.activity =>
         'Riwayat transaksi terakhir dari top-up dan pembelian paket.',
       _DashboardTab.invoices => 'Daftar invoice dari aktivitas billing.',
+      _DashboardTab.requestFeature =>
+        'Ajukan ide fitur baru untuk Costik IPTV atau Digital Signage.',
       _DashboardTab.support =>
         'Bantuan produk, dokumentasi, integrasi, dan saluran kontak resmi.',
     };
@@ -1747,6 +1759,11 @@ class _DashboardNavBar extends StatelessWidget {
         ),
       ]),
       _DashboardNavSection('HELP & SUPPORT', [
+        _DashboardNavItem(
+          _DashboardTab.requestFeature,
+          'Request Fitur',
+          Icons.tips_and_updates_rounded,
+        ),
         _DashboardNavItem(
           _DashboardTab.support,
           'Support',

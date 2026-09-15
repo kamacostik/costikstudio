@@ -30,11 +30,29 @@ void main() {
     );
     expect(find.byKey(const Key('dashboard_nav_billing')), findsOneWidget);
     expect(find.byKey(const Key('dashboard_nav_invoices')), findsOneWidget);
+    expect(
+      find.byKey(const Key('dashboard_nav_requestFeature')),
+      findsOneWidget,
+    );
+    expect(find.text('Request Fitur'), findsOneWidget);
     expect(find.text('Wallet Balance'), findsOneWidget);
     expect(find.text('Payment Status'), findsOneWidget);
     expect(find.text('Produk'), findsWidgets);
     expect(find.text('Costik IPTV'), findsWidgets);
     expect(find.text('Active subscriptions'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('dashboard_nav_requestFeature')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Request Fitur'), findsWidgets);
+    expect(find.text('Pilih Aplikasi'), findsOneWidget);
+    expect(find.text('Costik IPTV'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('feature_request_product_dropdown')));
+    await tester.pumpAndSettle();
+    expect(find.text('Digital Signage'), findsOneWidget);
+    await tester.tap(find.text('Digital Signage').last);
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('dashboard_nav_subscriptions')));
     await tester.pumpAndSettle();
