@@ -107,6 +107,10 @@ void main() {
       );
       expect(find.text('Tampilan Aplikasi'), findsOneWidget);
       expect(find.text('Lihat Dokumentasi'), findsOneWidget);
+      expect(
+        find.widgetWithText(OutlinedButton, 'Download APK'),
+        findsOneWidget,
+      );
       expect(find.text('Cara mulai'), findsOneWidget);
     },
   );

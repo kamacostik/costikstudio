@@ -894,6 +894,14 @@ class _EmbeddedProductDetail extends StatelessWidget {
                     icon: const Icon(Icons.menu_book_rounded),
                     label: const Text('Lihat Dokumentasi'),
                   ),
+                  if (product.id == 'costik-iptv' &&
+                      product.hasDownload &&
+                      isManagedActive)
+                    OutlinedButton.icon(
+                      onPressed: () => openExternalUrl(product.downloadUrl!),
+                      icon: const Icon(Icons.download_rounded),
+                      label: const Text('Download APK'),
+                    ),
                   if (product.id == 'digital-signage') ...[
                     if (isManagedActive)
                       OutlinedButton.icon(
@@ -909,7 +917,9 @@ class _EmbeddedProductDetail extends StatelessWidget {
                       icon: const Icon(Icons.open_in_new_rounded),
                       label: const Text('Open web admin'),
                     ),
-                  if (product.hasDownload && isManagedActive)
+                  if (product.id != 'costik-iptv' &&
+                      product.hasDownload &&
+                      isManagedActive)
                     OutlinedButton.icon(
                       onPressed: () => context.go(AppRoutes.apps),
                       icon: const Icon(Icons.download_rounded),

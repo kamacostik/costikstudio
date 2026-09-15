@@ -11,6 +11,7 @@ const dummyProducts = <ProductItem>[
     accentHex: 0xFF0EA5E9,
     productUrl: 'https://iptv.costikstudio.com',
     adminUrl: 'https://admin-ip-tv.pages.dev/',
+    downloadUrl: 'https://drive.google.com/drive/folders/1i_pawAjDbQZeoLld_HGO40OfEIRypYSE?usp=drive_link',
     features: [
       'Live TV channel and video playlist management',
       'Room, device, and guest profile management',
