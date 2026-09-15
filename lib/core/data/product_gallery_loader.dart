@@ -18,6 +18,21 @@ class ProductGalleryLoader {
     _imageCache = const {};
   }
 
+  static List<ProductImage> cachedImagesFor(String productId) {
+    return _imageCache[productId] ?? const [];
+  }
+
+  static List<ProductItem> attachCachedImages(List<ProductItem> products) {
+    return products
+        .map((product) {
+          if (product.activeImages.isNotEmpty) return product;
+          final cached = cachedImagesFor(product.id);
+          if (cached.isEmpty) return product;
+          return product.copyWith(images: cached);
+        })
+        .toList(growable: false);
+  }
+
   Future<List<ProductItem>> attachImages(List<ProductItem> products) async {
     final imagesByProductId = await _loadImagesPreservingCache();
     return products
@@ -45,8 +60,8 @@ class ProductGalleryLoader {
   Future<Map<String, List<ProductImage>>> _loadImagesPreservingCache() async {
     final loaded = await repository.loadImagesByProductId();
     if (_hasAnyImages(loaded)) {
-      _imageCache = loaded;
-      return loaded;
+      _imageCache = _mergeImages(_imageCache, loaded);
+      return _imageCache;
     }
     return _imageCache;
   }
@@ -55,6 +70,17 @@ class ProductGalleryLoader {
     return imagesByProductId.values.any(
       (images) => images.any((image) => image.isActive),
     );
+  }
+
+  Map<String, List<ProductImage>> _mergeImages(
+    Map<String, List<ProductImage>> current,
+    Map<String, List<ProductImage>> loaded,
+  ) {
+    return <String, List<ProductImage>>{
+      ...current,
+      for (final entry in loaded.entries)
+        if (entry.value.any((image) => image.isActive)) entry.key: entry.value,
+    };
   }
 
   List<ProductImage> _catalogImagesFor(List<ProductImage> images) {
