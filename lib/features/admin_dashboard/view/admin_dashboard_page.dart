@@ -38,14 +38,18 @@ class _AdminDashboardView extends StatelessWidget {
         }
 
         final pendingTopUps = snapshot.pendingTopUps.length;
-        final activeSubs = snapshot.subscriptionMetrics
-            .where((m) => m.label == 'Active Subscriptions')
-            .map((m) => m.value)
-            .firstOrNull ?? '-';
-        final totalDevices = snapshot.subscriptionMetrics
-            .where((m) => m.label == 'Total Devices Monitored')
-            .map((m) => m.value)
-            .firstOrNull ?? '-';
+        final activeSubs =
+            snapshot.subscriptionMetrics
+                .where((m) => m.label == 'Active Subscriptions')
+                .map((m) => m.value)
+                .firstOrNull ??
+            '-';
+        final totalDevices =
+            snapshot.subscriptionMetrics
+                .where((m) => m.label == 'Total Devices Monitored')
+                .map((m) => m.value)
+                .firstOrNull ??
+            '-';
         final totalCustomers = snapshot.customerWallets.length;
 
         return SingleChildScrollView(
@@ -64,10 +68,8 @@ class _AdminDashboardView extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   'Pantau billing, subscription, dan tenant Signage dari satu dashboard.',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: CostikStudioTheme.slate,
-                    height: 1.5,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(color: CostikStudioTheme.slate, height: 1.5),
                 ),
                 const SizedBox(height: 28),
                 LayoutBuilder(
@@ -109,8 +111,7 @@ class _AdminDashboardView extends StatelessWidget {
                       children: [
                         for (var i = 0; i < metrics.length; i++) ...[
                           Expanded(child: metrics[i]),
-                          if (i < metrics.length - 1)
-                            const SizedBox(width: 12),
+                          if (i < metrics.length - 1) const SizedBox(width: 12),
                         ],
                       ],
                     );
@@ -120,8 +121,7 @@ class _AdminDashboardView extends StatelessWidget {
                 _ModuleCard(
                   icon: Icons.receipt_long_rounded,
                   title: 'Billing & Subscription',
-                  description:
-                      'Setujui top up manual, pantau wallet customer, dan kelola subscription IPTV.',
+                  description: 'Setujui top up manual, pantau wallet customer, dan kelola subscription IPTV.',
                   ctaLabel: 'Buka Billing',
                   onTap: () => context.go(AppRoutes.adminBilling),
                 ),
@@ -129,10 +129,17 @@ class _AdminDashboardView extends StatelessWidget {
                 _ModuleCard(
                   icon: Icons.tv_rounded,
                   title: 'Signage Tenants',
-                  description:
-                      'Daftar tenant/hotel Signage customer beserta status device dan subscription.',
+                  description: 'Daftar tenant/hotel Signage customer beserta status device dan subscription.',
                   ctaLabel: 'Buka Signage',
                   onTap: () => context.go(AppRoutes.adminSignage),
+                ),
+                const SizedBox(height: 12),
+                _ModuleCard(
+                  icon: Icons.photo_library_rounded,
+                  title: 'Product Gallery',
+                  description: 'Upload screenshot aplikasi, pilih cover image, dan kelola gallery produk member.',
+                  ctaLabel: 'Kelola Gallery',
+                  onTap: () => context.go(AppRoutes.adminProductGallery),
                 ),
                 const SizedBox(height: 12),
                 _ModuleCard(
@@ -226,7 +233,9 @@ class _ModuleCard extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: CostikStudioTheme.primary.withValues(alpha: 0.10),
+              backgroundColor: CostikStudioTheme.primary.withValues(
+                alpha: 0.10,
+              ),
               foregroundColor: CostikStudioTheme.primary,
               child: Icon(icon),
             ),

@@ -6,6 +6,7 @@ void main() {
   test('product images schema supports admin-managed galleries', () {
     final sql = File('docs/db/product_images.sql').readAsStringSync();
 
+    expect(sql, contains("values ('product-images', 'product-images', true)"));
     expect(sql, contains('create table if not exists public.product_images'));
     expect(sql, contains('product_id text not null'));
     expect(sql, contains('image_url text not null'));

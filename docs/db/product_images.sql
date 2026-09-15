@@ -1,6 +1,10 @@
 -- Product gallery images for Costik Studio member product cards/details.
 -- Admin can manage images from web admin; members can read active images.
 
+insert into storage.buckets (id, name, public)
+values ('product-images', 'product-images', true)
+on conflict (id) do update set public = excluded.public;
+
 create table if not exists public.product_images (
   id uuid primary key default gen_random_uuid(),
   product_id text not null references public.products(id) on delete cascade,
@@ -67,3 +71,47 @@ create trigger product_images_set_updated_at
   before update on public.product_images
   for each row
   execute function public.set_product_images_updated_at();
+
+-- Storage policies for the public product image bucket.
+drop policy if exists "product images storage is readable" on storage.objects;
+create policy "product images storage is readable"
+  on storage.objects
+  for select
+  to authenticated
+  using (bucket_id = 'product-images');
+
+drop policy if exists "product images storage is admin insertable" on storage.objects;
+create policy "product images storage is admin insertable"
+  on storage.objects
+  for insert
+  to authenticated
+  with check (
+    bucket_id = 'product-images'
+    and exists (
+      select 1
+      from public.admin_profiles ap
+      where ap.user_id = auth.uid()
+    )
+  );
+
+drop policy if exists "product images storage is admin updatable" on storage.objects;
+create policy "product images storage is admin updatable"
+  on storage.objects
+  for update
+  to authenticated
+  using (
+    bucket_id = 'product-images'
+    and exists (
+      select 1
+      from public.admin_profiles ap
+      where ap.user_id = auth.uid()
+    )
+  )
+  with check (
+    bucket_id = 'product-images'
+    and exists (
+      select 1
+      from public.admin_profiles ap
+      where ap.user_id = auth.uid()
+    )
+  );
