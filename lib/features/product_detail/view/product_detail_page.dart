@@ -1,26 +1,64 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
+import 'package:costikstudio/core/data/product_gallery_loader.dart';
 import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
+import 'package:costikstudio/features/shared/widgets/product_gallery_strip.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class ProductDetailPage extends StatefulWidget {
-  const ProductDetailPage({super.key, required this.product});
+  const ProductDetailPage({
+    super.key,
+    required this.product,
+    this.galleryLoader = const ProductGalleryLoader(),
+  });
 
   final ProductItem? product;
+  final ProductGalleryLoader galleryLoader;
 
   @override
   State<ProductDetailPage> createState() => _ProductDetailPageState();
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
+  late final Future<ProductItem?> _productFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final item = widget.product;
+    _productFuture = item == null
+        ? Future.value(null)
+        : widget.galleryLoader
+              .attachImages([item])
+              .then((list) => list.isEmpty ? item : list.first);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final item = widget.product;
-    if (item == null) {
+    return FutureBuilder<ProductItem?>(
+      future: _productFuture,
+      initialData: widget.product,
+      builder: (context, snapshot) {
+        final item = snapshot.data ?? widget.product;
+        return _DetailBody(item: item);
+      },
+    );
+  }
+}
+
+class _DetailBody extends StatelessWidget {
+  const _DetailBody({required this.item});
+
+  final ProductItem? item;
+
+  @override
+  Widget build(BuildContext context) {
+    final detail = this.item;
+    if (detail == null) {
       return ResponsiveSection(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,6 +78,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       );
     }
 
+    final item = detail;
     final accent = Color(item.accentHex);
     final isAuthenticated = context.select<AuthCubit, bool>(
       (cubit) => cubit.state.isAuthenticated,
@@ -107,6 +146,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     style: Theme.of(context).textTheme.titleMedium
                         ?.copyWith(color: CostikStudioTheme.slate, height: 1.6),
                   ),
+                  if (item.activeImages.isNotEmpty) ...[
+                    const SizedBox(height: 22),
+                    ProductGalleryStrip(images: item.activeImages),
+                  ],
                   const SizedBox(height: 22),
                   Wrap(
                     spacing: 12,

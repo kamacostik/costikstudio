@@ -10,7 +10,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({
+    super.key,
+    this.galleryLoader = const ProductGalleryLoader(),
+  });
+
+  final ProductGalleryLoader galleryLoader;
 
   static void scrollToProducts() => _HomePageState.scrollToProducts();
 
@@ -32,8 +37,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  late final Future<List<ProductItem>> _productsFuture =
-      const ProductGalleryLoader().attachImages(dummyProducts);
+  late final Future<List<ProductItem>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = widget.galleryLoader.attachImages(dummyProducts);
+  }
 
   List<ProductItem> _focusProducts(List<ProductItem> products) => products
       .where(
@@ -291,6 +301,7 @@ class _FocusProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = Color(product.accentHex);
+    final coverImage = product.coverImage;
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
@@ -300,6 +311,29 @@ class _FocusProductCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (coverImage != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 160,
+                    width: double.infinity,
+                    child: Image.network(
+                      coverImage.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        color: accent.withValues(alpha: 0.1),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          _iconFor(product.id),
+                          color: accent,
+                          size: 42,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+              ],
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(

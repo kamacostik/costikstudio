@@ -1,19 +1,36 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
+import 'package:costikstudio/core/data/product_gallery_loader.dart';
 import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class AppsPage extends StatelessWidget {
-  const AppsPage({super.key});
+class AppsPage extends StatefulWidget {
+  const AppsPage({
+    super.key,
+    this.galleryLoader = const ProductGalleryLoader(),
+  });
+
+  final ProductGalleryLoader galleryLoader;
+
+  @override
+  State<AppsPage> createState() => _AppsPageState();
+}
+
+class _AppsPageState extends State<AppsPage> {
+  late final Future<List<ProductItem>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = widget.galleryLoader.attachImages(
+      dummyProducts.where((product) => product.id == 'costik-iptv').toList(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final products = dummyProducts
-        .where((product) => product.id == 'costik-iptv')
-        .toList();
-
     return SingleChildScrollView(
       child: ResponsiveSection(
         child: Column(
@@ -67,21 +84,34 @@ class AppsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 28),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 760;
-                return Wrap(
-                  spacing: 18,
-                  runSpacing: 18,
-                  children: [
-                    for (final product in products)
-                      SizedBox(
-                        width: isWide
-                            ? (constraints.maxWidth - 18) / 2
-                            : double.infinity,
-                        child: _AppProductCard(item: product),
-                      ),
-                  ],
+            FutureBuilder<List<ProductItem>>(
+              future: _productsFuture,
+              initialData: dummyProducts
+                  .where((product) => product.id == 'costik-iptv')
+                  .toList(),
+              builder: (context, snapshot) {
+                final products =
+                    snapshot.data ??
+                    dummyProducts
+                        .where((product) => product.id == 'costik-iptv')
+                        .toList();
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth > 760;
+                    return Wrap(
+                      spacing: 18,
+                      runSpacing: 18,
+                      children: [
+                        for (final product in products)
+                          SizedBox(
+                            width: isWide
+                                ? (constraints.maxWidth - 18) / 2
+                                : double.infinity,
+                            child: _AppProductCard(item: product),
+                          ),
+                      ],
+                    );
+                  },
                 );
               },
             ),
@@ -100,6 +130,7 @@ class _AppProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = Color(item.accentHex);
+    final coverImage = item.coverImage;
 
     return Card(
       child: InkWell(
@@ -110,6 +141,25 @@ class _AppProductCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (coverImage != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 170,
+                    width: double.infinity,
+                    child: Image.network(
+                      coverImage.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        color: accent.withValues(alpha: 0.1),
+                        alignment: Alignment.center,
+                        child: Icon(Icons.tv_rounded, color: accent, size: 42),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+              ],
               Row(
                 children: [
                   Container(

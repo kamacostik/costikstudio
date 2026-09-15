@@ -4,6 +4,7 @@ import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_pricing.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
+import 'package:costikstudio/core/data/product_gallery_loader.dart';
 import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/core/platform/external_url.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
@@ -16,6 +17,7 @@ import 'package:costikstudio/features/billing/widgets/subscriptions_card.dart';
 import 'package:costikstudio/features/billing/widgets/transactions_card.dart';
 import 'package:costikstudio/features/billing/widgets/wallet_card.dart';
 import 'package:costikstudio/features/shared/widgets/product_card.dart';
+import 'package:costikstudio/features/shared/widgets/product_gallery_strip.dart';
 import 'package:costikstudio/features/signage/view/signage_admin_page.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
 import 'package:costikstudio/features/subscription/view/signage_subscription_page.dart';
@@ -410,24 +412,9 @@ class _DashboardPage extends StatelessWidget {
       );
     }
 
-    return GridView.builder(
-      itemCount: dummyProducts.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 380,
-        mainAxisExtent: 350,
-        crossAxisSpacing: 18,
-        mainAxisSpacing: 18,
-      ),
-      itemBuilder: (context, index) {
-        final product = dummyProducts[index];
-        return ProductCard(
-          product: product,
-          compact: true,
-          onTap: () => onSelectProduct(product),
-        );
-      },
+    return _MemberProductGrid(
+      galleryLoader: const ProductGalleryLoader(),
+      onSelectProduct: onSelectProduct,
     );
   }
 
@@ -656,6 +643,59 @@ class _DashboardSummaryCard extends StatelessWidget {
   }
 }
 
+class _MemberProductGrid extends StatefulWidget {
+  const _MemberProductGrid({
+    required this.galleryLoader,
+    required this.onSelectProduct,
+  });
+
+  final ProductGalleryLoader galleryLoader;
+  final ValueChanged<ProductItem> onSelectProduct;
+
+  @override
+  State<_MemberProductGrid> createState() => _MemberProductGridState();
+}
+
+class _MemberProductGridState extends State<_MemberProductGrid> {
+  late final Future<List<ProductItem>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = widget.galleryLoader.attachImages(dummyProducts);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<ProductItem>>(
+      future: _productsFuture,
+      initialData: dummyProducts,
+      builder: (context, snapshot) {
+        final products = snapshot.data ?? dummyProducts;
+        return GridView.builder(
+          itemCount: products.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 380,
+            mainAxisExtent: 350,
+            crossAxisSpacing: 18,
+            mainAxisSpacing: 18,
+          ),
+          itemBuilder: (context, index) {
+            final product = products[index];
+            return ProductCard(
+              product: product,
+              compact: true,
+              onTap: () => widget.onSelectProduct(product),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
 class _EmbeddedProductDetail extends StatelessWidget {
   const _EmbeddedProductDetail({
     required this.product,
@@ -739,6 +779,10 @@ class _EmbeddedProductDetail extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
+              if (product.activeImages.isNotEmpty) ...[
+                ProductGalleryStrip(images: product.activeImages),
+                const SizedBox(height: 24),
+              ],
               Text(
                 product.name,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
