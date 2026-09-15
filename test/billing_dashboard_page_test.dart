@@ -48,11 +48,27 @@ void main() {
     expect(find.text('Pilih Aplikasi'), findsOneWidget);
     expect(find.text('Costik IPTV'), findsOneWidget);
 
+    expect(find.widgetWithText(FilledButton, 'Kirim Request'), findsOneWidget);
+
     await tester.tap(find.byKey(const Key('feature_request_product_dropdown')));
     await tester.pumpAndSettle();
     expect(find.text('Digital Signage'), findsOneWidget);
-    await tester.tap(find.text('Digital Signage').last);
+    expect(find.text('CosHRIS'), findsOneWidget);
+    expect(find.text('Smart INV'), findsOneWidget);
+    await tester.tap(find.text('Smart INV').last);
     await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('feature_request_title_field')),
+      'Tambah export laporan',
+    );
+    await tester.enterText(
+      find.byKey(const Key('feature_request_detail_field')),
+      'Butuh export data ke Excel dari dashboard aplikasi.',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Kirim Request'));
+    await tester.pumpAndSettle();
+    expect(find.text('Request fitur berhasil disiapkan.'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('dashboard_nav_subscriptions')));
     await tester.pumpAndSettle();

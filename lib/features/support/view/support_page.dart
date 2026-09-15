@@ -1,3 +1,4 @@
+import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
 
@@ -83,7 +84,23 @@ class _FeatureRequestContent extends StatefulWidget {
 }
 
 class _FeatureRequestContentState extends State<_FeatureRequestContent> {
-  String _selectedProduct = 'Costik IPTV';
+  String _selectedProduct = dummyProducts.first.name;
+  final _titleController = TextEditingController();
+  final _detailController = TextEditingController();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _detailController.dispose();
+    super.dispose();
+  }
+
+  void _submitRequest() {
+    FocusScope.of(context).unfocus();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Request fitur berhasil disiapkan.')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,15 +129,12 @@ class _FeatureRequestContentState extends State<_FeatureRequestContent> {
                 labelText: 'Pilih Aplikasi',
                 border: OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(
-                  value: 'Costik IPTV',
-                  child: Text('Costik IPTV'),
-                ),
-                DropdownMenuItem(
-                  value: 'Digital Signage',
-                  child: Text('Digital Signage'),
-                ),
+              items: [
+                for (final product in dummyProducts)
+                  DropdownMenuItem(
+                    value: product.name,
+                    child: Text(product.name),
+                  ),
               ],
               onChanged: (value) {
                 if (value == null) return;
@@ -128,17 +142,21 @@ class _FeatureRequestContentState extends State<_FeatureRequestContent> {
               },
             ),
             const SizedBox(height: 16),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              key: const Key('feature_request_title_field'),
+              controller: _titleController,
+              decoration: const InputDecoration(
                 labelText: 'Judul Fitur',
                 hintText: 'Contoh: Jadwal reboot perangkat otomatis',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
-            const TextField(
+            TextField(
+              key: const Key('feature_request_detail_field'),
+              controller: _detailController,
               maxLines: 5,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Detail Request',
                 hintText: 'Jelaskan kebutuhan, alur kerja, dan manfaat fitur.',
                 alignLabelWithHint: true,
@@ -147,7 +165,7 @@ class _FeatureRequestContentState extends State<_FeatureRequestContent> {
             ),
             const SizedBox(height: 20),
             FilledButton.icon(
-              onPressed: null,
+              onPressed: _submitRequest,
               icon: const Icon(Icons.send_rounded),
               label: const Text('Kirim Request'),
             ),
