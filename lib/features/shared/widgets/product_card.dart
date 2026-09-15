@@ -18,6 +18,8 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = Color(product.accentHex);
+    final coverImage = product.coverImage;
+    final imageCount = product.activeImages.length;
 
     return Card(
       child: InkWell(
@@ -28,6 +30,64 @@ class ProductCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (coverImage != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Stack(
+                    children: [
+                      SizedBox(
+                        height: compact ? 118 : 180,
+                        width: double.infinity,
+                        child: Image.network(
+                          coverImage.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => _ProductImageFallback(
+                            accent: accent,
+                            category: product.category,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 10,
+                        bottom: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '$imageCount ${imageCount == 1 ? 'image' : 'images'}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (coverImage.title != null &&
+                    coverImage.title!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    coverImage.title!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: accent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+              ],
               Row(
                 children: [
                   Container(
@@ -124,6 +184,29 @@ class ProductCard extends StatelessWidget {
       ProductCategory.productivity => Icons.groups_rounded,
       ProductCategory.freeApp => Icons.download_for_offline_rounded,
     };
+  }
+}
+
+class _ProductImageFallback extends StatelessWidget {
+  const _ProductImageFallback({required this.accent, required this.category});
+
+  final Color accent;
+  final ProductCategory category;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = switch (category) {
+      ProductCategory.business => Icons.point_of_sale_rounded,
+      ProductCategory.hospitality => Icons.tv_rounded,
+      ProductCategory.productivity => Icons.groups_rounded,
+      ProductCategory.freeApp => Icons.download_for_offline_rounded,
+    };
+
+    return Container(
+      color: accent.withValues(alpha: 0.1),
+      alignment: Alignment.center,
+      child: Icon(icon, color: accent, size: 42),
+    );
   }
 }
 
