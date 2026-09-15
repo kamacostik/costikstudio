@@ -20,8 +20,8 @@ void main() {
 
     expect(compressed.length, lessThan(originalBytes.length));
     final decoded = img.decodeImage(compressed)!;
-    expect(decoded.width <= 1600, isTrue);
-    expect(decoded.height <= 1600, isTrue);
+    expect(decoded.width <= 1920, isTrue);
+    expect(decoded.height <= 1920, isTrue);
   });
 
   test('returns original bytes when input is not an image', () {

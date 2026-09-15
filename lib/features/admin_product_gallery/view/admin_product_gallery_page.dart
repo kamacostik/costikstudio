@@ -101,10 +101,10 @@ class _AdminProductGalleryPageState extends State<AdminProductGalleryPage> {
     }
   }
 
-  Future<void> _deleteImage(ProductImage image) async {
+  Future<void> _toggleImageActive(ProductImage image) async {
     setState(() => _loading = true);
     try {
-      await _repository.deleteImage(image.id);
+      await _repository.setImageActive(image.id, !image.isActive);
       await _loadImages();
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -222,7 +222,7 @@ class _AdminProductGalleryPageState extends State<AdminProductGalleryPage> {
                           child: _ProductGalleryImageCard(
                             image: image,
                             onSetCover: () => _setCover(image),
-                            onDelete: () => _deleteImage(image),
+                            onToggleActive: () => _toggleImageActive(image),
                           ),
                         ),
                     ],
@@ -379,7 +379,7 @@ abstract class ProductGalleryRepository {
 
   Future<void> setCover(String productId, String imageId);
 
-  Future<void> deleteImage(String imageId);
+  Future<void> setImageActive(String imageId, bool isActive);
 }
 
 class SupabaseProductGalleryRepository implements ProductGalleryRepository {
@@ -452,10 +452,10 @@ class SupabaseProductGalleryRepository implements ProductGalleryRepository {
   }
 
   @override
-  Future<void> deleteImage(String imageId) async {
+  Future<void> setImageActive(String imageId, bool isActive) async {
     await _supabase
         .from('product_images')
-        .update({'is_active': false, 'is_cover': false})
+        .update({'is_active': isActive, if (!isActive) 'is_cover': false})
         .eq('id', imageId);
   }
 
@@ -477,12 +477,12 @@ class _ProductGalleryImageCard extends StatelessWidget {
   const _ProductGalleryImageCard({
     required this.image,
     required this.onSetCover,
-    required this.onDelete,
+    required this.onToggleActive,
   });
 
   final ProductImage image;
   final VoidCallback onSetCover;
-  final VoidCallback onDelete;
+  final VoidCallback onToggleActive;
 
   @override
   Widget build(BuildContext context) {
@@ -578,16 +578,23 @@ class _ProductGalleryImageCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: image.isCover ? null : onSetCover,
+                        onPressed: image.isCover || !image.isActive
+                            ? null
+                            : onSetCover,
                         icon: const Icon(Icons.star_outline_rounded, size: 16),
                         label: const Text('Set as cover'),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    IconButton.filledTonal(
-                      tooltip: 'Hide',
-                      onPressed: onDelete,
-                      icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                    FilledButton.tonalIcon(
+                      onPressed: onToggleActive,
+                      icon: Icon(
+                        image.isActive
+                            ? Icons.visibility_off_rounded
+                            : Icons.visibility_rounded,
+                        size: 16,
+                      ),
+                      label: Text(image.isActive ? 'Nonaktifkan' : 'Aktifkan'),
                     ),
                   ],
                 ),

@@ -14,12 +14,15 @@ void main() {
         home: AdminProductGalleryPage(repository: _FakeGalleryRepository()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Product Gallery'), findsOneWidget);
     expect(find.text('Pilih Produk'), findsOneWidget);
     expect(find.text('Upload Image'), findsOneWidget);
     expect(find.text('Set as cover'), findsWidgets);
+    expect(find.text('Nonaktifkan'), findsOneWidget);
+    expect(find.text('Aktifkan'), findsOneWidget);
   });
 }
 
@@ -33,6 +36,13 @@ class _FakeGalleryRepository implements ProductGalleryRepository {
         imageUrl: 'https://example.com/cover.png',
         title: 'Cover preview',
         isCover: true,
+      ),
+      ProductImage(
+        id: 'image-2',
+        productId: productId,
+        imageUrl: 'https://example.com/hidden.png',
+        title: 'Hidden preview',
+        isActive: false,
       ),
     ];
   }
@@ -49,5 +59,5 @@ class _FakeGalleryRepository implements ProductGalleryRepository {
   Future<void> setCover(String productId, String imageId) async {}
 
   @override
-  Future<void> deleteImage(String imageId) async {}
+  Future<void> setImageActive(String imageId, bool isActive) async {}
 }

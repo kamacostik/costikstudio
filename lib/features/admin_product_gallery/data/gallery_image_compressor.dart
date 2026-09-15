@@ -3,10 +3,10 @@ import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 
 /// Max dimension (longest side) for gallery uploads, in pixels.
-const galleryImageMaxDimension = 1600;
+const galleryImageMaxDimension = 1920;
 
 /// JPEG quality for compressed gallery uploads.
-const galleryImageJpegQuality = 80;
+const galleryImageJpegQuality = 85;
 
 /// Compresses raw image bytes for gallery upload: downscales large images
 /// so the longest side is at most [galleryImageMaxDimension] and re-encodes
