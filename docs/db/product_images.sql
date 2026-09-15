@@ -5,6 +5,36 @@ insert into storage.buckets (id, name, public)
 values ('product-images', 'product-images', true)
 on conflict (id) do update set public = excluded.public;
 
+-- Gallery product ids must match the public app catalog ids exactly.
+-- Safe to run repeatedly; this prevents FK upload failures when adding images
+-- from the web admin before the billing/subscription seed has created products.
+insert into public.products (
+  id,
+  name,
+  tagline,
+  price_per_device,
+  metadata
+) values
+  (
+    'costik-iptv',
+    'Costik IPTV',
+    'Hotel IPTV, live TV, and guest information system.',
+    20000,
+    jsonb_build_object('gallery_upload_enabled', true)
+  ),
+  (
+    'digital-signage',
+    'Digital Signage',
+    'Event schedule board and fullscreen video signage for hotels.',
+    20000,
+    jsonb_build_object('gallery_upload_enabled', true, 'billing_product_id', 'costik-signage')
+  )
+on conflict (id) do update set
+  name = excluded.name,
+  tagline = excluded.tagline,
+  price_per_device = excluded.price_per_device,
+  metadata = coalesce(public.products.metadata, '{}'::jsonb) || excluded.metadata;
+
 create table if not exists public.product_images (
   id uuid primary key default gen_random_uuid(),
   product_id text not null references public.products(id) on delete cascade,
