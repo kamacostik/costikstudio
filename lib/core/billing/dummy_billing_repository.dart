@@ -7,9 +7,9 @@ import 'package:costikstudio/core/billing/topup_order_result.dart';
 import 'package:costikstudio/core/billing/dummy_billing_data.dart';
 
 class DummyBillingRepository implements BillingRepository {
-  DummyBillingRepository()
+  DummyBillingRepository({List<Subscription>? seedSubscriptions})
     : _wallet = const Wallet(userId: 'demo-user', balance: 350000),
-      _subscriptions = List.of(dummySubscriptions),
+      _subscriptions = List.of(seedSubscriptions ?? dummySubscriptions),
       _transactions = [
         const WalletTransaction(
           userId: 'demo-user',
@@ -220,12 +220,13 @@ class DummyBillingRepository implements BillingRepository {
     _wallet = Wallet(userId: _wallet.userId, balance: transaction.balanceAfter);
     _transactions.insert(0, transaction);
     _invoices.insert(0, _invoiceFrom(transaction));
+    final renewalBase = subscription.expiresAt.isAfter(DateTime.now())
+        ? subscription.expiresAt
+        : DateTime.now();
     _subscriptions[index] = subscription.copyWith(
       status: SubscriptionStatus.active,
       billingCycleMonths: billingCycleMonths,
-      expiresAt: subscription.expiresAt.add(
-        Duration(days: 30 * billingCycleMonths),
-      ),
+      expiresAt: renewalBase.add(Duration(days: 30 * billingCycleMonths)),
     );
 
     return _snapshot(
@@ -308,6 +309,12 @@ class DummyBillingRepository implements BillingRepository {
         subscription.productId,
         'productId',
         'Only $productId subscription is supported.',
+      );
+    }
+
+    if (subscription.effectiveStatus() != SubscriptionStatus.active) {
+      return _snapshot(
+        message: 'Subscription expired. Renew dulu sebelum upgrade device.',
       );
     }
 
@@ -544,7 +551,12 @@ class DummyBillingRepository implements BillingRepository {
       wallet: _wallet,
       products: List.unmodifiable(dummyBillingProducts),
       plans: List.unmodifiable(dummyBillingPlans),
-      subscriptions: List.unmodifiable(_subscriptions),
+      subscriptions: List.unmodifiable(
+        _subscriptions.map(
+          (subscription) =>
+              subscription.copyWith(status: subscription.effectiveStatus()),
+        ),
+      ),
       transactions: List.unmodifiable(_transactions),
       invoices: List.unmodifiable(_invoices),
       paymentOrders: const [],

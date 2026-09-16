@@ -41,7 +41,7 @@ class SupabaseBillingRepository implements BillingRepository {
       wallet: wallet,
       products: results[1] as List<BillingProduct>,
       plans: _buildPlans(results[1] as List<BillingProduct>),
-      subscriptions: results[2] as List<Subscription>,
+      subscriptions: _withEffectiveStatuses(results[2] as List<Subscription>),
       transactions: transactions,
       invoices: results[4] as List<BillingInvoice>,
       paymentOrders: results[5] as List<PaymentOrder>,
@@ -509,6 +509,15 @@ class SupabaseBillingRepository implements BillingRepository {
     }
 
     return enriched;
+  }
+
+  List<Subscription> _withEffectiveStatuses(List<Subscription> subscriptions) {
+    return subscriptions
+        .map(
+          (subscription) =>
+              subscription.copyWith(status: subscription.effectiveStatus()),
+        )
+        .toList(growable: false);
   }
 
   WalletTransactionType _transactionType(String? value) {

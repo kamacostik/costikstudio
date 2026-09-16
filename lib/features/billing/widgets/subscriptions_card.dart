@@ -168,7 +168,9 @@ class _SubscriptionRow extends StatelessWidget {
   }
 
   bool get _isActive => subscription.status == SubscriptionStatus.active;
+  bool get _isExpired => subscription.status == SubscriptionStatus.expired;
   bool get _isCancelled => subscription.status == SubscriptionStatus.cancelled;
+  bool get _canRenew => _isActive || _isExpired;
 
   Future<void> _reactivate(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -244,7 +246,7 @@ class _SubscriptionRow extends StatelessWidget {
   }
 
   Future<void> _showRenewDialog(BuildContext context) async {
-    if (!_isActive) {
+    if (!_canRenew) {
       _showInactiveInfo(context, actionName: 'renew/extend');
       return;
     }
