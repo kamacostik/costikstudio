@@ -369,6 +369,11 @@ abstract class SignageAdminRepository {
     required String fileName,
     required String contentType,
   });
+  Future<String> uploadMediaImage({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+  });
   Future<List<SignageDevice>> fetchDevices();
   Future<SignageDeviceQuota> fetchDeviceQuota();
   Future<List<SignageMediaItem>> fetchMedia();
@@ -459,6 +464,37 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
     required String fileName,
     required String contentType,
   }) async {
+    return _uploadSignageImage(
+      bytes: bytes,
+      fileName: fileName,
+      contentType: contentType,
+      folder: 'hotel-logo',
+    );
+  }
+
+  @override
+  Future<String> uploadMediaImage({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+  }) async {
+    return _uploadSignageImage(
+      bytes: bytes,
+      fileName: fileName,
+      contentType: contentType,
+      folder: 'media-images',
+    );
+  }
+
+  Future<String> _uploadSignageImage({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+    required String folder,
+  }) async {
+    if (!contentType.startsWith('image/')) {
+      throw StateError('Upload media hanya menerima file gambar.');
+    }
     final tenantId = await currentTenantId();
     if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
     final safeName = fileName
@@ -472,7 +508,7 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
             _ => 'jpg',
           };
     final path =
-        '$tenantId/hotel-logo/${DateTime.now().millisecondsSinceEpoch}.$extension';
+        '$tenantId/$folder/${DateTime.now().millisecondsSinceEpoch}.$extension';
     await _supabase.storage
         .from('signage-media')
         .uploadBinary(

@@ -19,6 +19,21 @@ void main() {
     expect(find.byTooltip('Hapus media'), findsOneWidget);
   });
 
+  testWidgets('add media dialog is image-only and offers upload action', (
+    tester,
+  ) async {
+    final cubit = await _pumpMediaSection(tester);
+    addTearDown(cubit.close);
+
+    await tester.tap(find.text('Tambah Media'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Upload Gambar'), findsOneWidget);
+    expect(find.text('Image'), findsOneWidget);
+    expect(find.text('Video'), findsNothing);
+    expect(find.text('Other'), findsNothing);
+  });
+
   testWidgets('media section renders as usable cards on phone width', (
     tester,
   ) async {
@@ -88,6 +103,13 @@ class _FakeSignageAdminRepository extends SignageAdminRepository {
     required String fileName,
     required String contentType,
   }) async => 'https://example.com/$fileName';
+
+  @override
+  Future<String> uploadMediaImage({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+  }) async => 'https://example.com/media/$fileName';
 
   @override
   Future<List<SignageDevice>> fetchDevices() async => const [];
