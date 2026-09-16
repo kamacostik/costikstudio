@@ -453,9 +453,10 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                                   textCapitalization:
                                       TextCapitalization.characters,
                                   decoration: const InputDecoration(
-                                    labelText: 'Kode Voucher Launching',
-                                    hintText: 'WELCOME20 atau LAUNCH30',
-                                    helperText: 'Opsional. Voucher customer baru dihitung setelah diskon volume.',
+                                    labelText: 'Kode Voucher',
+                                    hintText:
+                                        'Masukkan kode voucher jika tersedia',
+                                    helperText: 'Opsional. Kode voucher khusus dihitung setelah diskon volume.',
                                     prefixIcon: Icon(
                                       Icons.confirmation_number_rounded,
                                     ),
@@ -742,9 +743,9 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(flex: 3, child: formSection),
+                          Expanded(flex: 4, child: formSection),
                           const SizedBox(width: 24),
-                          SizedBox(width: 360, child: summarySection),
+                          SizedBox(width: 420, child: summarySection),
                         ],
                       );
                     }
