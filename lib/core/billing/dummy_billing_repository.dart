@@ -1,6 +1,7 @@
 import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_pricing.dart';
+import 'package:costikstudio/core/billing/device_pricing.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/core/billing/topup_order_result.dart';
 import 'package:costikstudio/core/billing/dummy_billing_data.dart';
@@ -77,17 +78,35 @@ class DummyBillingRepository implements BillingRepository {
     required int billingCycleMonths,
     bool autoRenew = false,
     bool includeVideoAddon = false,
+    String? voucherCode,
   }) async {
+    final normalizedVoucher = voucherCode?.trim().toUpperCase();
+    final voucherPercent = switch (normalizedVoucher) {
+      'WELCOME20' => 20,
+      'LAUNCH30' => 30,
+      _ => 0,
+    };
+    final breakdown = calculateIptvDevicePrice(
+      deviceCount: deviceCount,
+      billingCycleMonths: billingCycleMonths,
+      voucherDiscountPercent: voucherPercent,
+    );
     final amount =
-        deviceCount * iptvPricePerDevice * billingCycleMonths +
-        (includeVideoAddon ? iptvVideoAddonPrice : 0);
+        breakdown.finalTotal + (includeVideoAddon ? iptvVideoAddonPrice : 0);
     final plan = BillingPlan(
       id: 'costik-iptv:custom',
       productId: 'costik-iptv',
-      name: '$deviceCount Device / $billingCycleMonths Bulan',
+      name: normalizedVoucher == null || voucherPercent == 0
+          ? '$deviceCount Device / $billingCycleMonths Bulan'
+          : '$deviceCount Device / $billingCycleMonths Bulan ($normalizedVoucher)',
       price: amount,
       durationDays: 30 * billingCycleMonths,
-      features: const ['Custom IPTV device licence'],
+      features: [
+        'Custom IPTV device licence',
+        if (breakdown.volumeDiscountPercent > 0)
+          'Diskon volume ${breakdown.volumeDiscountPercent}%',
+        if (voucherPercent > 0) 'Voucher $normalizedVoucher $voucherPercent%',
+      ],
     );
     final snapshot = await _checkout(plan: plan, autoRenew: autoRenew);
     if (includeVideoAddon) {

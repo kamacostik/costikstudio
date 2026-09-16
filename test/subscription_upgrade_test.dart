@@ -19,12 +19,12 @@ void main() {
 
     expect(afterSubscription.deviceCount, beforeSubscription.deviceCount + 2);
     expect(afterSubscription.expiresAt, beforeSubscription.expiresAt);
-    expect(snapshot.wallet.balance, before.wallet.balance - 34667);
+    expect(snapshot.wallet.balance, before.wallet.balance - 86667);
     expect(
       snapshot.transactions.first.referenceId,
       'upgrade-device:${beforeSubscription.id}:2:26-days',
     );
-    expect(snapshot.invoices.first.amount, 34667);
+    expect(snapshot.invoices.first.amount, 86667);
     expect(snapshot.message, 'Costik IPTV ditambah 2 device prorata 26 hari.');
   });
 }

@@ -35,5 +35,22 @@ void main() {
       expect(cubit.state.snapshot?.wallet.balance, 275000);
       expect(cubit.state.snapshot?.message, 'Costik HRIS Starter aktif');
     });
+
+    test('passes IPTV voucher code to subscription checkout', () async {
+      final repository = DummyBillingRepository();
+      final cubit = BillingCubit(repository: repository);
+      await cubit.load();
+      await cubit.topUp(amount: 2000000);
+
+      await cubit.checkoutIptvSubscription(
+        deviceCount: 100,
+        billingCycleMonths: 1,
+        voucherCode: 'WELCOME20',
+      );
+
+      expect(cubit.state.status, BillingStatus.success);
+      expect(cubit.state.snapshot?.wallet.balance, 750000);
+      expect(cubit.state.snapshot?.message, contains('WELCOME20'));
+    });
   });
 }
