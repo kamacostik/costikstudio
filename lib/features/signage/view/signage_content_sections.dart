@@ -2,6 +2,8 @@ import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/features/signage/cubit/signage_admin_cubit.dart';
 import 'package:costikstudio/features/signage/data/signage_admin_repository.dart';
 import 'package:costikstudio/features/signage/view/widgets/signage_table_widgets.dart';
+import 'dart:ui' as ui;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -157,6 +159,7 @@ class SignageMediaSection extends StatelessWidget {
     BuildContext context, [
     SignageMediaItem? existing,
   ]) async {
+    final cubit = context.read<SignageAdminCubit>();
     final nameController = TextEditingController(
       text: existing?.fileName ?? '',
     );
@@ -164,6 +167,7 @@ class SignageMediaSection extends StatelessWidget {
       text: existing?.publicUrl ?? existing?.storagePath ?? '',
     );
     const mediaType = 'image';
+    bool isUploading = false;
     final item = await showDialog<SignageMediaItem>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -203,31 +207,62 @@ class SignageMediaSection extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () async {
+                        onPressed: isUploading ? null : () async {
                           final file = await FilePicker.pickFile(
                             type: FileType.image,
                           );
                           if (file == null || !context.mounted) return;
                           final bytes = await file.readAsBytes();
                           if (bytes.isEmpty || !dialogContext.mounted) return;
-                          final url = await dialogContext
-                              .read<SignageAdminCubit>()
-                              .uploadMediaImage(
-                                bytes: bytes,
-                                fileName: file.name,
-                                contentType: _contentTypeFor(file.name),
+
+                          // Validasi format gambar menggunakan image codec
+                          try {
+                            final codec = await ui.instantiateImageCodec(bytes);
+                            final frame = await codec.getNextFrame();
+                            frame.image.dispose();
+                            codec.dispose();
+                          } catch (_) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Format gambar tidak valid. Gunakan PNG, JPG, atau WebP.'),
+                                  backgroundColor: Colors.red,
+                                ),
                               );
-                          if (url == null || url.isEmpty) return;
-                          setState(() {
-                            nameController.text =
-                                nameController.text.trim().isEmpty
-                                ? file.name
-                                : nameController.text;
-                            pathController.text = url;
-                          });
+                            }
+                            return;
+                          }
+
+                          setState(() => isUploading = true);
+                          try {
+                            final url = await cubit
+                                .uploadMediaImage(
+                                  bytes: bytes,
+                                  fileName: file.name,
+                                  contentType: _contentTypeFor(file.name),
+                                );
+                            if (url == null || url.isEmpty) return;
+                            setState(() {
+                              nameController.text =
+                                  nameController.text.trim().isEmpty
+                                  ? file.name
+                                  : nameController.text;
+                              pathController.text = url;
+                            });
+                          } finally {
+                            if (context.mounted) {
+                              setState(() => isUploading = false);
+                            }
+                          }
                         },
-                        icon: const Icon(Icons.upload_file_rounded),
-                        label: const Text('Upload Gambar'),
+                        icon: isUploading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.upload_file_rounded),
+                        label: Text(isUploading ? 'Mengupload...' : 'Upload Gambar'),
                       ),
                     ),
                     const SizedBox(width: 12),
