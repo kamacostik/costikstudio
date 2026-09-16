@@ -109,7 +109,10 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                _DeviceSettingsAction(device: device),
+                                _DeviceSettingsAction(
+                                  device: device,
+                                  mediaItems: state.mediaItems,
+                                ),
                                 _DeviceDeleteAction(device: device),
                               ],
                             ),
@@ -291,9 +294,10 @@ class _DeviceQuotaBadge extends StatelessWidget {
 }
 
 class _DeviceSettingsAction extends StatelessWidget {
-  const _DeviceSettingsAction({required this.device});
+  const _DeviceSettingsAction({required this.device, required this.mediaItems});
 
   final SignageDevice device;
+  final List<SignageMediaItem> mediaItems;
 
   @override
   Widget build(BuildContext context) {
@@ -307,6 +311,15 @@ class _DeviceSettingsAction extends StatelessWidget {
   Future<void> _showSettingsDialog(BuildContext context) async {
     var slideDuration = device.eventSlideDurationSeconds.clamp(3, 60);
     var appMode = device.appMode;
+    var eventBackgroundUrl = device.eventBackgroundUrl;
+    final backgroundItems = mediaItems
+        .where(
+          (item) =>
+              item.publicUrl != null &&
+              item.publicUrl!.trim().isNotEmpty &&
+              item.mediaType == 'image',
+        )
+        .toList();
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -348,6 +361,28 @@ class _DeviceSettingsAction extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 18),
+                DropdownButtonFormField<String?>(
+                  initialValue: eventBackgroundUrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Background jika tidak ada event hari ini',
+                    prefixIcon: Icon(Icons.image_rounded),
+                    helperText: 'Opsional. Pilih gambar dari Media Web Admin untuk device ini.',
+                  ),
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('Tidak pakai background'),
+                    ),
+                    for (final item in backgroundItems)
+                      DropdownMenuItem<String?>(
+                        value: item.publicUrl,
+                        child: Text(item.fileName),
+                      ),
+                  ],
+                  onChanged: (value) =>
+                      setState(() => eventBackgroundUrl = value),
+                ),
+                const SizedBox(height: 18),
                 Text('Durasi slide Daily Event: $slideDuration detik'),
                 Slider(
                   value: slideDuration.toDouble(),
@@ -385,6 +420,12 @@ class _DeviceSettingsAction extends StatelessWidget {
     final cubit = context.read<SignageAdminCubit>();
     if (appMode != device.appMode) {
       await cubit.updateDeviceAppMode(device.id, appMode: appMode);
+    }
+    if (eventBackgroundUrl != device.eventBackgroundUrl) {
+      await cubit.updateDeviceEventBackground(
+        device.id,
+        eventBackgroundUrl: eventBackgroundUrl,
+      );
     }
     if (slideDuration != device.eventSlideDurationSeconds) {
       await cubit.updateDeviceSlideDuration(

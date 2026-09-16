@@ -62,6 +62,7 @@ create table if not exists public.sg_devices (
   promo_duration double precision not null default 7,
   table_column integer not null default 4,
   event_slide_duration_seconds integer not null default 7,
+  event_background_url text,
   app_mode text not null default 'daily_event'
     check (app_mode in ('daily_event', 'video_player')),
   is_active boolean not null default true,
@@ -132,6 +133,9 @@ create table if not exists public.sg_event_lists (
 -- Compatibility adjustment if an older draft created sg_event_lists.is_enabled.
 alter table public.sg_event_lists
 add column if not exists is_active boolean not null default true;
+
+alter table public.sg_devices
+add column if not exists event_background_url text;
 
 -- Indexes
 create index if not exists sg_profiles_tenant_id_idx on public.sg_profiles (tenant_id);

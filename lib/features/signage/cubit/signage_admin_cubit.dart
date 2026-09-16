@@ -376,6 +376,29 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     }
   }
 
+  Future<void> updateDeviceEventBackground(
+    String deviceId, {
+    String? eventBackgroundUrl,
+  }) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.updateDeviceEventBackground(
+        deviceId,
+        eventBackgroundUrl: eventBackgroundUrl,
+      );
+      final devices = await _repository.fetchDevices();
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          successMessage: 'Background Daily Event device berhasil disimpan.',
+        ),
+      );
+    } catch (e) {
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
   Future<void> deleteDevice(String deviceId) async {
     _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {

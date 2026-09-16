@@ -189,5 +189,11 @@ class _FakeSignageAdminRepository extends SignageAdminRepository {
   }) async {}
 
   @override
+  Future<void> updateDeviceEventBackground(
+    String deviceId, {
+    String? eventBackgroundUrl,
+  }) async {}
+
+  @override
   Future<void> deleteDevice(String deviceId) async {}
 }
