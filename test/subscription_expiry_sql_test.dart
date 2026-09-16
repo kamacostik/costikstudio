@@ -21,4 +21,12 @@ void main() {
       expect(sql, contains('expires_at <= now()'));
     },
   );
+
+  test('Signage upgrade RPC blocks expired subscriptions server-side', () {
+    final sql = File('docs/db/signage_subscription_lifecycle_rpc.sql')
+        .readAsStringSync();
+
+    expect(sql, contains("and expires_at > now()"));
+    expect(sql, contains('Only active Signage subscriptions can be upgraded'));
+  });
 }

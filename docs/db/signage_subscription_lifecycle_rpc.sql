@@ -202,6 +202,7 @@ begin
     where id = target_subscription_id
       and user_id = v_user_id
       and status = 'active'
+      and expires_at > now()
   ) then
     raise exception 'Only active Signage subscriptions can be upgraded';
   end if;
