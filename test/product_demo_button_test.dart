@@ -23,7 +23,43 @@ void main() {
   });
 
   testWidgets(
-    'IPTV detail shows demo beside subscription and web admin actions',
+    'IPTV detail hides demo download and web admin actions before login',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final product = findProductById('costik-iptv')!;
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<AuthCubit>(create: (_) => AuthCubit()),
+            BlocProvider<ProductCatalogCubit>(
+              create: (_) => ProductCatalogCubit(),
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(body: ProductDetailPage(product: product)),
+          ),
+        ),
+      );
+
+      expect(
+        find.widgetWithText(FilledButton, 'Login untuk berlangganan'),
+        findsOneWidget,
+      );
+      expect(find.widgetWithText(OutlinedButton, 'Demo'), findsNothing);
+      expect(find.widgetWithText(OutlinedButton, 'Download APK'), findsNothing);
+      expect(
+        find.widgetWithText(OutlinedButton, 'Open web admin'),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
+    'IPTV detail shows demo download and web admin actions after login',
     (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -52,6 +88,10 @@ void main() {
         findsOneWidget,
       );
       expect(find.widgetWithText(OutlinedButton, 'Demo'), findsOneWidget);
+      expect(
+        find.widgetWithText(OutlinedButton, 'Download APK'),
+        findsOneWidget,
+      );
       expect(
         find.widgetWithText(OutlinedButton, 'Lihat Dokumentasi'),
         findsOneWidget,

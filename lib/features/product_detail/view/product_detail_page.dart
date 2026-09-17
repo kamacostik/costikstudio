@@ -155,6 +155,12 @@ class _DetailBody extends StatelessWidget {
                             icon: const Icon(Icons.play_circle_outline_rounded),
                             label: const Text('Demo'),
                           ),
+                        if (item.hasDownload)
+                          OutlinedButton.icon(
+                            onPressed: () => openExternalUrl(item.downloadUrl!),
+                            icon: const Icon(Icons.download_rounded),
+                            label: const Text('Download APK'),
+                          ),
                         OutlinedButton.icon(
                           onPressed: () =>
                               _showMemberDocumentation(context, item),
