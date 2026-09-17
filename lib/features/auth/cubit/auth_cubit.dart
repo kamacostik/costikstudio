@@ -212,6 +212,45 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<bool> setAdminIptvPassword(String password) async {
+    final cleanPassword = password.trim();
+    if (cleanPassword.length < 8) {
+      emit(
+        state.copyWith(errorMessage: 'Password Admin IPTV minimal 8 karakter.'),
+      );
+      return false;
+    }
+
+    if (!SupabaseConfig.isConfigured) {
+      emit(
+        state.copyWith(
+          errorMessage: 'Set password Admin IPTV membutuhkan Supabase Auth.',
+        ),
+      );
+      return false;
+    }
+
+    emit(state.copyWith(isLoading: true));
+    try {
+      await _supabase.auth.updateUser(
+        sb.UserAttributes(password: cleanPassword),
+      );
+      emit(state.copyWith(isLoading: false));
+      return true;
+    } on sb.AuthException catch (error) {
+      emit(state.copyWith(isLoading: false, errorMessage: error.message));
+      return false;
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: 'Password Admin IPTV gagal disimpan.',
+        ),
+      );
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     if (SupabaseConfig.isConfigured) {
       await _supabase.auth.signOut();

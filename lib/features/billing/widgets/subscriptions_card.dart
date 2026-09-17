@@ -2,7 +2,9 @@ import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_pricing.dart';
+import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SubscriptionsCard extends StatelessWidget {
   const SubscriptionsCard({
@@ -298,6 +300,126 @@ class _SubscriptionRow extends StatelessWidget {
     await onRenew(subscriptionId: subscription.id, billingCycleMonths: months);
   }
 
+  Future<void> _showAdminIptvPasswordDialog(BuildContext context) async {
+    final authCubit = context.read<AuthCubit>();
+    final email = authCubit.state.userEmail ?? 'email akun Anda';
+    final passwordController = TextEditingController();
+    final confirmController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    var obscurePassword = true;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Create Admin IPTV Password'),
+          content: Form(
+            key: formKey,
+            child: SizedBox(
+              width: 420,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Password ini dipakai untuk login Admin IPTV dengan email $email. Password disimpan di Supabase Auth, bukan di database aplikasi.',
+                    style: const TextStyle(
+                      color: CostikStudioTheme.slate,
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: obscurePassword,
+                    decoration: InputDecoration(
+                      labelText: 'Password Admin IPTV',
+                      helperText: 'Minimal 8 karakter.',
+                      prefixIcon: const Icon(Icons.lock_outline_rounded),
+                      suffixIcon: IconButton(
+                        onPressed: () => setDialogState(
+                          () => obscurePassword = !obscurePassword,
+                        ),
+                        icon: Icon(
+                          obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                      ),
+                    ),
+                    validator: (value) {
+                      final password = value ?? '';
+                      if (password.length < 8) {
+                        return 'Password minimal 8 karakter';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: confirmController,
+                    obscureText: obscurePassword,
+                    decoration: const InputDecoration(
+                      labelText: 'Konfirmasi Password',
+                      prefixIcon: Icon(Icons.verified_user_outlined),
+                    ),
+                    validator: (value) {
+                      if (value != passwordController.text) {
+                        return 'Konfirmasi password tidak sama';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: const Text('Batal'),
+            ),
+            FilledButton.icon(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                final messenger = ScaffoldMessenger.of(context);
+                final success = await authCubit.setAdminIptvPassword(
+                  passwordController.text,
+                );
+                if (!context.mounted) return;
+                if (success) {
+                  Navigator.of(dialogCtx).pop();
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Password Admin IPTV berhasil dibuat. Login Admin IPTV bisa memakai email dan password ini.',
+                      ),
+                    ),
+                  );
+                } else {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      backgroundColor: Colors.red,
+                      content: Text(
+                        authCubit.state.errorMessage ??
+                            'Password Admin IPTV gagal disimpan.',
+                      ),
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.save_rounded, size: 16),
+              label: const Text('Simpan Password'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    passwordController.dispose();
+    confirmController.dispose();
+  }
+
   void _showInactiveInfo(BuildContext context, {required String actionName}) {
     showDialog<void>(
       context: context,
@@ -533,6 +655,21 @@ class _SubscriptionRow extends StatelessWidget {
                         child: const Text('Batalkan Langganan'),
                       ),
                     const Spacer(),
+                    if (_isActive &&
+                        subscription.productId == 'costik-iptv') ...[
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(dialogCtx).pop();
+                          _showAdminIptvPasswordDialog(context);
+                        },
+                        icon: const Icon(
+                          Icons.admin_panel_settings_rounded,
+                          size: 16,
+                        ),
+                        label: const Text('Create Admin Password'),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
                     TextButton(
                       onPressed: () => Navigator.of(dialogCtx).pop(),
                       child: const Text('Tutup'),
