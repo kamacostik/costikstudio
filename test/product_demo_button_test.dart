@@ -22,99 +22,36 @@ void main() {
     expect(find.widgetWithText(OutlinedButton, 'Demo'), findsNothing);
   });
 
-  testWidgets(
-    'IPTV detail hides demo download and web admin actions before login',
-    (tester) async {
-      tester.view.physicalSize = const Size(1200, 900);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
+  testWidgets('public IPTV product detail stays informational only', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
 
-      final product = findProductById('costik-iptv')!;
+    final product = findProductById('costik-iptv')!;
+    final authCubit = AuthCubit();
+    await authCubit.login('user@costik.com', '123456');
 
-      await tester.pumpWidget(
-        MultiBlocProvider(
-          providers: [
-            BlocProvider<AuthCubit>(create: (_) => AuthCubit()),
-            BlocProvider<ProductCatalogCubit>(
-              create: (_) => ProductCatalogCubit(),
-            ),
-          ],
-          child: MaterialApp(
-            home: Scaffold(body: ProductDetailPage(product: product)),
+    await tester.pumpWidget(
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthCubit>.value(value: authCubit),
+          BlocProvider<ProductCatalogCubit>(
+            create: (_) => ProductCatalogCubit(),
           ),
+        ],
+        child: MaterialApp(
+          home: Scaffold(body: ProductDetailPage(product: product)),
         ),
-      );
+      ),
+    );
 
-      expect(
-        find.widgetWithText(FilledButton, 'Login untuk berlangganan'),
-        findsOneWidget,
-      );
-      expect(find.widgetWithText(OutlinedButton, 'Demo'), findsNothing);
-      expect(find.widgetWithText(OutlinedButton, 'Download APK'), findsNothing);
-      expect(
-        find.widgetWithText(OutlinedButton, 'Open web admin'),
-        findsNothing,
-      );
-    },
-  );
+    expect(find.text('Costik IPTV'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Demo'), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'Download APK'), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'Open web admin'), findsNothing);
 
-  testWidgets(
-    'IPTV detail shows demo download and web admin actions after login',
-    (tester) async {
-      tester.view.physicalSize = const Size(1200, 900);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-
-      final product = findProductById('costik-iptv')!;
-      final authCubit = AuthCubit();
-      await authCubit.login('user@costik.com', '123456');
-
-      await tester.pumpWidget(
-        MultiBlocProvider(
-          providers: [
-            BlocProvider<AuthCubit>.value(value: authCubit),
-            BlocProvider<ProductCatalogCubit>(
-              create: (_) => ProductCatalogCubit(),
-            ),
-          ],
-          child: MaterialApp(
-            home: Scaffold(body: ProductDetailPage(product: product)),
-          ),
-        ),
-      );
-
-      expect(
-        find.widgetWithText(FilledButton, 'Berlangganan sekarang'),
-        findsOneWidget,
-      );
-      expect(find.widgetWithText(OutlinedButton, 'Demo'), findsOneWidget);
-      expect(
-        find.widgetWithText(OutlinedButton, 'Download APK'),
-        findsOneWidget,
-      );
-      expect(
-        find.widgetWithText(OutlinedButton, 'Lihat Dokumentasi'),
-        findsOneWidget,
-      );
-      expect(
-        find.widgetWithText(OutlinedButton, 'Open web admin'),
-        findsOneWidget,
-      );
-
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Demo'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Demo Admin IPTV'), findsOneWidget);
-      expect(find.text('demo1@costikstudio.com'), findsOneWidget);
-      expect(find.text('demo112233'), findsOneWidget);
-      expect(
-        find.text(
-          'Gunakan akun demo ini untuk mencoba dashboard Admin IPTV tanpa mengubah data hotel Anda.',
-        ),
-        findsOneWidget,
-      );
-
-      await authCubit.close();
-    },
-  );
+    await authCubit.close();
+  });
 }

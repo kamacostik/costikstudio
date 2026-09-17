@@ -107,11 +107,22 @@ void main() {
       );
       expect(find.text('Tampilan Aplikasi'), findsOneWidget);
       expect(find.text('Lihat Dokumentasi'), findsOneWidget);
+      expect(find.widgetWithText(OutlinedButton, 'Demo'), findsOneWidget);
       expect(
         find.widgetWithText(OutlinedButton, 'Download APK'),
         findsOneWidget,
       );
+      expect(
+        find.widgetWithText(OutlinedButton, 'Open web admin'),
+        findsOneWidget,
+      );
       expect(find.text('Cara mulai'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Demo'));
+      await tester.pumpAndSettle();
+      expect(find.text('Demo Admin IPTV'), findsOneWidget);
+      expect(find.text('demo1@costikstudio.com'), findsOneWidget);
+      expect(find.text('demo112233'), findsOneWidget);
     },
   );
 
