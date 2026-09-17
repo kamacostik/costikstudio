@@ -35,11 +35,16 @@ class CostikStudioApp extends StatelessWidget {
                 home: const _SessionRestoreSplash(),
               );
             }
+            final authCubit = context.read<AuthCubit>();
             return MaterialApp.router(
               title: title,
               debugShowCheckedModeBanner: false,
               theme: CostikStudioTheme.light,
-              routerConfig: createAppRouter(experience),
+              routerConfig: createAppRouter(
+                experience,
+                authCubit: authCubit,
+                authState: authState,
+              ),
             );
           },
         ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/core/supabase/supabase_config.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -191,8 +192,8 @@ class AuthCubit extends Cubit<AuthState> {
         sb.OAuthProvider.google,
         // On web Supabase falls back to the dashboard Site URL
         // (default http://localhost:3000) when redirectTo is omitted,
-        // so always send the running app origin back.
-        redirectTo: kIsWeb ? Uri.base.origin : null,
+        // so send users back to the member billing dashboard.
+        redirectTo: kIsWeb ? Uri.base.origin + AppRoutes.billing : null,
       );
       if (!launched) {
         emit(

@@ -18,15 +18,25 @@ import 'package:costikstudio/features/signage/view/signage_admin_page.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
 import 'package:costikstudio/features/subscription/view/signage_subscription_page.dart';
 import 'package:costikstudio/features/support/view/support_page.dart';
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-GoRouter createAppRouter(AppExperience experience) {
+GoRouter createAppRouter(
+  AppExperience experience, {
+  AuthCubit? authCubit,
+  AuthState authState = const AuthState(),
+}) {
   final isAdminApp = experience == AppExperience.admin;
 
   return GoRouter(
-    initialLocation: isAdminApp ? AppRoutes.adminDashboard : AppRoutes.home,
+    initialLocation: _initialLocationFor(experience, authState),
+    refreshListenable: authCubit == null
+        ? null
+        : _AuthRouterRefreshNotifier(authCubit.stream),
     routes: [
       ShellRoute(
         builder: (context, state, child) =>
@@ -245,6 +255,27 @@ GoRouter createAppRouter(AppExperience experience) {
       ),
     ],
   );
+}
+
+String _initialLocationFor(AppExperience experience, AuthState authState) {
+  if (experience == AppExperience.admin) {
+    return AppRoutes.adminDashboard;
+  }
+  return authState.isAuthenticated ? AppRoutes.billing : AppRoutes.home;
+}
+
+class _AuthRouterRefreshNotifier extends ChangeNotifier {
+  _AuthRouterRefreshNotifier(Stream<AuthState> stream) {
+    _subscription = stream.listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<AuthState> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }
 
 final appRouter = createAppRouter(AppExperience.user);
