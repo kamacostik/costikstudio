@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:costikstudio/app/costik_studio_app.dart';
 import 'package:costikstudio/features/shared/widgets/product_card.dart';
 import 'package:flutter/material.dart';
@@ -117,14 +119,54 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Cara mulai'), findsOneWidget);
-
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Demo'));
-      await tester.pumpAndSettle();
-      expect(find.text('Demo Admin IPTV'), findsOneWidget);
-      expect(find.text('demo1@costikstudio.com'), findsOneWidget);
-      expect(find.text('demo112233'), findsOneWidget);
     },
   );
+
+  test('IPTV download APK action is not gated by active subscription', () {
+    final source = Uri.file(
+      'lib/features/billing/view/billing_dashboard_page.dart',
+    ).toFilePath();
+    final content = File(source).readAsStringSync();
+
+    expect(
+      content,
+      contains("product.id == 'costik-iptv' && product.hasDownload"),
+    );
+    expect(
+      content,
+      isNot(
+        contains(
+          "product.id == 'costik-iptv' &&\n                      product.hasDownload &&\n                      isManagedActive",
+        ),
+      ),
+    );
+  });
+
+  testWidgets('active IPTV customers can open the demo credential dialog', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(const CostikStudioApp());
+    await tester.pumpAndSettle();
+
+    await loginAsCustomer(tester);
+
+    await tester.tap(find.byKey(const Key('header_nav_/billing')));
+    await tester.pumpAndSettle();
+    final iptvCard = find.widgetWithText(ProductCard, 'Costik IPTV');
+    await tester.ensureVisible(iptvCard);
+    await tester.tap(iptvCard);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Demo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Demo Admin IPTV'), findsOneWidget);
+    expect(find.text('demo1@costikstudio.com'), findsOneWidget);
+    expect(find.text('demo112233'), findsOneWidget);
+  });
 
   testWidgets('billing menu shows wallet and top up action', (tester) async {
     tester.view.physicalSize = const Size(1280, 900);

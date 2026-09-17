@@ -885,9 +885,7 @@ class _EmbeddedProductDetail extends StatelessWidget {
                     icon: const Icon(Icons.menu_book_rounded),
                     label: const Text('Lihat Dokumentasi'),
                   ),
-                  if (product.id == 'costik-iptv' &&
-                      product.hasDownload &&
-                      isManagedActive)
+                  if (product.id == 'costik-iptv' && product.hasDownload)
                     OutlinedButton.icon(
                       onPressed: () => openExternalUrl(product.downloadUrl!),
                       icon: const Icon(Icons.download_rounded),
