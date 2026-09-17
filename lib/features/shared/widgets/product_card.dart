@@ -166,56 +166,11 @@ class ProductCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (product.id == 'costik-iptv')
-                    OutlinedButton.icon(
-                      onPressed: () => _showIptvDemoDialog(context),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 32),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
-                        ),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      icon: const Icon(
-                        Icons.play_circle_outline_rounded,
-                        size: 16,
-                      ),
-                      label: const Text('Demo'),
-                    ),
                 ],
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showIptvDemoDialog(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: const Text('Demo Admin IPTV'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Gunakan akun demo berikut untuk mencoba login ke Admin IPTV:',
-              style: TextStyle(color: CostikStudioTheme.slate, height: 1.45),
-            ),
-            SizedBox(height: 16),
-            _DemoCredentialRow(label: 'User', value: 'demo1@costikstudio.com'),
-            _DemoCredentialRow(label: 'Password', value: 'demo112233'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: const Text('Tutup'),
-          ),
-        ],
       ),
     );
   }
@@ -227,44 +182,6 @@ class ProductCard extends StatelessWidget {
       ProductCategory.productivity => Icons.groups_rounded,
       ProductCategory.freeApp => Icons.download_for_offline_rounded,
     };
-  }
-}
-
-class _DemoCredentialRow extends StatelessWidget {
-  const _DemoCredentialRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 84,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: CostikStudioTheme.slate,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Expanded(
-            child: SelectableText(
-              value,
-              style: const TextStyle(
-                color: CostikStudioTheme.navy,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
