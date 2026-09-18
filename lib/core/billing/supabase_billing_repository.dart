@@ -118,6 +118,7 @@ class SupabaseBillingRepository implements BillingRepository {
     required int deviceCount,
     required int billingCycleMonths,
     bool autoRenew = false,
+    String? voucherCode,
   }) async {
     await _supabase.rpc<void>(
       'checkout_signage_subscription',
@@ -125,6 +126,7 @@ class SupabaseBillingRepository implements BillingRepository {
         'device_count': deviceCount,
         'billing_cycle_months': billingCycleMonths,
         'p_auto_renew': autoRenew,
+        'p_voucher_code': voucherCode,
       },
     );
 
