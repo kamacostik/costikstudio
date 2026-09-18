@@ -226,6 +226,7 @@ class SignagePlaylistItem extends Equatable {
     this.mediaId,
     this.path,
     this.isEnabled = true,
+    this.targetDeviceIds = const [],
   });
 
   final String? id;
@@ -233,6 +234,7 @@ class SignagePlaylistItem extends Equatable {
   final String? mediaId;
   final String? path;
   final bool isEnabled;
+  final List<String> targetDeviceIds;
 
   factory SignagePlaylistItem.fromMap(Map<String, dynamic> map) {
     return SignagePlaylistItem(
@@ -252,6 +254,7 @@ class SignagePlaylistItem extends Equatable {
       'media_id': mediaId,
       'path_playlist': path,
       'is_enabled': isEnabled,
+      'target_device_ids': targetDeviceIds.isEmpty ? null : targetDeviceIds,
     };
   }
 
@@ -295,6 +298,7 @@ class SignageEventItem extends Equatable {
     this.startDate,
     this.endDate,
     this.isActive = true,
+    this.targetDeviceIds = const [],
   });
 
   final String? id;
@@ -305,6 +309,7 @@ class SignageEventItem extends Equatable {
   final DateTime? startDate;
   final DateTime? endDate;
   final bool isActive;
+  final List<String> targetDeviceIds;
 
   factory SignageEventItem.fromMap(Map<String, dynamic> map) {
     return SignageEventItem(
@@ -316,6 +321,11 @@ class SignageEventItem extends Equatable {
       startDate: DateTime.tryParse(map['start_date'] as String? ?? ''),
       endDate: DateTime.tryParse(map['end_date'] as String? ?? ''),
       isActive: map['is_active'] as bool? ?? true,
+      targetDeviceIds:
+          (map['target_device_ids'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
   }
 
@@ -330,6 +340,7 @@ class SignageEventItem extends Equatable {
       'start_date': startDate?.toIso8601String(),
       'end_date': endDate?.toIso8601String(),
       'is_active': isActive,
+      'target_device_ids': targetDeviceIds.isEmpty ? null : targetDeviceIds,
     };
   }
 
@@ -343,6 +354,7 @@ class SignageEventItem extends Equatable {
     startDate,
     endDate,
     isActive,
+    targetDeviceIds,
   ];
 }
 

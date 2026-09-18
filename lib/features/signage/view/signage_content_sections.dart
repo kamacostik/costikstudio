@@ -2,6 +2,7 @@ import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/features/signage/cubit/signage_admin_cubit.dart';
 import 'package:costikstudio/features/signage/data/signage_admin_repository.dart';
 import 'package:costikstudio/features/signage/view/widgets/signage_table_widgets.dart';
+
 import 'dart:ui' as ui;
 
 import 'package:file_picker/file_picker.dart';
@@ -207,62 +208,72 @@ class SignageMediaSection extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: isUploading ? null : () async {
-                          final file = await FilePicker.pickFile(
-                            type: FileType.image,
-                          );
-                          if (file == null || !context.mounted) return;
-                          final bytes = await file.readAsBytes();
-                          if (bytes.isEmpty || !dialogContext.mounted) return;
-
-                          // Validasi format gambar menggunakan image codec
-                          try {
-                            final codec = await ui.instantiateImageCodec(bytes);
-                            final frame = await codec.getNextFrame();
-                            frame.image.dispose();
-                            codec.dispose();
-                          } catch (_) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Format gambar tidak valid. Gunakan PNG, JPG, atau WebP.'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                            return;
-                          }
-
-                          setState(() => isUploading = true);
-                          try {
-                            final url = await cubit
-                                .uploadMediaImage(
-                                  bytes: bytes,
-                                  fileName: file.name,
-                                  contentType: _contentTypeFor(file.name),
+                        onPressed: isUploading
+                            ? null
+                            : () async {
+                                final file = await FilePicker.pickFile(
+                                  type: FileType.image,
                                 );
-                            if (url == null || url.isEmpty) return;
-                            setState(() {
-                              nameController.text =
-                                  nameController.text.trim().isEmpty
-                                  ? file.name
-                                  : nameController.text;
-                              pathController.text = url;
-                            });
-                          } finally {
-                            if (context.mounted) {
-                              setState(() => isUploading = false);
-                            }
-                          }
-                        },
+                                if (file == null || !context.mounted) return;
+                                final bytes = await file.readAsBytes();
+                                if (bytes.isEmpty || !dialogContext.mounted)
+                                  return;
+
+                                // Validasi format gambar menggunakan image codec
+                                try {
+                                  final codec = await ui.instantiateImageCodec(
+                                    bytes,
+                                  );
+                                  final frame = await codec.getNextFrame();
+                                  frame.image.dispose();
+                                  codec.dispose();
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Format gambar tidak valid. Gunakan PNG, JPG, atau WebP.',
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                  return;
+                                }
+
+                                setState(() => isUploading = true);
+                                try {
+                                  final url = await cubit.uploadMediaImage(
+                                    bytes: bytes,
+                                    fileName: file.name,
+                                    contentType: _contentTypeFor(file.name),
+                                  );
+                                  if (url == null || url.isEmpty) return;
+                                  setState(() {
+                                    nameController.text =
+                                        nameController.text.trim().isEmpty
+                                        ? file.name
+                                        : nameController.text;
+                                    pathController.text = url;
+                                  });
+                                } finally {
+                                  if (context.mounted) {
+                                    setState(() => isUploading = false);
+                                  }
+                                }
+                              },
                         icon: isUploading
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.upload_file_rounded),
-                        label: Text(isUploading ? 'Mengupload...' : 'Upload Gambar'),
+                        label: Text(
+                          isUploading ? 'Mengupload...' : 'Upload Gambar',
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -444,6 +455,7 @@ class SignagePlaylistSection extends StatelessWidget {
   ]) async {
     final nameController = TextEditingController(text: existing?.name ?? '');
     var enabled = existing?.isEnabled ?? true;
+    var targetDeviceIds = existing?.targetDeviceIds.toList() ?? [];
     var selectedIds = <String>[];
     if (existing?.id != null && existing!.id!.isNotEmpty) {
       try {
@@ -572,6 +584,35 @@ class SignagePlaylistSection extends StatelessWidget {
                   title: const Text('Aktif'),
                   onChanged: (value) => setState(() => enabled = value),
                 ),
+                const SizedBox(height: 12),
+                const Text('Tampilkan di Layar:'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilterChip(
+                      label: const Text('Semua Device'),
+                      selected: targetDeviceIds.isEmpty,
+                      onSelected: (_) =>
+                          setState(() => targetDeviceIds.clear()),
+                    ),
+                    for (final device in state.devices)
+                      FilterChip(
+                        label: Text(device.name),
+                        selected: targetDeviceIds.contains(device.id),
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              targetDeviceIds.add(device.id);
+                            } else {
+                              targetDeviceIds.remove(device.id);
+                            }
+                          });
+                        },
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -607,6 +648,7 @@ class SignagePlaylistSection extends StatelessWidget {
                     name: name,
                     mediaIds: List.of(selectedIds),
                     isEnabled: enabled,
+                    targetDeviceIds: targetDeviceIds,
                   ),
                 );
               },
@@ -623,6 +665,7 @@ class SignagePlaylistSection extends StatelessWidget {
         name: result.name,
         mediaIds: result.mediaIds,
         isEnabled: result.isEnabled,
+        targetDeviceIds: result.targetDeviceIds,
       );
     }
   }
@@ -663,11 +706,13 @@ class _PlaylistDialogResult {
     required this.name,
     required this.mediaIds,
     required this.isEnabled,
+    required this.targetDeviceIds,
   });
 
   final String name;
   final List<String> mediaIds;
   final bool isEnabled;
+  final List<String> targetDeviceIds;
 }
 
 String _playlistVideoLabel(SignagePlaylistItem item, Map<String, int> counts) {
@@ -697,7 +742,9 @@ class SignageEventListSection extends StatelessWidget {
           title: 'Daily Event',
           subtitle: 'Kelola event harian berdasarkan tanggal, jam mulai, dan jam selesai.',
           action: FilledButton.icon(
-            onPressed: state.isSaving ? null : () => _showEventDialog(context),
+            onPressed: state.isSaving
+                ? null
+                : () => _showEventDialog(context, state),
             icon: const Icon(Icons.add_rounded),
             label: const Text('Tambah Event'),
           ),
@@ -857,7 +904,11 @@ class _DailyEventTable extends StatelessWidget {
                       icon: const Icon(Icons.edit_rounded),
                       onPressed: isSaving
                           ? null
-                          : () => _showEventDialog(context, item),
+                          : () => _showEventDialog(
+                              context,
+                              context.read<SignageAdminCubit>().state,
+                              item,
+                            ),
                     ),
                     IconButton(
                       tooltip: 'Hapus event',
@@ -890,7 +941,8 @@ bool _isSameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
 
 Future<void> _showEventDialog(
-  BuildContext context, [
+  BuildContext context,
+  SignageAdminState state, [
   SignageEventItem? existing,
 ]) async {
   final eventController = TextEditingController(
@@ -902,6 +954,7 @@ Future<void> _showEventDialog(
   final floorController = TextEditingController(text: existing?.floor ?? '');
   var direction = existing?.direction ?? 'right';
   var eventDate = existing?.startDate ?? DateTime.now();
+  var targetDeviceIds = existing?.targetDeviceIds.toList() ?? [];
   var startTime = existing?.startDate != null
       ? TimeOfDay(
           hour: existing!.startDate!.hour,
@@ -1078,6 +1131,35 @@ Future<void> _showEventDialog(
                     onChanged: (value) =>
                         setState(() => direction = value ?? 'right'),
                   ),
+                  const SizedBox(height: 18),
+                  const Text('Tampilkan di Layar:'),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilterChip(
+                        label: const Text('Semua Device'),
+                        selected: targetDeviceIds.isEmpty,
+                        onSelected: (_) =>
+                            setState(() => targetDeviceIds.clear()),
+                      ),
+                      for (final device in state.devices)
+                        FilterChip(
+                          label: Text(device.name),
+                          selected: targetDeviceIds.contains(device.id),
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                targetDeviceIds.add(device.id);
+                              } else {
+                                targetDeviceIds.remove(device.id);
+                              }
+                            });
+                          },
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -1136,6 +1218,7 @@ Future<void> _showEventDialog(
                     startDate: startDateTime,
                     endDate: endDateTime,
                     isActive: existing?.isActive ?? true,
+                    targetDeviceIds: targetDeviceIds,
                   ),
                 );
               },

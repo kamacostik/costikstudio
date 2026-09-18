@@ -259,6 +259,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     required String name,
     required List<String> mediaIds,
     required bool isEnabled,
+    required List<String> targetDeviceIds,
   }) async {
     _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
@@ -269,6 +270,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           mediaId: mediaIds.isNotEmpty ? mediaIds.first : existing?.mediaId,
           path: existing?.path,
           isEnabled: isEnabled,
+          targetDeviceIds: targetDeviceIds,
         ),
       );
       if (saved.id != null && saved.id!.isNotEmpty) {

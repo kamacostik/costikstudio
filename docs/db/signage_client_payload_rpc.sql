@@ -91,11 +91,13 @@ begin
       m.public_url as media_url,
       m.storage_path as media_storage_path,
       m.file_name as media_file_name,
-      m.mime_type as media_mime_type
+      m.mime_type as media_mime_type,
+      p.target_device_ids
     from public.sg_playlists as p
     left join public.sg_media as m on m.id = p.media_id
     where p.tenant_id = v_device.tenant_id
       and p.is_enabled = true
+      and (p.target_device_ids is null or array_length(p.target_device_ids, 1) is null or array_length(p.target_device_ids, 1) = 0 or v_device.id = any(p.target_device_ids))
       and not exists (
         select 1
         from public.sg_playlist_items as pi
@@ -114,13 +116,15 @@ begin
       m.public_url as media_url,
       m.storage_path as media_storage_path,
       m.file_name as media_file_name,
-      m.mime_type as media_mime_type
+      m.mime_type as media_mime_type,
+      p.target_device_ids
     from public.sg_playlist_items as pi
     join public.sg_playlists as p on p.id = pi.playlist_id
     left join public.sg_media as m on m.id = pi.media_id
     where pi.tenant_id = v_device.tenant_id
       and p.tenant_id = v_device.tenant_id
       and p.is_enabled = true
+      and (p.target_device_ids is null or array_length(p.target_device_ids, 1) is null or array_length(p.target_device_ids, 1) = 0 or v_device.id = any(p.target_device_ids))
     limit 500
   ) as pl;
 
@@ -139,10 +143,12 @@ begin
       e.start_date,
       e.end_date,
       to_char(e.start_date, 'HH24:MI') as start_time,
-      to_char(e.end_date, 'HH24:MI') as end_time
+      to_char(e.end_date, 'HH24:MI') as end_time,
+      e.target_device_ids
     from public.sg_event_lists as e
     where e.tenant_id = v_device.tenant_id
       and e.is_active = true
+      and (e.target_device_ids is null or array_length(e.target_device_ids, 1) is null or array_length(e.target_device_ids, 1) = 0 or v_device.id = any(e.target_device_ids))
       and (e.end_date is null or e.end_date::date >= current_date)
     order by e.start_date nulls last
     limit 200
