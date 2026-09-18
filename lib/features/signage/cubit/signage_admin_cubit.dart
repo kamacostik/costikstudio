@@ -401,6 +401,29 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     }
   }
 
+  Future<void> updateDeviceEventTheme(
+    String deviceId, {
+    required SignageEventTheme eventTheme,
+  }) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.updateDeviceEventTheme(
+        deviceId,
+        eventTheme: eventTheme,
+      );
+      final devices = await _repository.fetchDevices();
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          successMessage: 'Tema Event Schedule device berhasil disimpan.',
+        ),
+      );
+    } catch (e) {
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
   Future<void> updateDeviceEventBackground(
     String deviceId, {
     String? eventBackgroundUrl,

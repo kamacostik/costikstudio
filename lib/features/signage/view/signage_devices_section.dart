@@ -311,6 +311,7 @@ class _DeviceSettingsAction extends StatelessWidget {
   Future<void> _showSettingsDialog(BuildContext context) async {
     var slideDuration = device.eventSlideDurationSeconds.clamp(3, 60);
     var appMode = device.appMode;
+    var eventTheme = device.eventTheme;
     var eventBackgroundUrl = device.eventBackgroundUrl;
     final backgroundItems = mediaItems
         .where(
@@ -341,12 +342,16 @@ class _DeviceSettingsAction extends StatelessWidget {
         builder: (context, setState) => AlertDialog(
           titlePadding: EdgeInsets.zero,
           contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
           title: Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
               color: CostikStudioTheme.primary.withValues(alpha: 0.10),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
             ),
             child: Row(
               children: [
@@ -387,12 +392,18 @@ class _DeviceSettingsAction extends StatelessWidget {
                 children: [
                   const Text(
                     'Mode Aplikasi',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: CostikStudioTheme.navy),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: CostikStudioTheme.navy,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   const Text(
                     'Pilih tampilan utama pada layar TV.',
-                    style: TextStyle(fontSize: 13, color: CostikStudioTheme.slate),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: CostikStudioTheme.slate,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<SignageAppMode>(
@@ -410,13 +421,52 @@ class _DeviceSettingsAction extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   const Text(
+                    'Tema Event Schedule',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: CostikStudioTheme.navy,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Pilih gaya tampilan jadwal event untuk device ini.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: CostikStudioTheme.slate,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<SignageEventTheme>(
+                    initialValue: eventTheme,
+                    decoration: inputDecoration.copyWith(
+                      prefixIcon: const Icon(Icons.palette_rounded),
+                    ),
+                    items: [
+                      for (final theme in SignageEventTheme.values)
+                        DropdownMenuItem(
+                          value: theme,
+                          child: Text(theme.label),
+                        ),
+                    ],
+                    onChanged: (theme) {
+                      if (theme != null) setState(() => eventTheme = theme);
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
                     'Background (Tanpa Event)',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: CostikStudioTheme.navy),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: CostikStudioTheme.navy,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   const Text(
                     'Gambar yang tampil jika tidak ada event hari ini.',
-                    style: TextStyle(fontSize: 13, color: CostikStudioTheme.slate),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: CostikStudioTheme.slate,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String?>(
@@ -442,12 +492,18 @@ class _DeviceSettingsAction extends StatelessWidget {
                   const SizedBox(height: 24),
                   const Text(
                     'Durasi Slide Event',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: CostikStudioTheme.navy),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: CostikStudioTheme.navy,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   const Text(
                     'Lama tiap gambar event tampil (berlaku jika event > 4).',
-                    style: TextStyle(fontSize: 13, color: CostikStudioTheme.slate),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: CostikStudioTheme.slate,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -501,6 +557,9 @@ class _DeviceSettingsAction extends StatelessWidget {
     if (appMode != device.appMode) {
       await cubit.updateDeviceAppMode(device.id, appMode: appMode);
     }
+    if (eventTheme != device.eventTheme) {
+      await cubit.updateDeviceEventTheme(device.id, eventTheme: eventTheme);
+    }
     if (eventBackgroundUrl != device.eventBackgroundUrl) {
       await cubit.updateDeviceEventBackground(
         device.id,
@@ -533,12 +592,16 @@ class _DeviceDeleteAction extends StatelessWidget {
           builder: (dialogContext) => AlertDialog(
             titlePadding: EdgeInsets.zero,
             contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
             title: Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 color: Colors.red.withValues(alpha: 0.10),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
               ),
               child: Row(
                 children: [
@@ -586,7 +649,9 @@ class _DeviceDeleteAction extends StatelessWidget {
                 child: const Text('Batal'),
               ),
               FilledButton.icon(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade600),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.red.shade600,
+                ),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
                 icon: const Icon(Icons.delete_outline_rounded),
                 label: const Text('Ya, Hapus'),

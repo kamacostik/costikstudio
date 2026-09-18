@@ -60,6 +60,26 @@ enum SignageAppMode {
   }
 }
 
+enum SignageEventTheme {
+  classic('classic', 'Classic Gold'),
+  modernDark('modern_dark', 'Modern Dark'),
+  hotelElegant('hotel_elegant', 'Hotel Lobby Elegant'),
+  minimalLight('minimal_light', 'Minimal White'),
+  conferenceBoard('conference_board', 'Conference Board');
+
+  const SignageEventTheme(this.value, this.label);
+
+  final String value;
+  final String label;
+
+  static SignageEventTheme fromValue(String? value) {
+    return SignageEventTheme.values.firstWhere(
+      (theme) => theme.value == value,
+      orElse: () => SignageEventTheme.classic,
+    );
+  }
+}
+
 class SignageDevice extends Equatable {
   const SignageDevice({
     required this.id,
@@ -70,6 +90,7 @@ class SignageDevice extends Equatable {
     required this.tableColumn,
     this.eventSlideDurationSeconds = 7,
     this.appMode = SignageAppMode.dailyEvent,
+    this.eventTheme = SignageEventTheme.classic,
     this.eventBackgroundUrl,
     required this.isActive,
     this.pairingCode,
@@ -86,6 +107,7 @@ class SignageDevice extends Equatable {
   final int tableColumn;
   final int eventSlideDurationSeconds;
   final SignageAppMode appMode;
+  final SignageEventTheme eventTheme;
   final String? eventBackgroundUrl;
   final bool isActive;
   final String? pairingCode;
@@ -115,6 +137,7 @@ class SignageDevice extends Equatable {
       eventSlideDurationSeconds:
           (map['event_slide_duration_seconds'] as num?)?.round() ?? 7,
       appMode: SignageAppMode.fromValue(map['app_mode'] as String?),
+      eventTheme: SignageEventTheme.fromValue(map['event_theme'] as String?),
       eventBackgroundUrl: map['event_background_url'] as String?,
       isActive: map['is_active'] as bool? ?? true,
       pairingCode: map['pairing_code'] as String?,
@@ -136,6 +159,7 @@ class SignageDevice extends Equatable {
     tableColumn,
     eventSlideDurationSeconds,
     appMode,
+    eventTheme,
     eventBackgroundUrl,
     isActive,
     pairingCode,
@@ -397,6 +421,10 @@ abstract class SignageAdminRepository {
   Future<void> updateDeviceAppMode(
     String deviceId, {
     required SignageAppMode appMode,
+  });
+  Future<void> updateDeviceEventTheme(
+    String deviceId, {
+    required SignageEventTheme eventTheme,
   });
   Future<void> updateDeviceEventBackground(
     String deviceId, {
@@ -760,6 +788,23 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
         .from('sg_devices')
         .update({
           'app_mode': appMode.value,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', deviceId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
+  Future<void> updateDeviceEventTheme(
+    String deviceId, {
+    required SignageEventTheme eventTheme,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    await _supabase
+        .from('sg_devices')
+        .update({
+          'event_theme': eventTheme.value,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', deviceId)

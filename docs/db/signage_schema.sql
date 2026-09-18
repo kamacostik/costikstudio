@@ -63,6 +63,8 @@ create table if not exists public.sg_devices (
   table_column integer not null default 4,
   event_slide_duration_seconds integer not null default 7,
   event_background_url text,
+  event_theme text not null default 'classic'
+    check (event_theme in ('classic', 'modern_dark', 'hotel_elegant', 'minimal_light', 'conference_board')),
   app_mode text not null default 'daily_event'
     check (app_mode in ('daily_event', 'video_player')),
   is_active boolean not null default true,
@@ -136,6 +138,9 @@ add column if not exists is_active boolean not null default true;
 
 alter table public.sg_devices
 add column if not exists event_background_url text;
+
+alter table public.sg_devices
+add column if not exists event_theme text not null default 'classic';
 
 -- Indexes
 create index if not exists sg_profiles_tenant_id_idx on public.sg_profiles (tenant_id);

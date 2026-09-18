@@ -159,6 +159,7 @@ begin
       'table_column', v_device.table_column,
       'event_slide_duration_seconds', v_device.event_slide_duration_seconds,
       'event_background_url', v_device.event_background_url,
+      'event_theme', v_device.event_theme,
       'app_mode', v_device.app_mode
     ),
     'tenant_id', v_device.tenant_id,
