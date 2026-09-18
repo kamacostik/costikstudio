@@ -16,7 +16,8 @@ begin
         'modern_dark',
         'hotel_elegant',
         'minimal_light',
-        'conference_board'
+        'conference_board',
+        'flight_board'
       ));
   end if;
 end

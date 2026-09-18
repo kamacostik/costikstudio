@@ -66,7 +66,7 @@ create table if not exists public.sg_devices (
   running_text_enabled boolean not null default false,
   running_text text,
   event_theme text not null default 'classic'
-    check (event_theme in ('classic', 'modern_dark', 'hotel_elegant', 'minimal_light', 'conference_board')),
+    check (event_theme in ('classic', 'modern_dark', 'hotel_elegant', 'minimal_light', 'conference_board', 'flight_board')),
   app_mode text not null default 'daily_event'
     check (app_mode in ('daily_event', 'video_player')),
   is_active boolean not null default true,
