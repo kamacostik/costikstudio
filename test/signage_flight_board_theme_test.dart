@@ -11,7 +11,7 @@ void main() {
     final migration = File('docs/db/signage_device_event_theme.sql')
         .readAsStringSync();
 
-    expect(repository, contains("flightBoard('flight_board', 'Flight Board')"));
+    expect(repository, contains("flightBoard('flight_board', 'Terminal Board Style')"));
     expect(schema, contains("'flight_board'"));
     expect(migration, contains("'flight_board'"));
   });

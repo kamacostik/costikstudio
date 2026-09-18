@@ -66,7 +66,7 @@ enum SignageEventTheme {
   hotelElegant('hotel_elegant', 'Hotel Lobby Elegant'),
   minimalLight('minimal_light', 'Minimal White'),
   conferenceBoard('conference_board', 'Conference Board'),
-  flightBoard('flight_board', 'Flight Board');
+  flightBoard('flight_board', 'Terminal Board Style');
 
   const SignageEventTheme(this.value, this.label);
 
