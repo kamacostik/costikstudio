@@ -42,11 +42,12 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
     orElse: () => dummyProducts.first,
   );
 
+  String? _appliedVoucherCode;
+
   @override
   void initState() {
     super.initState();
     _deviceCountController.addListener(_onDeviceCountChanged);
-    _voucherCodeController.addListener(_onVoucherCodeChanged);
   }
 
   void _onDeviceCountChanged() {
@@ -54,12 +55,62 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
     if (parsed != _deviceCount) {
       setState(() {
         _deviceCount = parsed;
+        if (_appliedVoucherCode == 'HITAINTIM' && _deviceCount != 1) {
+          _appliedVoucherCode = null;
+          _voucherCodeController.clear();
+        }
       });
     }
   }
 
-  void _onVoucherCodeChanged() {
-    setState(() {}); // trigger rebuild to calculate voucher
+  void _setBillingCycle(int months) {
+    setState(() {
+      _billingCycleMonths = months;
+      if (_appliedVoucherCode == 'HITAINTIM' && _billingCycleMonths != 12) {
+        _appliedVoucherCode = null;
+        _voucherCodeController.clear();
+      }
+    });
+  }
+
+  void _applyVoucher() {
+    final code = _voucherCodeController.text.trim().toUpperCase();
+    if (code.isEmpty) {
+      setState(() {
+        _appliedVoucherCode = null;
+      });
+      return;
+    }
+
+    if (code == 'HITAINTIM') {
+      setState(() {
+        _appliedVoucherCode = 'HITAINTIM';
+        _deviceCount = 1;
+        _deviceCountController.text = '1';
+        _billingCycleMonths = 12;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Voucher berhasil diterapkan! Mengunci ke 1 Device & 1 Tahun.',
+          ),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kode voucher tidak ditemukan atau tidak valid.'),
+          backgroundColor: Colors.redAccent,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      setState(() {
+        _appliedVoucherCode = null;
+        _voucherCodeController.clear();
+      });
+    }
   }
 
   @override
@@ -69,10 +120,7 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
     super.dispose();
   }
 
-  String? get _voucherCode {
-    final code = _voucherCodeController.text.trim().toUpperCase();
-    return code.isNotEmpty ? code : null;
-  }
+  String? get _voucherCode => _appliedVoucherCode;
 
   int get _effectivePricePerDevice => _pricePerDevice ?? 0;
 
@@ -439,19 +487,33 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
                                 const SizedBox(height: 18),
 
                                 // Input Voucher
-                                TextFormField(
-                                  controller: _voucherCodeController,
-                                  textCapitalization:
-                                      TextCapitalization.characters,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Kode Voucher',
-                                    hintText:
-                                        'Masukkan kode voucher jika tersedia',
-                                    helperText: 'Opsional.',
-                                    prefixIcon: Icon(
-                                      Icons.confirmation_number_rounded,
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: TextFormField(
+                                        controller: _voucherCodeController,
+                                        textCapitalization:
+                                            TextCapitalization.characters,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Kode Voucher',
+                                          hintText: 'Masukkan kode voucher jika tersedia',
+                                          helperText: 'Opsional.',
+                                          prefixIcon: Icon(
+                                            Icons.confirmation_number_rounded,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(width: 12),
+                                    SizedBox(
+                                      height: 56, // matching text field default height
+                                      child: FilledButton.tonal(
+                                        onPressed: _applyVoucher,
+                                        child: const Text('Terapkan'),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 26),
                                 const Divider(),
@@ -486,9 +548,7 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
                                           selected: isSelected,
                                           onSelected: (selected) {
                                             if (selected) {
-                                              setState(() {
-                                                _billingCycleMonths = months;
-                                              });
+                                              _setBillingCycle(months);
                                             }
                                           },
                                         );
