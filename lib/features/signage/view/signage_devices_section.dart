@@ -312,6 +312,10 @@ class _DeviceSettingsAction extends StatelessWidget {
     var slideDuration = device.eventSlideDurationSeconds.clamp(3, 60);
     var appMode = device.appMode;
     var eventTheme = device.eventTheme;
+    var runningTextEnabled = device.runningTextEnabled;
+    final runningTextController = TextEditingController(
+      text: device.runningText ?? '',
+    );
     var eventBackgroundUrl = device.eventBackgroundUrl;
     final backgroundItems = mediaItems
         .where(
@@ -491,6 +495,41 @@ class _DeviceSettingsAction extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   const Text(
+                    'Text Berjalan',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: CostikStudioTheme.navy,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Pesan ticker yang berjalan di bagian bawah layar event.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: CostikStudioTheme.slate,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    value: runningTextEnabled,
+                    title: const Text('Aktifkan text berjalan'),
+                    onChanged: (value) =>
+                        setState(() => runningTextEnabled = value),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: runningTextController,
+                    enabled: runningTextEnabled,
+                    maxLines: 2,
+                    maxLength: 180,
+                    decoration: inputDecoration.copyWith(
+                      prefixIcon: const Icon(Icons.short_text_rounded),
+                      hintText: 'Contoh: Welcome to Costik Hotel • Breakfast starts at 06:00',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
                     'Durasi Slide Event',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
@@ -560,6 +599,16 @@ class _DeviceSettingsAction extends StatelessWidget {
     if (eventTheme != device.eventTheme) {
       await cubit.updateDeviceEventTheme(device.id, eventTheme: eventTheme);
     }
+    final nextRunningText = runningTextController.text.trim();
+    if (runningTextEnabled != device.runningTextEnabled ||
+        nextRunningText != (device.runningText ?? '').trim()) {
+      await cubit.updateDeviceRunningText(
+        device.id,
+        runningTextEnabled: runningTextEnabled,
+        runningText: nextRunningText,
+      );
+    }
+    runningTextController.dispose();
     if (eventBackgroundUrl != device.eventBackgroundUrl) {
       await cubit.updateDeviceEventBackground(
         device.id,

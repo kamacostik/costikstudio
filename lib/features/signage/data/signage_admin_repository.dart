@@ -91,6 +91,8 @@ class SignageDevice extends Equatable {
     this.eventSlideDurationSeconds = 7,
     this.appMode = SignageAppMode.dailyEvent,
     this.eventTheme = SignageEventTheme.classic,
+    this.runningTextEnabled = false,
+    this.runningText,
     this.eventBackgroundUrl,
     required this.isActive,
     this.pairingCode,
@@ -108,6 +110,8 @@ class SignageDevice extends Equatable {
   final int eventSlideDurationSeconds;
   final SignageAppMode appMode;
   final SignageEventTheme eventTheme;
+  final bool runningTextEnabled;
+  final String? runningText;
   final String? eventBackgroundUrl;
   final bool isActive;
   final String? pairingCode;
@@ -138,6 +142,8 @@ class SignageDevice extends Equatable {
           (map['event_slide_duration_seconds'] as num?)?.round() ?? 7,
       appMode: SignageAppMode.fromValue(map['app_mode'] as String?),
       eventTheme: SignageEventTheme.fromValue(map['event_theme'] as String?),
+      runningTextEnabled: map['running_text_enabled'] as bool? ?? false,
+      runningText: map['running_text'] as String?,
       eventBackgroundUrl: map['event_background_url'] as String?,
       isActive: map['is_active'] as bool? ?? true,
       pairingCode: map['pairing_code'] as String?,
@@ -160,6 +166,8 @@ class SignageDevice extends Equatable {
     eventSlideDurationSeconds,
     appMode,
     eventTheme,
+    runningTextEnabled,
+    runningText,
     eventBackgroundUrl,
     isActive,
     pairingCode,
@@ -425,6 +433,11 @@ abstract class SignageAdminRepository {
   Future<void> updateDeviceEventTheme(
     String deviceId, {
     required SignageEventTheme eventTheme,
+  });
+  Future<void> updateDeviceRunningText(
+    String deviceId, {
+    required bool runningTextEnabled,
+    String? runningText,
   });
   Future<void> updateDeviceEventBackground(
     String deviceId, {
@@ -805,6 +818,26 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
         .from('sg_devices')
         .update({
           'event_theme': eventTheme.value,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', deviceId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
+  Future<void> updateDeviceRunningText(
+    String deviceId, {
+    required bool runningTextEnabled,
+    String? runningText,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    final trimmed = runningText?.trim();
+    await _supabase
+        .from('sg_devices')
+        .update({
+          'running_text_enabled': runningTextEnabled,
+          'running_text': trimmed == null || trimmed.isEmpty ? null : trimmed,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', deviceId)
