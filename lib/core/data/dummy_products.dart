@@ -33,10 +33,13 @@ const dummyProducts = <ProductItem>[
     accentHex: 0xFF2563EB,
     productUrl: 'https://signage.costikstudio.com',
     adminUrl: 'https://admin.signage.costikstudio.com',
+    isNew: true,
     features: [
-      'Daily Event board with date, start/end time, room, floor, auto-slide, and manual OK refresh',
-      'Fullscreen video player with hotel logo overlay and multi-video playlist order',
-      'TV/browser client pairing with 6-digit code, device quota, online status, and per-device mode',
+      'Digital Signage dengan tema Flight Board / FIDS terbaru',
+      'Daily Event board dengan animasi arah (direction) dan status event real-time (Upcoming, Ongoing, Finished)',
+      'Live Weather info dan Running Text per-device untuk pengumuman hotel',
+      'Fullscreen video player dengan playlist dan overlay logo hotel',
+      'TV/browser client pairing dengan 6-digit code dan manajemen kuota device',
     ],
   ),
   ProductItem(
