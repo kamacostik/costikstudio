@@ -1,9 +1,10 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
-import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart';
 import 'package:costikstudio/core/router/app_router.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
+import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -31,7 +32,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<ProductItem> get _focusProducts => dummyProducts
+  List<ProductItem> _focusProducts(List<ProductItem> products) => products
       .where(
         (product) => const {
           'costik-iptv',
@@ -111,9 +112,13 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 54),
                     const _MinimalPortalPreview(),
                     const SizedBox(height: 92),
-                    _ProductSection(
-                      key: _productsKey,
-                      products: _focusProducts,
+                    BlocBuilder<ProductCatalogCubit, ProductCatalogState>(
+                      builder: (context, state) {
+                        return _ProductSection(
+                          key: _productsKey,
+                          products: _focusProducts(state.products),
+                        );
+                      },
                     ),
                     const SizedBox(height: 92),
                     const _HowItWorksSection(),
@@ -279,6 +284,7 @@ class _FocusProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = Color(product.accentHex);
+    final coverImage = product.coverImage;
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
@@ -288,6 +294,29 @@ class _FocusProductCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (coverImage != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 160,
+                    width: double.infinity,
+                    child: CachedGalleryImage(
+                      imageUrl: coverImage.imageUrl,
+                      placeholderColor: accent.withValues(alpha: 0.1),
+                      fallback: Container(
+                        color: accent.withValues(alpha: 0.1),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          _iconFor(product.id),
+                          color: accent,
+                          size: 42,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+              ],
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -310,7 +339,32 @@ class _FocusProductCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium
                     ?.copyWith(color: CostikStudioTheme.slate, height: 1.55),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
+              for (final feature in product.features.take(3))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.check_circle_rounded, color: accent, size: 17),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          feature,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: CostikStudioTheme.slate,
+                                height: 1.35,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 10),
               Text(
                 'View details',
                 style: TextStyle(color: accent, fontWeight: FontWeight.w900),

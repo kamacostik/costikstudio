@@ -162,6 +162,31 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     }
   }
 
+  Future<String?> uploadMediaImage({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+  }) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      final url = await _repository.uploadMediaImage(
+        bytes: bytes,
+        fileName: fileName,
+        contentType: contentType,
+      );
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          successMessage: 'Gambar media berhasil diupload.',
+        ),
+      );
+      return url;
+    } catch (e) {
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+      return null;
+    }
+  }
+
   Future<void> saveMedia(SignageMediaItem item) async {
     _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
@@ -369,6 +394,29 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           isSaving: false,
           devices: devices,
           successMessage: 'Mode aplikasi device berhasil disimpan.',
+        ),
+      );
+    } catch (e) {
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> updateDeviceEventBackground(
+    String deviceId, {
+    String? eventBackgroundUrl,
+  }) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.updateDeviceEventBackground(
+        deviceId,
+        eventBackgroundUrl: eventBackgroundUrl,
+      );
+      final devices = await _repository.fetchDevices();
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          successMessage: 'Background Daily Event device berhasil disimpan.',
         ),
       );
     } catch (e) {

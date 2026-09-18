@@ -71,5 +71,25 @@ void main() {
         await cubit.close();
       },
     );
+
+    test(
+      'admin IPTV password requires Supabase Auth and minimum length',
+      () async {
+        SupabaseConfig.load(const {});
+        final cubit = AuthCubit();
+
+        final tooShort = await cubit.setAdminIptvPassword('short');
+        expect(tooShort, isFalse);
+        expect(cubit.state.errorMessage, contains('minimal 8'));
+
+        final withoutSupabase = await cubit.setAdminIptvPassword(
+          'strongpass123',
+        );
+        expect(withoutSupabase, isFalse);
+        expect(cubit.state.errorMessage, contains('Supabase Auth'));
+
+        await cubit.close();
+      },
+    );
   });
 }

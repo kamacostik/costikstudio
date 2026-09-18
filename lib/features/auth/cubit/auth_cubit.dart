@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/core/supabase/supabase_config.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -191,8 +192,8 @@ class AuthCubit extends Cubit<AuthState> {
         sb.OAuthProvider.google,
         // On web Supabase falls back to the dashboard Site URL
         // (default http://localhost:3000) when redirectTo is omitted,
-        // so always send the running app origin back.
-        redirectTo: kIsWeb ? Uri.base.origin : null,
+        // so send users back to the member billing dashboard.
+        redirectTo: kIsWeb ? Uri.base.origin + AppRoutes.billing : null,
       );
       if (!launched) {
         emit(
@@ -208,6 +209,45 @@ class AuthCubit extends Cubit<AuthState> {
       return false;
     } on Object {
       emit(const AuthState(errorMessage: 'Login Google gagal.'));
+      return false;
+    }
+  }
+
+  Future<bool> setAdminIptvPassword(String password) async {
+    final cleanPassword = password.trim();
+    if (cleanPassword.length < 8) {
+      emit(
+        state.copyWith(errorMessage: 'Password Admin IPTV minimal 8 karakter.'),
+      );
+      return false;
+    }
+
+    if (!SupabaseConfig.isConfigured) {
+      emit(
+        state.copyWith(
+          errorMessage: 'Set password Admin IPTV membutuhkan Supabase Auth.',
+        ),
+      );
+      return false;
+    }
+
+    emit(state.copyWith(isLoading: true));
+    try {
+      await _supabase.auth.updateUser(
+        sb.UserAttributes(password: cleanPassword),
+      );
+      emit(state.copyWith(isLoading: false));
+      return true;
+    } on sb.AuthException catch (error) {
+      emit(state.copyWith(isLoading: false, errorMessage: error.message));
+      return false;
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: 'Password Admin IPTV gagal disimpan.',
+        ),
+      );
       return false;
     }
   }

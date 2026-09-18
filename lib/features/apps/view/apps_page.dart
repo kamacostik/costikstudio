@@ -1,8 +1,10 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
-import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart';
+import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class AppsPage extends StatelessWidget {
@@ -10,10 +12,6 @@ class AppsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final products = dummyProducts
-        .where((product) => product.id == 'costik-iptv')
-        .toList();
-
     return SingleChildScrollView(
       child: ResponsiveSection(
         child: Column(
@@ -67,21 +65,28 @@ class AppsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 28),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 760;
-                return Wrap(
-                  spacing: 18,
-                  runSpacing: 18,
-                  children: [
-                    for (final product in products)
-                      SizedBox(
-                        width: isWide
-                            ? (constraints.maxWidth - 18) / 2
-                            : double.infinity,
-                        child: _AppProductCard(item: product),
-                      ),
-                  ],
+            BlocBuilder<ProductCatalogCubit, ProductCatalogState>(
+              builder: (context, state) {
+                final products = state.products
+                    .where((product) => product.id == 'costik-iptv')
+                    .toList(growable: false);
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth > 760;
+                    return Wrap(
+                      spacing: 18,
+                      runSpacing: 18,
+                      children: [
+                        for (final product in products)
+                          SizedBox(
+                            width: isWide
+                                ? (constraints.maxWidth - 18) / 2
+                                : double.infinity,
+                            child: _AppProductCard(item: product),
+                          ),
+                      ],
+                    );
+                  },
                 );
               },
             ),
@@ -100,6 +105,7 @@ class _AppProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = Color(item.accentHex);
+    final coverImage = item.coverImage;
 
     return Card(
       child: InkWell(
@@ -110,6 +116,25 @@ class _AppProductCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (coverImage != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 170,
+                    width: double.infinity,
+                    child: CachedGalleryImage(
+                      imageUrl: coverImage.imageUrl,
+                      placeholderColor: accent.withValues(alpha: 0.1),
+                      fallback: Container(
+                        color: accent.withValues(alpha: 0.1),
+                        alignment: Alignment.center,
+                        child: Icon(Icons.tv_rounded, color: accent, size: 42),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+              ],
               Row(
                 children: [
                   Container(

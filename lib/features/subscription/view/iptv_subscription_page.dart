@@ -1,6 +1,7 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_pricing.dart';
+import 'package:costikstudio/core/billing/device_pricing.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/models/product_item.dart';
@@ -28,6 +29,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
 
   final _formKey = GlobalKey<FormState>();
   final _deviceCountController = TextEditingController(text: '10');
+  final _voucherCodeController = TextEditingController();
 
   int _deviceCount = 10;
   int _billingCycleMonths = 1; // 1, 3, 6, 12 bulan
@@ -44,6 +46,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
   void initState() {
     super.initState();
     _deviceCountController.addListener(_onDeviceCountChanged);
+    _voucherCodeController.addListener(_onVoucherCodeChanged);
   }
 
   void _onDeviceCountChanged() {
@@ -55,20 +58,43 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
     }
   }
 
+  void _onVoucherCodeChanged() {
+    setState(() {});
+  }
+
   @override
   void dispose() {
     _deviceCountController.dispose();
+    _voucherCodeController.dispose();
     super.dispose();
   }
 
   int get _effectivePricePerDevice => _pricePerDevice ?? 0;
 
+  String? get _voucherCode {
+    final code = _voucherCodeController.text.trim().toUpperCase();
+    return code.isEmpty ? null : code;
+  }
+
+  int get _voucherDiscountPercent {
+    return switch (_voucherCode) {
+      'WELCOME20' => 20,
+      'LAUNCH30' => 30,
+      _ => 0,
+    };
+  }
+
+  DevicePriceBreakdown get _priceBreakdown => calculateIptvDevicePrice(
+    deviceCount: _deviceCount,
+    billingCycleMonths: _billingCycleMonths,
+    voucherDiscountPercent: _voucherDiscountPercent,
+    basePricePerDevice: _effectivePricePerDevice,
+  );
+
   int get _addonTotal =>
       _includeVideoAddon ? iptvVideoAddonPrice * _billingCycleMonths : 0;
 
-  int get _totalPrice =>
-      _deviceCount * _effectivePricePerDevice * _billingCycleMonths +
-      _addonTotal;
+  int get _totalPrice => _priceBreakdown.finalTotal + _addonTotal;
 
   void _syncPriceFromSnapshot(BillingSnapshot? snapshot) {
     if (snapshot == null) return;
@@ -115,6 +141,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
       billingCycleMonths: _billingCycleMonths,
       autoRenew: _autoRenew,
       includeVideoAddon: _isVideoAddonEnabled && _includeVideoAddon,
+      voucherCode: _voucherCode,
     );
 
     if (!mounted) return;
@@ -150,6 +177,18 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
             _SummaryRow(label: 'Produk', value: 'Costik IPTV'),
             _SummaryRow(label: 'Jumlah Device', value: '$_deviceCount Device'),
             _SummaryRow(label: 'Durasi', value: '$_billingCycleMonths Bulan'),
+            _SummaryRow(
+              label: 'Diskon Volume',
+              value: _priceBreakdown.volumeDiscountPercent > 0
+                  ? '${_priceBreakdown.volumeDiscountPercent}% (-${formatRupiah(_priceBreakdown.volumeDiscountAmount)})'
+                  : 'Tidak ada',
+            ),
+            _SummaryRow(
+              label: 'Voucher',
+              value: _voucherDiscountPercent > 0
+                  ? '${_voucherCode ?? '-'} (-${formatRupiah(_priceBreakdown.voucherDiscountAmount)})'
+                  : 'Tidak ada',
+            ),
             _SummaryRow(
               label: 'Add-on Video',
               value: _includeVideoAddon
@@ -408,6 +447,21 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                                   }).toList(),
                                 ),
 
+                                const SizedBox(height: 24),
+                                TextFormField(
+                                  controller: _voucherCodeController,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Kode Voucher',
+                                    hintText:
+                                        'Masukkan kode voucher jika tersedia',
+                                    helperText: 'Opsional. Kode voucher khusus dihitung setelah diskon volume.',
+                                    prefixIcon: Icon(
+                                      Icons.confirmation_number_rounded,
+                                    ),
+                                  ),
+                                ),
                                 const SizedBox(height: 26),
                                 const Divider(),
                                 const SizedBox(height: 18),
@@ -549,7 +603,7 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
-                                            'Saldo wallet harus mencukupi (${formatRupiah(_deviceCount * pricePerDevice)}/bulan) saat auto-renew berjalan, kalau tidak langganan bisa expire.',
+                                            'Saldo wallet harus mencukupi (${formatRupiah(_priceBreakdown.finalTotal)}/periode) saat auto-renew berjalan, kalau tidak langganan bisa expire.',
                                             style: const TextStyle(
                                               color: CostikStudioTheme.slate,
                                               fontSize: 12,
@@ -588,8 +642,9 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                               value: 'Costik IPTV',
                             ),
                             _OrderSummaryRow(
-                              label: 'Tarif per Device',
-                              value: '${formatRupiah(pricePerDevice)} / bln',
+                              label: 'Harga Dasar',
+                              value:
+                                  '${formatRupiah(pricePerDevice)} / device / bln',
                             ),
                             _OrderSummaryRow(
                               label: 'Jumlah Device',
@@ -598,6 +653,18 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                             _OrderSummaryRow(
                               label: 'Durasi Berlangganan',
                               value: '$_billingCycleMonths Bulan',
+                            ),
+                            _OrderSummaryRow(
+                              label: 'Diskon Volume',
+                              value: _priceBreakdown.volumeDiscountPercent > 0
+                                  ? '${_priceBreakdown.volumeDiscountPercent}% (${formatRupiah(_priceBreakdown.effectivePricePerDevice)}/device)'
+                                  : 'Tidak ada',
+                            ),
+                            _OrderSummaryRow(
+                              label: 'Voucher',
+                              value: _voucherDiscountPercent > 0
+                                  ? '${_voucherCode ?? '-'} -${formatRupiah(_priceBreakdown.voucherDiscountAmount)}'
+                                  : 'Tidak ada',
                             ),
                             _OrderSummaryRow(
                               label: 'Add-on Video',
@@ -676,9 +743,9 @@ class _IptvSubscriptionPageState extends State<IptvSubscriptionPage> {
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(flex: 3, child: formSection),
+                          Expanded(flex: 4, child: formSection),
                           const SizedBox(width: 24),
-                          SizedBox(width: 360, child: summarySection),
+                          SizedBox(width: 420, child: summarySection),
                         ],
                       );
                     }

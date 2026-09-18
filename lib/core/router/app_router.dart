@@ -3,6 +3,7 @@ import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/account/view/account_page.dart';
 import 'package:costikstudio/features/admin_dashboard/view/admin_dashboard_page.dart';
+import 'package:costikstudio/features/admin_product_gallery/view/admin_product_gallery_page.dart';
 import 'package:costikstudio/features/apps/view/apps_page.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:costikstudio/features/auth/view/login_page.dart';
@@ -17,15 +18,25 @@ import 'package:costikstudio/features/signage/view/signage_admin_page.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
 import 'package:costikstudio/features/subscription/view/signage_subscription_page.dart';
 import 'package:costikstudio/features/support/view/support_page.dart';
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-GoRouter createAppRouter(AppExperience experience) {
+GoRouter createAppRouter(
+  AppExperience experience, {
+  AuthCubit? authCubit,
+  AuthState authState = const AuthState(),
+}) {
   final isAdminApp = experience == AppExperience.admin;
 
   return GoRouter(
-    initialLocation: isAdminApp ? AppRoutes.adminDashboard : AppRoutes.home,
+    initialLocation: _initialLocationFor(experience, authState),
+    refreshListenable: authCubit == null
+        ? null
+        : _AuthRouterRefreshNotifier(authCubit.stream),
     routes: [
       ShellRoute(
         builder: (context, state, child) =>
@@ -38,6 +49,10 @@ GoRouter createAppRouter(AppExperience experience) {
               builder: (context, state) => const HomePage(),
             ),
             GoRoute(
+              path: '/produk',
+              redirect: (context, state) => AppRoutes.products,
+            ),
+            GoRoute(
               path: AppRoutes.products,
               name: AppRouteNames.products,
               builder: (context, state) => const ProductsPage(),
@@ -45,11 +60,25 @@ GoRouter createAppRouter(AppExperience experience) {
             GoRoute(
               path: AppRoutes.subscribeIptv,
               name: AppRouteNames.subscribeIptv,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAuthenticated) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
               builder: (context, state) => const IptvSubscriptionPage(),
             ),
             GoRoute(
               path: AppRoutes.subscribeSignage,
               name: AppRouteNames.subscribeSignage,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAuthenticated) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
               builder: (context, state) => const SignageSubscriptionPage(),
             ),
             GoRoute(
@@ -206,6 +235,18 @@ GoRouter createAppRouter(AppExperience experience) {
               builder: (context, state) => const AdminSignagePage(),
             ),
             GoRoute(
+              path: AppRoutes.adminProductGallery,
+              name: AppRouteNames.adminProductGallery,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAdmin) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
+              builder: (context, state) => const AdminProductGalleryPage(),
+            ),
+            GoRoute(
               path: AppRoutes.home,
               redirect: (context, state) => AppRoutes.adminDashboard,
             ),
@@ -214,6 +255,27 @@ GoRouter createAppRouter(AppExperience experience) {
       ),
     ],
   );
+}
+
+String _initialLocationFor(AppExperience experience, AuthState authState) {
+  if (experience == AppExperience.admin) {
+    return AppRoutes.adminDashboard;
+  }
+  return authState.isAuthenticated ? AppRoutes.billing : AppRoutes.home;
+}
+
+class _AuthRouterRefreshNotifier extends ChangeNotifier {
+  _AuthRouterRefreshNotifier(Stream<AuthState> stream) {
+    _subscription = stream.listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<AuthState> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }
 
 final appRouter = createAppRouter(AppExperience.user);
@@ -240,6 +302,7 @@ class CostikStudioShell extends StatelessWidget {
                 _NavItem('Dashboard', AppRoutes.adminDashboard),
                 _NavItem('Billing', AppRoutes.adminBilling),
                 _NavItem('Signage', AppRoutes.adminSignage),
+                _NavItem('Gallery', AppRoutes.adminProductGallery),
                 _NavItem('Account', AppRoutes.account),
               ]
             : [

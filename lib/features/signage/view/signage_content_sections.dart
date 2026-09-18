@@ -2,6 +2,9 @@ import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/features/signage/cubit/signage_admin_cubit.dart';
 import 'package:costikstudio/features/signage/data/signage_admin_repository.dart';
 import 'package:costikstudio/features/signage/view/widgets/signage_table_widgets.dart';
+import 'dart:ui' as ui;
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -53,6 +56,14 @@ class _StyledDialogHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+String _contentTypeFor(String fileName) {
+  final lower = fileName.toLowerCase();
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  return 'image/jpeg';
 }
 
 class SignageMediaSection extends StatelessWidget {
@@ -148,13 +159,15 @@ class SignageMediaSection extends StatelessWidget {
     BuildContext context, [
     SignageMediaItem? existing,
   ]) async {
+    final cubit = context.read<SignageAdminCubit>();
     final nameController = TextEditingController(
       text: existing?.fileName ?? '',
     );
     final pathController = TextEditingController(
       text: existing?.publicUrl ?? existing?.storagePath ?? '',
     );
-    var mediaType = existing?.mediaType ?? 'image';
+    const mediaType = 'image';
+    bool isUploading = false;
     final item = await showDialog<SignageMediaItem>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -164,8 +177,7 @@ class SignageMediaSection extends StatelessWidget {
           title: _StyledDialogHeader(
             icon: Icons.perm_media_rounded,
             title: existing == null ? 'Tambah Media' : 'Ubah Media',
-            subtitle:
-                'Tambahkan URL gambar atau video untuk bahan playlist signage.',
+            subtitle: 'Upload atau masukkan URL gambar untuk background device signage.',
           ),
           content: SizedBox(
             width: (MediaQuery.sizeOf(context).width - 48)
@@ -185,25 +197,80 @@ class SignageMediaSection extends StatelessWidget {
                 TextField(
                   controller: pathController,
                   decoration: const InputDecoration(
-                    labelText: 'URL / storage path',
-                    helperText: 'Sementara bisa pakai URL langsung; upload storage menyusul.',
+                    labelText: 'URL gambar / storage path',
+                    helperText: 'Khusus gambar. URL ini dipakai untuk background device.',
                     prefixIcon: Icon(Icons.link_rounded),
                   ),
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: mediaType,
-                  decoration: const InputDecoration(
-                    labelText: 'Tipe media',
-                    prefixIcon: Icon(Icons.category_rounded),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'image', child: Text('Image')),
-                    DropdownMenuItem(value: 'video', child: Text('Video')),
-                    DropdownMenuItem(value: 'other', child: Text('Other')),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: isUploading ? null : () async {
+                          final file = await FilePicker.pickFile(
+                            type: FileType.image,
+                          );
+                          if (file == null || !context.mounted) return;
+                          final bytes = await file.readAsBytes();
+                          if (bytes.isEmpty || !dialogContext.mounted) return;
+
+                          // Validasi format gambar menggunakan image codec
+                          try {
+                            final codec = await ui.instantiateImageCodec(bytes);
+                            final frame = await codec.getNextFrame();
+                            frame.image.dispose();
+                            codec.dispose();
+                          } catch (_) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Format gambar tidak valid. Gunakan PNG, JPG, atau WebP.'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                            return;
+                          }
+
+                          setState(() => isUploading = true);
+                          try {
+                            final url = await cubit
+                                .uploadMediaImage(
+                                  bytes: bytes,
+                                  fileName: file.name,
+                                  contentType: _contentTypeFor(file.name),
+                                );
+                            if (url == null || url.isEmpty) return;
+                            setState(() {
+                              nameController.text =
+                                  nameController.text.trim().isEmpty
+                                  ? file.name
+                                  : nameController.text;
+                              pathController.text = url;
+                            });
+                          } finally {
+                            if (context.mounted) {
+                              setState(() => isUploading = false);
+                            }
+                          }
+                        },
+                        icon: isUploading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.upload_file_rounded),
+                        label: Text(isUploading ? 'Mengupload...' : 'Upload Gambar'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Chip(
+                      avatar: Icon(Icons.image_rounded, size: 18),
+                      label: Text('Image'),
+                    ),
                   ],
-                  onChanged: (value) =>
-                      setState(() => mediaType = value ?? 'image'),
                 ),
               ],
             ),

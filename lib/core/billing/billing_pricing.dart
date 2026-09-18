@@ -2,9 +2,10 @@
 ///
 /// Keep these in sync with `docs/db/seed_*_product.sql`
 /// (`products.price_per_device`). UI estimates, dummy repository math,
-/// and subscription cards must all read from here. Both wallet-billed
-/// products (IPTV + Signage) are 20rb/device/month.
-const int iptvPricePerDevice = 20000;
+/// and subscription cards must all read from here.
+/// IPTV starts at 50rb/device/month before volume discounts.
+/// Signage remains 20rb/screen/month.
+const int iptvPricePerDevice = 50000;
 const int signagePricePerDevice = 20000;
 
 /// IPTV video promo add-on: Rp50.000/month for 2 active videos.

@@ -1,26 +1,39 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
+import 'package:costikstudio/features/shared/widgets/product_gallery_strip.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class ProductDetailPage extends StatefulWidget {
+class ProductDetailPage extends StatelessWidget {
   const ProductDetailPage({super.key, required this.product});
 
   final ProductItem? product;
 
   @override
-  State<ProductDetailPage> createState() => _ProductDetailPageState();
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProductCatalogCubit, ProductCatalogState>(
+      builder: (context, state) {
+        final item = product == null ? null : state.productById(product!.id);
+        return _DetailBody(item: item ?? product);
+      },
+    );
+  }
 }
 
-class _ProductDetailPageState extends State<ProductDetailPage> {
+class _DetailBody extends StatelessWidget {
+  const _DetailBody({required this.item});
+
+  final ProductItem? item;
+
   @override
   Widget build(BuildContext context) {
-    final item = widget.product;
-    if (item == null) {
+    final detail = this.item;
+    if (detail == null) {
       return ResponsiveSection(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,6 +53,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       );
     }
 
+    final item = detail;
     final accent = Color(item.accentHex);
     final isAuthenticated = context.select<AuthCubit, bool>(
       (cubit) => cubit.state.isAuthenticated,
@@ -107,6 +121,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     style: Theme.of(context).textTheme.titleMedium
                         ?.copyWith(color: CostikStudioTheme.slate, height: 1.6),
                   ),
+                  if (item.activeImages.isNotEmpty) ...[
+                    const SizedBox(height: 22),
+                    ProductGalleryStrip(images: item.activeImages),
+                  ],
                   const SizedBox(height: 22),
                   Wrap(
                     spacing: 12,
@@ -130,12 +148,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 : 'Berlangganan sekarang',
                           ),
                         ),
-                        if (item.hasAdmin)
-                          OutlinedButton.icon(
-                            onPressed: () => context.go('/support'),
-                            icon: const Icon(Icons.open_in_new_rounded),
-                            label: const Text('Info web admin'),
-                          ),
                       ] else ...[
                         FilledButton.icon(
                           onPressed: () => context.go(AppRoutes.login),
@@ -143,13 +155,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           label: const Text('Login untuk berlangganan'),
                         ),
                       ],
-
-                      if (item.hasDownload)
-                        OutlinedButton.icon(
-                          onPressed: () => context.go(AppRoutes.apps),
-                          icon: const Icon(Icons.download_rounded),
-                          label: const Text('Download app'),
-                        ),
                     ],
                   ),
                 ],

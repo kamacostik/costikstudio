@@ -158,6 +158,7 @@ begin
       'promo_duration', v_device.promo_duration,
       'table_column', v_device.table_column,
       'event_slide_duration_seconds', v_device.event_slide_duration_seconds,
+      'event_background_url', v_device.event_background_url,
       'app_mode', v_device.app_mode
     ),
     'tenant_id', v_device.tenant_id,

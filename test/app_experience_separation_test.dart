@@ -64,7 +64,9 @@ void main() {
     expect(find.text('Billing & Subscription'), findsOneWidget);
     expect(find.text('Signage Tenants'), findsOneWidget);
 
-    await tester.tap(find.text('Buka Billing'));
+    await tester.ensureVisible(find.text('Billing & Subscription'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Billing & Subscription'));
     await tester.pumpAndSettle();
 
     expect(find.text('Pending top ups'), findsOneWidget);

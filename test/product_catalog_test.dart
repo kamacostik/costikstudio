@@ -33,6 +33,38 @@ void main() {
     );
   });
 
+  test('Costik IPTV catalog highlights admin IPTV hospitality modules', () {
+    final iptv = dummyProducts.firstWhere(
+      (product) => product.id == 'costik-iptv',
+    );
+
+    expect(iptv.features.length, greaterThanOrEqualTo(8));
+    expect(
+      iptv.features,
+      contains('Live TV channel and video playlist management'),
+    );
+    expect(
+      iptv.features,
+      contains('Room, device, and guest profile management'),
+    );
+    expect(
+      iptv.features,
+      contains('Restaurant menu, category, and incoming order workflow'),
+    );
+    expect(
+      iptv.features,
+      contains(
+        'Hotel information modules for facilities, dining, convention, maps, Wi-Fi, and about pages',
+      ),
+    );
+    expect(
+      iptv.features,
+      contains(
+        'Guest request tools: service call, reviews, promo, and message/content menus',
+      ),
+    );
+  });
+
   test('free app catalog exposes download URLs', () {
     final freeApps = productsByCategory(ProductCategory.freeApp);
 

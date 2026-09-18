@@ -18,7 +18,9 @@ void main() {
 
     await loginAsAdmin(tester);
 
-    await tester.tap(find.text('Buka Billing'));
+    await tester.ensureVisible(find.text('Billing & Subscription'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Billing & Subscription'));
     await tester.pumpAndSettle();
 
     expect(find.text('Admin Billing'), findsWidgets);
@@ -43,7 +45,9 @@ void main() {
 
     await loginAsAdmin(tester);
 
-    await tester.tap(find.text('Buka Billing'));
+    await tester.ensureVisible(find.text('Billing & Subscription'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Billing & Subscription'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Approve Rp 250.000'));

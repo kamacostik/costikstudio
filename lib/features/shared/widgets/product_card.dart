@@ -1,5 +1,6 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/models/product_item.dart';
+import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -18,6 +19,8 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = Color(product.accentHex);
+    final coverImage = product.coverImage;
+    final imageCount = product.activeImages.length;
 
     return Card(
       child: InkWell(
@@ -28,6 +31,49 @@ class ProductCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (coverImage != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Stack(
+                    children: [
+                      SizedBox(
+                        height: compact ? 72 : 96,
+                        width: double.infinity,
+                        child: CachedGalleryImage(
+                          imageUrl: coverImage.imageUrl,
+                          fallback: _ProductImageFallback(
+                            accent: accent,
+                            category: product.category,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 10,
+                        bottom: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '$imageCount ${imageCount == 1 ? 'image' : 'images'}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: compact ? 10 : 14),
+              ],
               Row(
                 children: [
                   Container(
@@ -64,7 +110,7 @@ class ProductCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium
                     ?.copyWith(color: CostikStudioTheme.slate, height: 1.5),
               ),
-              if (!compact) ...[
+              if (!compact && coverImage == null) ...[
                 const SizedBox(height: 18),
                 Expanded(
                   child: Column(
@@ -97,17 +143,29 @@ class ProductCard extends StatelessWidget {
               ] else
                 const Spacer(),
               const SizedBox(height: 18),
-              Row(
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Text(
-                    'View details',
-                    style: TextStyle(
-                      color: accent,
-                      fontWeight: FontWeight.w900,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'View details',
+                        style: TextStyle(
+                          color: accent,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        color: accent,
+                        size: 18,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 6),
-                  Icon(Icons.arrow_forward_rounded, color: accent, size: 18),
                 ],
               ),
             ],
@@ -124,6 +182,29 @@ class ProductCard extends StatelessWidget {
       ProductCategory.productivity => Icons.groups_rounded,
       ProductCategory.freeApp => Icons.download_for_offline_rounded,
     };
+  }
+}
+
+class _ProductImageFallback extends StatelessWidget {
+  const _ProductImageFallback({required this.accent, required this.category});
+
+  final Color accent;
+  final ProductCategory category;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = switch (category) {
+      ProductCategory.business => Icons.point_of_sale_rounded,
+      ProductCategory.hospitality => Icons.tv_rounded,
+      ProductCategory.productivity => Icons.groups_rounded,
+      ProductCategory.freeApp => Icons.download_for_offline_rounded,
+    };
+
+    return Container(
+      color: accent.withValues(alpha: 0.1),
+      alignment: Alignment.center,
+      child: Icon(icon, color: accent, size: 42),
+    );
   }
 }
 

@@ -126,6 +126,7 @@ class BillingCubit extends Cubit<BillingState> {
     required int billingCycleMonths,
     bool autoRenew = false,
     bool includeVideoAddon = false,
+    String? voucherCode,
   }) async {
     await _runMutation(
       () => repository.checkoutIptvSubscription(
@@ -133,6 +134,7 @@ class BillingCubit extends Cubit<BillingState> {
         billingCycleMonths: billingCycleMonths,
         autoRenew: autoRenew,
         includeVideoAddon: includeVideoAddon,
+        voucherCode: voucherCode,
       ),
     );
   }

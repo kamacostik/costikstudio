@@ -3,7 +3,7 @@ import 'package:costikstudio/core/billing/billing_core.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/billing/billing_pricing.dart';
 import 'package:costikstudio/core/billing/billing_repository.dart';
-import 'package:costikstudio/core/data/dummy_products.dart';
+import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart';
 import 'package:costikstudio/core/models/product_item.dart';
 import 'package:costikstudio/core/platform/external_url.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
@@ -16,6 +16,7 @@ import 'package:costikstudio/features/billing/widgets/subscriptions_card.dart';
 import 'package:costikstudio/features/billing/widgets/transactions_card.dart';
 import 'package:costikstudio/features/billing/widgets/wallet_card.dart';
 import 'package:costikstudio/features/shared/widgets/product_card.dart';
+import 'package:costikstudio/features/shared/widgets/product_gallery_strip.dart';
 import 'package:costikstudio/features/signage/view/signage_admin_page.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
 import 'package:costikstudio/features/subscription/view/signage_subscription_page.dart';
@@ -47,6 +48,7 @@ enum _DashboardTab {
   billing,
   activity,
   invoices,
+  requestFeature,
   support,
 }
 
@@ -58,6 +60,7 @@ extension _DashboardTabRoute on _DashboardTab {
     _DashboardTab.billing => 'billing',
     _DashboardTab.activity => 'activity',
     _DashboardTab.invoices => 'invoices',
+    _DashboardTab.requestFeature => 'request-feature',
     _DashboardTab.support => 'support',
   };
 
@@ -69,6 +72,9 @@ extension _DashboardTabRoute on _DashboardTab {
       'billing' || 'wallet' => _DashboardTab.billing,
       'activity' || 'history' => _DashboardTab.activity,
       'invoices' || 'invoice' => _DashboardTab.invoices,
+      'request-feature' ||
+      'request-fitur' ||
+      'feature-request' => _DashboardTab.requestFeature,
       'support' => _DashboardTab.support,
       _ => _DashboardTab.apps,
     };
@@ -87,10 +93,15 @@ class _BillingDashboardViewState extends State<_BillingDashboardView> {
   ProductItem? _selectedProduct;
   bool _isOrderingIptv = false;
   bool _isOrderingSignage = false;
+  bool _catalogLoadRequested = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_catalogLoadRequested) {
+      _catalogLoadRequested = true;
+      context.read<ProductCatalogCubit>().load();
+    }
     final routeTab = _DashboardTabRoute.fromSlug(
       GoRouterState.of(context).uri.queryParameters['tab'],
     );
@@ -375,6 +386,10 @@ class _DashboardPage extends StatelessWidget {
         transactions: snapshot.transactions,
       ),
       _DashboardTab.invoices => InvoicesCard(invoices: snapshot.invoices),
+      _DashboardTab.requestFeature => const SupportPage(
+        isEmbedded: true,
+        mode: SupportPageMode.featureRequest,
+      ),
       _DashboardTab.support => const SupportPage(isEmbedded: true),
     };
   }
@@ -395,8 +410,11 @@ class _DashboardPage extends StatelessWidget {
     }
 
     if (selectedProduct != null) {
+      final catalogProduct = context.select<ProductCatalogCubit, ProductItem?>(
+        (cubit) => cubit.state.productById(selectedProduct!.id),
+      );
       return _EmbeddedProductDetail(
-        product: selectedProduct!,
+        product: catalogProduct ?? selectedProduct!,
         subscriptions: snapshot.subscriptions,
         onBack: onBackToProductCatalog,
         onSubscribe: () {
@@ -410,25 +428,7 @@ class _DashboardPage extends StatelessWidget {
       );
     }
 
-    return GridView.builder(
-      itemCount: dummyProducts.length,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 380,
-        mainAxisExtent: 350,
-        crossAxisSpacing: 18,
-        mainAxisSpacing: 18,
-      ),
-      itemBuilder: (context, index) {
-        final product = dummyProducts[index];
-        return ProductCard(
-          product: product,
-          compact: true,
-          onTap: () => onSelectProduct(product),
-        );
-      },
-    );
+    return _MemberProductGrid(onSelectProduct: onSelectProduct);
   }
 
   String _titleFor(_DashboardTab tab) {
@@ -445,6 +445,7 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.billing => 'Billing Wallet',
       _DashboardTab.activity => 'Aktivitas Wallet',
       _DashboardTab.invoices => 'Invoice',
+      _DashboardTab.requestFeature => 'Request Fitur',
       _DashboardTab.support => 'Support',
     };
   }
@@ -473,6 +474,8 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.activity =>
         'Riwayat transaksi terakhir dari top-up dan pembelian paket.',
       _DashboardTab.invoices => 'Daftar invoice dari aktivitas billing.',
+      _DashboardTab.requestFeature =>
+        'Ajukan ide fitur baru untuk Costik IPTV atau Digital Signage.',
       _DashboardTab.support =>
         'Bantuan produk, dokumentasi, integrasi, dan saluran kontak resmi.',
     };
@@ -656,6 +659,40 @@ class _DashboardSummaryCard extends StatelessWidget {
   }
 }
 
+class _MemberProductGrid extends StatelessWidget {
+  const _MemberProductGrid({required this.onSelectProduct});
+
+  final ValueChanged<ProductItem> onSelectProduct;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProductCatalogCubit, ProductCatalogState>(
+      builder: (context, state) {
+        final products = state.products;
+        return GridView.builder(
+          itemCount: products.length,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 380,
+            mainAxisExtent: 350,
+            crossAxisSpacing: 18,
+            mainAxisSpacing: 18,
+          ),
+          itemBuilder: (context, index) {
+            final product = products[index];
+            return ProductCard(
+              product: product,
+              compact: true,
+              onTap: () => onSelectProduct(product),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
 class _EmbeddedProductDetail extends StatelessWidget {
   const _EmbeddedProductDetail({
     required this.product,
@@ -739,6 +776,10 @@ class _EmbeddedProductDetail extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
+              if (product.activeImages.isNotEmpty) ...[
+                ProductGalleryStrip(images: product.activeImages),
+                const SizedBox(height: 24),
+              ],
               Text(
                 product.name,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -833,17 +874,31 @@ class _EmbeddedProductDetail extends StatelessWidget {
                       icon: const Icon(Icons.workspace_premium_rounded),
                       label: const Text('Berlangganan sekarang'),
                     ),
+                  if (product.id == 'costik-iptv')
+                    OutlinedButton.icon(
+                      onPressed: () => _showIptvDemoDialog(context),
+                      icon: const Icon(Icons.play_circle_outline_rounded),
+                      label: const Text('Demo'),
+                    ),
                   OutlinedButton.icon(
                     onPressed: () => _showMemberDocumentation(context),
                     icon: const Icon(Icons.menu_book_rounded),
                     label: const Text('Lihat Dokumentasi'),
                   ),
-                  if (product.id == 'digital-signage') ...[
+                  if (product.id == 'costik-iptv' && product.hasDownload)
                     OutlinedButton.icon(
-                      onPressed: () => openExternalUrl(_signageApkDownloadUrl),
+                      onPressed: () => openExternalUrl(product.downloadUrl!),
                       icon: const Icon(Icons.download_rounded),
                       label: const Text('Download APK'),
                     ),
+                  if (product.id == 'digital-signage') ...[
+                    if (isManagedActive)
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            openExternalUrl(_signageApkDownloadUrl),
+                        icon: const Icon(Icons.download_rounded),
+                        label: const Text('Download APK'),
+                      ),
                     _SignageAdminAccessButton(subscriptions: subscriptions),
                   ] else if (product.hasAdmin)
                     OutlinedButton.icon(
@@ -851,7 +906,9 @@ class _EmbeddedProductDetail extends StatelessWidget {
                       icon: const Icon(Icons.open_in_new_rounded),
                       label: const Text('Open web admin'),
                     ),
-                  if (product.hasDownload)
+                  if (product.id != 'costik-iptv' &&
+                      product.hasDownload &&
+                      isManagedActive)
                     OutlinedButton.icon(
                       onPressed: () => context.go(AppRoutes.apps),
                       icon: const Icon(Icons.download_rounded),
@@ -1163,6 +1220,99 @@ class _EmbeddedProductDetail extends StatelessWidget {
     );
   }
 
+  void _showIptvDemoDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 18),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0EA5E9), Color(0xFF2563EB)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.play_circle_fill_rounded,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Demo Admin IPTV',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Akses demo dashboard web admin',
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Gunakan akun demo ini untuk mencoba dashboard Admin IPTV tanpa mengubah data hotel Anda.',
+              style: TextStyle(color: CostikStudioTheme.slate, height: 1.5),
+            ),
+            SizedBox(height: 18),
+            _DemoCredentialTile(
+              icon: Icons.alternate_email_rounded,
+              label: 'User',
+              value: 'demo1@costikstudio.com',
+            ),
+            SizedBox(height: 10),
+            _DemoCredentialTile(
+              icon: Icons.lock_rounded,
+              label: 'Password',
+              value: 'demo112233',
+            ),
+          ],
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 22),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Tutup'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.of(dialogCtx).pop();
+              openExternalUrl('https://admin-ip-tv.pages.dev/');
+            },
+            icon: const Icon(Icons.open_in_new_rounded),
+            label: const Text('Open Admin IPTV'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showMemberDocumentation(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
@@ -1228,6 +1378,67 @@ class _EmbeddedProductDetail extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _DemoCredentialTile extends StatelessWidget {
+  const _DemoCredentialTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: CostikStudioTheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: CostikStudioTheme.primary, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: CostikStudioTheme.slate,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SelectableText(
+                  value,
+                  style: const TextStyle(
+                    color: CostikStudioTheme.navy,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1701,6 +1912,11 @@ class _DashboardNavBar extends StatelessWidget {
         ),
       ]),
       _DashboardNavSection('HELP & SUPPORT', [
+        _DashboardNavItem(
+          _DashboardTab.requestFeature,
+          'Request Fitur',
+          Icons.tips_and_updates_rounded,
+        ),
         _DashboardNavItem(
           _DashboardTab.support,
           'Support',

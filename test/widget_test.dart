@@ -25,6 +25,13 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Costik IPTV', skipOffstage: false), findsOneWidget);
+      expect(
+        find.text(
+          'Live TV channel and video playlist management',
+          skipOffstage: false,
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Digital Signage', skipOffstage: false), findsOneWidget);
       expect(find.text('CosHRIS', skipOffstage: false), findsOneWidget);
       expect(find.text('Smart INV', skipOffstage: false), findsOneWidget);

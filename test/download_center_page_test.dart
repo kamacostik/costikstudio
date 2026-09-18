@@ -1,5 +1,7 @@
 import 'package:costikstudio/features/apps/view/apps_page.dart';
+import 'package:costikstudio/features/products/cubit/product_catalog_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -7,7 +9,10 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: AppsPage())),
+      BlocProvider<ProductCatalogCubit>(
+        create: (_) => ProductCatalogCubit(),
+        child: const MaterialApp(home: Scaffold(body: AppsPage())),
+      ),
     );
 
     expect(find.text('Produk Aplikasi'), findsOneWidget);

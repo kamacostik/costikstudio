@@ -70,6 +70,7 @@ class SignageDevice extends Equatable {
     required this.tableColumn,
     this.eventSlideDurationSeconds = 7,
     this.appMode = SignageAppMode.dailyEvent,
+    this.eventBackgroundUrl,
     required this.isActive,
     this.pairingCode,
     this.pairingExpiresAt,
@@ -85,6 +86,7 @@ class SignageDevice extends Equatable {
   final int tableColumn;
   final int eventSlideDurationSeconds;
   final SignageAppMode appMode;
+  final String? eventBackgroundUrl;
   final bool isActive;
   final String? pairingCode;
   final DateTime? pairingExpiresAt;
@@ -113,6 +115,7 @@ class SignageDevice extends Equatable {
       eventSlideDurationSeconds:
           (map['event_slide_duration_seconds'] as num?)?.round() ?? 7,
       appMode: SignageAppMode.fromValue(map['app_mode'] as String?),
+      eventBackgroundUrl: map['event_background_url'] as String?,
       isActive: map['is_active'] as bool? ?? true,
       pairingCode: map['pairing_code'] as String?,
       pairingExpiresAt: DateTime.tryParse(
@@ -133,6 +136,7 @@ class SignageDevice extends Equatable {
     tableColumn,
     eventSlideDurationSeconds,
     appMode,
+    eventBackgroundUrl,
     isActive,
     pairingCode,
     pairingExpiresAt,
@@ -365,6 +369,11 @@ abstract class SignageAdminRepository {
     required String fileName,
     required String contentType,
   });
+  Future<String> uploadMediaImage({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+  });
   Future<List<SignageDevice>> fetchDevices();
   Future<SignageDeviceQuota> fetchDeviceQuota();
   Future<List<SignageMediaItem>> fetchMedia();
@@ -388,6 +397,10 @@ abstract class SignageAdminRepository {
   Future<void> updateDeviceAppMode(
     String deviceId, {
     required SignageAppMode appMode,
+  });
+  Future<void> updateDeviceEventBackground(
+    String deviceId, {
+    String? eventBackgroundUrl,
   });
   Future<void> deleteDevice(String deviceId);
 }
@@ -451,6 +464,37 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
     required String fileName,
     required String contentType,
   }) async {
+    return _uploadSignageImage(
+      bytes: bytes,
+      fileName: fileName,
+      contentType: contentType,
+      folder: 'hotel-logo',
+    );
+  }
+
+  @override
+  Future<String> uploadMediaImage({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+  }) async {
+    return _uploadSignageImage(
+      bytes: bytes,
+      fileName: fileName,
+      contentType: contentType,
+      folder: 'media-images',
+    );
+  }
+
+  Future<String> _uploadSignageImage({
+    required Uint8List bytes,
+    required String fileName,
+    required String contentType,
+    required String folder,
+  }) async {
+    if (!contentType.startsWith('image/')) {
+      throw StateError('Upload media hanya menerima file gambar.');
+    }
     final tenantId = await currentTenantId();
     if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
     final safeName = fileName
@@ -464,7 +508,7 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
             _ => 'jpg',
           };
     final path =
-        '$tenantId/hotel-logo/${DateTime.now().millisecondsSinceEpoch}.$extension';
+        '$tenantId/$folder/${DateTime.now().millisecondsSinceEpoch}.$extension';
     await _supabase.storage
         .from('signage-media')
         .uploadBinary(
@@ -716,6 +760,26 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
         .from('sg_devices')
         .update({
           'app_mode': appMode.value,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', deviceId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
+  Future<void> updateDeviceEventBackground(
+    String deviceId, {
+    String? eventBackgroundUrl,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    final trimmed = eventBackgroundUrl?.trim();
+    await _supabase
+        .from('sg_devices')
+        .update({
+          'event_background_url': trimmed == null || trimmed.isEmpty
+              ? null
+              : trimmed,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', deviceId)

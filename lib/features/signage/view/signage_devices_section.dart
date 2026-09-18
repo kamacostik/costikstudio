@@ -109,7 +109,10 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                _DeviceSettingsAction(device: device),
+                                _DeviceSettingsAction(
+                                  device: device,
+                                  mediaItems: state.mediaItems,
+                                ),
                                 _DeviceDeleteAction(device: device),
                               ],
                             ),
@@ -291,9 +294,10 @@ class _DeviceQuotaBadge extends StatelessWidget {
 }
 
 class _DeviceSettingsAction extends StatelessWidget {
-  const _DeviceSettingsAction({required this.device});
+  const _DeviceSettingsAction({required this.device, required this.mediaItems});
 
   final SignageDevice device;
+  final List<SignageMediaItem> mediaItems;
 
   @override
   Widget build(BuildContext context) {
@@ -307,66 +311,177 @@ class _DeviceSettingsAction extends StatelessWidget {
   Future<void> _showSettingsDialog(BuildContext context) async {
     var slideDuration = device.eventSlideDurationSeconds.clamp(3, 60);
     var appMode = device.appMode;
+    var eventBackgroundUrl = device.eventBackgroundUrl;
+    final backgroundItems = mediaItems
+        .where(
+          (item) =>
+              item.publicUrl != null &&
+              item.publicUrl!.trim().isNotEmpty &&
+              item.mediaType == 'image',
+        )
+        .toList();
+
+    final inputDecoration = InputDecoration(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+    );
+
     final saved = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Setting Device Signage'),
-          content: SizedBox(
-            width: (MediaQuery.sizeOf(context).width - 48)
-                .clamp(280, 420)
-                .toDouble(),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+          titlePadding: EdgeInsets.zero,
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          title: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: CostikStudioTheme.primary.withValues(alpha: 0.10),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Row(
               children: [
-                Text(
-                  device.name,
-                  style: const TextStyle(
-                    color: CostikStudioTheme.navy,
-                    fontWeight: FontWeight.w900,
+                const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  foregroundColor: CostikStudioTheme.primary,
+                  child: Icon(Icons.tune_rounded),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Setting Device'),
+                      const SizedBox(height: 4),
+                      Text(
+                        device.name,
+                        style: const TextStyle(
+                          color: CostikStudioTheme.slate,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 18),
-                const Text(
-                  'Mode aplikasi',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<SignageAppMode>(
-                  initialValue: appMode,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.apps_rounded),
-                    helperText: 'TV menampilkan Daily Event atau Video Player.',
-                  ),
-                  items: [
-                    for (final mode in SignageAppMode.values)
-                      DropdownMenuItem(value: mode, child: Text(mode.label)),
-                  ],
-                  onChanged: (mode) {
-                    if (mode != null) setState(() => appMode = mode);
-                  },
-                ),
-                const SizedBox(height: 18),
-                Text('Durasi slide Daily Event: $slideDuration detik'),
-                Slider(
-                  value: slideDuration.toDouble(),
-                  min: 3,
-                  max: 60,
-                  divisions: 57,
-                  label: '$slideDuration detik',
-                  onChanged: (value) =>
-                      setState(() => slideDuration = value.round()),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Aktif hanya jika event lebih dari 4. Nilai otomatis diambil '
-                  'TV saat refresh data berikutnya.',
-                  style: TextStyle(fontSize: 12),
                 ),
               ],
             ),
           ),
+          content: SizedBox(
+            width: (MediaQuery.sizeOf(context).width - 48)
+                .clamp(320, 460)
+                .toDouble(),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Mode Aplikasi',
+                    style: TextStyle(fontWeight: FontWeight.w700, color: CostikStudioTheme.navy),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Pilih tampilan utama pada layar TV.',
+                    style: TextStyle(fontSize: 13, color: CostikStudioTheme.slate),
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<SignageAppMode>(
+                    initialValue: appMode,
+                    decoration: inputDecoration.copyWith(
+                      prefixIcon: const Icon(Icons.apps_rounded),
+                    ),
+                    items: [
+                      for (final mode in SignageAppMode.values)
+                        DropdownMenuItem(value: mode, child: Text(mode.label)),
+                    ],
+                    onChanged: (mode) {
+                      if (mode != null) setState(() => appMode = mode);
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Background (Tanpa Event)',
+                    style: TextStyle(fontWeight: FontWeight.w700, color: CostikStudioTheme.navy),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Gambar yang tampil jika tidak ada event hari ini.',
+                    style: TextStyle(fontSize: 13, color: CostikStudioTheme.slate),
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String?>(
+                    initialValue: eventBackgroundUrl,
+                    isExpanded: true,
+                    decoration: inputDecoration.copyWith(
+                      prefixIcon: const Icon(Icons.wallpaper_rounded),
+                    ),
+                    items: [
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('Tidak pakai background'),
+                      ),
+                      for (final item in backgroundItems)
+                        DropdownMenuItem<String?>(
+                          value: item.publicUrl,
+                          child: Text(item.fileName),
+                        ),
+                    ],
+                    onChanged: (value) =>
+                        setState(() => eventBackgroundUrl = value),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Durasi Slide Event',
+                    style: TextStyle(fontWeight: FontWeight.w700, color: CostikStudioTheme.navy),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Lama tiap gambar event tampil (berlaku jika event > 4).',
+                    style: TextStyle(fontSize: 13, color: CostikStudioTheme.slate),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Slider(
+                          value: slideDuration.toDouble(),
+                          min: 3,
+                          max: 60,
+                          divisions: 57,
+                          label: '$slideDuration detik',
+                          onChanged: (value) =>
+                              setState(() => slideDuration = value.round()),
+                        ),
+                      ),
+                      Container(
+                        width: 50,
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          '${slideDuration}s',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: CostikStudioTheme.primary,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -385,6 +500,12 @@ class _DeviceSettingsAction extends StatelessWidget {
     final cubit = context.read<SignageAdminCubit>();
     if (appMode != device.appMode) {
       await cubit.updateDeviceAppMode(device.id, appMode: appMode);
+    }
+    if (eventBackgroundUrl != device.eventBackgroundUrl) {
+      await cubit.updateDeviceEventBackground(
+        device.id,
+        eventBackgroundUrl: eventBackgroundUrl,
+      );
     }
     if (slideDuration != device.eventSlideDurationSeconds) {
       await cubit.updateDeviceSlideDuration(
@@ -410,19 +531,65 @@ class _DeviceDeleteAction extends StatelessWidget {
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
-            title: const Text('Hapus Device?'),
-            content: Text(
-              'Device ${device.name} akan dihapus dari tenant ini. Slot kuotanya akan kembali tersedia.',
+            titlePadding: EdgeInsets.zero,
+            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            title: Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.10),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.red,
+                    child: Icon(Icons.warning_amber_rounded),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hapus Device?',
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          device.name,
+                          style: const TextStyle(
+                            color: CostikStudioTheme.slate,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
+            content: const Text(
+              'Device ini akan dihapus permanen dari tenant. Slot kuota Anda akan kembali tersedia dan dapat digunakan untuk device lain.',
+              style: TextStyle(color: CostikStudioTheme.navy, fontSize: 14),
+            ),
+            actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
                 child: const Text('Batal'),
               ),
-              FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade600),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: const Text('Hapus'),
+                icon: const Icon(Icons.delete_outline_rounded),
+                label: const Text('Ya, Hapus'),
               ),
             ],
           ),

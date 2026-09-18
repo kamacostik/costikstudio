@@ -126,6 +126,17 @@ class Subscription {
   bool get videoUploadEnabled =>
       (mediaLimits['video_upload_enabled'] as bool?) ?? false;
 
+  SubscriptionStatus effectiveStatus([DateTime? now]) {
+    if (status == SubscriptionStatus.active &&
+        !expiresAt.isAfter(now ?? DateTime.now())) {
+      return SubscriptionStatus.expired;
+    }
+    return status;
+  }
+
+  bool get isEffectivelyActive =>
+      effectiveStatus() == SubscriptionStatus.active;
+
   int get mediaStorageLimitMb =>
       (mediaLimits['media_storage_limit_mb'] as num?)?.toInt() ?? 500;
 
