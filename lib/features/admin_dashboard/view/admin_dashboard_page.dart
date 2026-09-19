@@ -494,20 +494,21 @@ class _KpiGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 1200
-            ? 3
-            : constraints.maxWidth > 800
-            ? 2
-            : 2;
         return GridView.builder(
           itemCount: cards.length,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
+            crossAxisCount: constraints.maxWidth > 1200
+                ? 6
+                : constraints.maxWidth > 800
+                ? 3
+                : constraints.maxWidth > 500
+                ? 2
+                : 1,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            mainAxisExtent: 168,
+            mainAxisExtent: 104,
           ),
           itemBuilder: (context, index) => _KpiCard(data: cards[index]),
         );
