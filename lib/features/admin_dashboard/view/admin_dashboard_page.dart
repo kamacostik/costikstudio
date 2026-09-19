@@ -79,8 +79,23 @@ class _AdminDashboardView extends StatelessWidget {
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 1080;
 
+                    final revenueTodayStr = formatRupiah(snapshot.revenueToday.toInt());
+                    final revenueMonthStr = formatRupiah(snapshot.revenueMonth.toInt());
+
                     final kpis = _KpiGrid(
                       cards: [
+                        _KpiData(
+                          icon: Icons.payments_outlined,
+                          label: 'Hari Ini',
+                          value: revenueTodayStr,
+                          trend: 'Pemasukan hari ini',
+                        ),
+                        _KpiData(
+                          icon: Icons.account_balance_rounded,
+                          label: 'Bulan Ini',
+                          value: revenueMonthStr,
+                          trend: 'Pemasukan bulan ini',
+                        ),
                         _KpiData(
                           icon: Icons.people_outline_rounded,
                           label: 'Total Users',
@@ -101,10 +116,10 @@ class _AdminDashboardView extends StatelessWidget {
                           isAlert: pendingTopUps > 0,
                         ),
                         _KpiData(
-                          icon: Icons.devices_other_rounded,
+                          icon: Icons.monitor_outlined,
                           label: 'Device Aktif',
                           value: totalDevices,
-                          trend: 'Signage & IPTV',
+                          trend: 'Total layar dipantau',
                         ),
                       ],
                     );
@@ -473,7 +488,11 @@ class _KpiGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 900 ? 4 : 2;
+        final crossAxisCount = constraints.maxWidth > 1200
+            ? 3
+            : constraints.maxWidth > 800
+                ? 2
+                : 2;
         return GridView.builder(
           itemCount: cards.length,
           shrinkWrap: true,

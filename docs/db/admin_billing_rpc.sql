@@ -8,7 +8,23 @@ declare
   v_pending_topups jsonb;
   v_wallets jsonb;
   v_subscriptions jsonb;
+  v_revenue_today numeric;
+  v_revenue_month numeric;
 begin
+  -- Calculate Revenue Today (Top Ups Paid Today)
+  select coalesce(sum(amount), 0)
+  into v_revenue_today
+  from public.payment_orders
+  where status = 'paid'
+    and created_at >= date_trunc('day', timezone('utc', now()));
+
+  -- Calculate Revenue This Month
+  select coalesce(sum(amount), 0)
+  into v_revenue_month
+  from public.payment_orders
+  where status = 'paid'
+    and created_at >= date_trunc('month', timezone('utc', now()));
+
   -- Fetch recent pending and paid topups
   select coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb)
   into v_pending_topups
@@ -64,7 +80,9 @@ begin
   return jsonb_build_object(
     'pendingTopUps', v_pending_topups,
     'customerWallets', v_wallets,
-    'allSubscriptions', v_subscriptions
+    'allSubscriptions', v_subscriptions,
+    'revenueToday', v_revenue_today,
+    'revenueMonth', v_revenue_month
   );
 end;
 $$;

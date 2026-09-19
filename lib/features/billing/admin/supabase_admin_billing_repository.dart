@@ -72,6 +72,8 @@ class SupabaseAdminBillingRepository implements AdminBillingRepository {
         ),
       ],
       allSubscriptions: allSubscriptions,
+      revenueToday: (response['revenueToday'] as num?)?.toDouble() ?? 0,
+      revenueMonth: (response['revenueMonth'] as num?)?.toDouble() ?? 0,
     );
   }
 
