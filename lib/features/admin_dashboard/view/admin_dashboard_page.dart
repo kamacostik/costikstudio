@@ -6,6 +6,7 @@ import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 /// Admin landing dashboard (dummy-first).
 ///
@@ -77,48 +78,81 @@ class _AdminDashboardView extends StatelessWidget {
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 1080;
-                    final hero = _HeroPanel(
-                      pendingTopUps: pendingTopUps,
-                      activeSubs: activeSubs,
-                      onOpenBilling: () => context.go(AppRoutes.adminBilling),
-                      onOpenSignage: () => context.go(AppRoutes.adminSignage),
-                    );
+
                     final kpis = _KpiGrid(
                       cards: [
                         _KpiData(
-                          icon: Icons.pending_actions_rounded,
+                          icon: Icons.people_outline_rounded,
+                          label: 'Total Users',
+                          value: '$totalCustomers',
+                          trend: '+12% minggu ini',
+                        ),
+                        _KpiData(
+                          icon: Icons.verified_user_outlined,
+                          label: 'Sub Aktif',
+                          value: activeSubs,
+                          trend: '+5% minggu ini',
+                        ),
+                        _KpiData(
+                          icon: Icons.account_balance_wallet_outlined,
                           label: 'Top Up Pending',
                           value: '$pendingTopUps',
-                        ),
-                        _KpiData(
-                          icon: Icons.people_rounded,
-                          label: 'Customer Terdaftar',
-                          value: '$totalCustomers',
-                        ),
-                        _KpiData(
-                          icon: Icons.verified_user_rounded,
-                          label: 'Subscription Aktif',
-                          value: activeSubs,
+                          trend: 'Butuh approval',
+                          isAlert: pendingTopUps > 0,
                         ),
                         _KpiData(
                           icon: Icons.devices_other_rounded,
-                          label: 'Device Dimonitor',
+                          label: 'Device Aktif',
                           value: totalDevices,
+                          trend: 'Signage & IPTV',
                         ),
                       ],
                     );
-                    if (!isWide) {
-                      return Column(
-                        children: [hero, const SizedBox(height: 12), kpis],
-                      );
-                    }
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: hero),
-                        const SizedBox(width: 12),
-                        SizedBox(width: 400, child: kpis),
-                      ],
+
+                    final middleRow = isWide
+                        ? Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: const _TransactionChartCard(),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 1,
+                                child: _HeroPanel(
+                                  pendingTopUps: pendingTopUps,
+                                  activeSubs: activeSubs,
+                                  onOpenBilling: () =>
+                                      context.go(AppRoutes.adminBilling),
+                                  onOpenSignage: () =>
+                                      context.go(AppRoutes.adminSignage),
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              kpis,
+                              const SizedBox(height: 16),
+                              const _TransactionChartCard(),
+                              const SizedBox(height: 16),
+                              _HeroPanel(
+                                pendingTopUps: pendingTopUps,
+                                activeSubs: activeSubs,
+                                onOpenBilling: () =>
+                                    context.go(AppRoutes.adminBilling),
+                                onOpenSignage: () =>
+                                    context.go(AppRoutes.adminSignage),
+                              ),
+                            ],
+                          );
+
+                    if (!isWide) return middleRow;
+
+                    return Column(
+                      children: [kpis, const SizedBox(height: 16), middleRow],
                     );
                   },
                 ),
@@ -419,11 +453,15 @@ class _KpiData {
     required this.icon,
     required this.label,
     required this.value,
+    this.trend = '',
+    this.isAlert = false,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final String trend;
+  final bool isAlert;
 }
 
 class _KpiGrid extends StatelessWidget {
@@ -436,7 +474,6 @@ class _KpiGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 900 ? 4 : 2;
-        final compact = constraints.maxWidth <= 420;
         return GridView.builder(
           itemCount: cards.length,
           shrinkWrap: true,
@@ -445,7 +482,7 @@ class _KpiGrid extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            mainAxisExtent: compact ? 132 : 118,
+            mainAxisExtent: 168,
           ),
           itemBuilder: (context, index) => _KpiCard(data: cards[index]),
         );
@@ -461,54 +498,86 @@ class _KpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = data.isAlert ? Colors.redAccent : CostikStudioTheme.primary;
     return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        child: Row(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: CostikStudioTheme.primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(
-                data.icon,
-                color: CostikStudioTheme.primary,
-                size: 24,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(data.icon, color: color, size: 22),
+                ),
+                if (data.isAlert)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Action Needed',
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              data.value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: data.isAlert ? Colors.redAccent : CostikStudioTheme.navy,
+                fontWeight: FontWeight.w900,
+                fontSize: 28,
+                letterSpacing: -0.5,
+                height: 1,
               ),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    data.value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: CostikStudioTheme.navy,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 22,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    data.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: CostikStudioTheme.slate,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 6),
+            Text(
+              data.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: CostikStudioTheme.slate,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              data.trend,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: data.isAlert
+                    ? Colors.redAccent.withValues(alpha: 0.8)
+                    : const Color(0xFF16A34A),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -711,6 +780,173 @@ class _ModuleTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TransactionChartCard extends StatelessWidget {
+  const _TransactionChartCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.show_chart_rounded,
+                    color: Colors.blue.shade600,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Grafik Transaksi & Top Up',
+                      style: TextStyle(
+                        color: CostikStudioTheme.navy,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '7 Hari Terakhir',
+                      style: TextStyle(
+                        color: CostikStudioTheme.slate,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              height: 220,
+              child: BarChart(
+                BarChartData(
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: 20,
+                  barTouchData: BarTouchData(enabled: false),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          const style = TextStyle(
+                            color: CostikStudioTheme.slate,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          );
+                          String text;
+                          switch (value.toInt()) {
+                            case 0:
+                              text = 'Sen';
+                              break;
+                            case 1:
+                              text = 'Sel';
+                              break;
+                            case 2:
+                              text = 'Rab';
+                              break;
+                            case 3:
+                              text = 'Kam';
+                              break;
+                            case 4:
+                              text = 'Jum';
+                              break;
+                            case 5:
+                              text = 'Sab';
+                              break;
+                            case 6:
+                              text = 'Min';
+                              break;
+                            default:
+                              text = '';
+                          }
+                          return SideTitleWidget(
+                            meta: meta,
+                            space: 10,
+                            child: Text(text, style: style),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                  ),
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: 5,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      strokeWidth: 1,
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  barGroups: [
+                    _makeGroup(0, 5, 3),
+                    _makeGroup(1, 8, 5),
+                    _makeGroup(2, 6, 2),
+                    _makeGroup(3, 12, 6),
+                    _makeGroup(4, 15, 8),
+                    _makeGroup(5, 18, 10),
+                    _makeGroup(6, 10, 4),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  BarChartGroupData _makeGroup(int x, double y1, double y2) {
+    return BarChartGroupData(
+      x: x,
+      barRods: [
+        BarChartRodData(
+          toY: y1,
+          color: CostikStudioTheme.primary,
+          width: 14,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        BarChartRodData(
+          toY: y2,
+          color: Colors.blue.shade200,
+          width: 14,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ],
     );
   }
 }
