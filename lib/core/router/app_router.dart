@@ -178,7 +178,7 @@ GoRouter createAppRouter(
               },
               builder: (context, state) => const SignageAdminPage(),
             ),
-          ] else ...[
+          ] else if (isAdminApp) ...[
             GoRoute(
               path: AppRoutes.login,
               name: AppRouteNames.login,
