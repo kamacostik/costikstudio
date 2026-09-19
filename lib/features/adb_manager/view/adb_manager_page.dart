@@ -320,12 +320,19 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
 
   Future<void> _clearGsfCache() async {
     _log('Membersihkan GSF Cache...');
-    await _runAdbCommand([
+    final adbPath = await _getAdbPath();
+    final result = await Process.run(adbPath, [
       'shell',
       'pm',
       'clear',
       'com.google.android.gsf',
-    ], silent: false);
+    ]);
+
+    if (result.stdout.toString().contains('Success')) {
+      _log('GSF Cache Success : Berhasil dibersihkan.');
+    } else {
+      _log('Selesai memproses pembersihan cache.');
+    }
   }
 
   Future<void> _setDeviceOwner() async {
@@ -334,12 +341,33 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
       return;
     }
     _log('Mengatur DCO, harap tunggu...');
-    await _runAdbCommand([
+    final adbPath = await _getAdbPath();
+    final result = await Process.run(adbPath, [
       'shell',
       'dpm',
       'set-device-owner',
       _deviceOwnerController.text,
-    ], silent: false);
+    ]);
+
+    final stdoutStr = result.stdout.toString();
+    final stderrStr = result.stderr.toString();
+
+    if (stdoutStr.toLowerCase().contains('success') ||
+        stderrStr.toLowerCase().contains('success')) {
+      _log('DCO Success : Berhasil dipasang.');
+    } else if (stdoutStr.contains('already set') ||
+        stderrStr.contains('already set')) {
+      _log(
+        'Error : DCO sudah terpasang. Harap Remove DCO lama terlebih dahulu.',
+      );
+    } else if (stdoutStr.contains('Not allowed to set the device owner') ||
+        stderrStr.contains('Not allowed to set the device owner')) {
+      _log(
+        'Error : Gagal memasang DCO. Pastikan tidak ada Akun (Check Accounts) yang tersisa di TV.',
+      );
+    } else {
+      _log('Gagal memasang DCO. Pastikan koneksi perangkat stabil.');
+    }
   }
 
   Future<void> _checkDeviceOwner() async {
@@ -357,18 +385,22 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
       for (int i = 0; i < lines.length; i++) {
         if (lines[i].toLowerCase().contains('device owner:')) {
           found = true;
+          String pkgName = 'com.costik.iptv'; // fallback
           for (int j = i; j < i + 4 && j < lines.length; j++) {
-            _log(lines[j].trim());
+            if (lines[j].trim().startsWith('package=')) {
+              pkgName = lines[j].trim().replaceFirst('package=', '');
+            }
           }
+          _log('DCO Success : $pkgName');
           break;
         }
       }
 
       if (!found) {
-        _log('Status: Tidak ada Device Owner (DCO) yang aktif.');
+        _log('Status : Tidak ada Device Owner (DCO) yang aktif.');
       }
     } else {
-      _log('Gagal membaca device policy atau perangkat tidak merespon.');
+      _log('Gagal memverifikasi DCO atau perangkat tidak merespon.');
     }
   }
 
@@ -378,17 +410,55 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
       return;
     }
     _log('Menghapus DCO, harap tunggu...');
-    await _runAdbCommand([
+    final adbPath = await _getAdbPath();
+    final result = await Process.run(adbPath, [
       'shell',
       'dpm',
       'remove-active-admin',
       _deviceOwnerController.text,
-    ], silent: false);
+    ]);
+
+    final stdoutStr = result.stdout.toString();
+    final stderrStr = result.stderr.toString();
+
+    if (stdoutStr.toLowerCase().contains('success') ||
+        stderrStr.toLowerCase().contains('success')) {
+      _log('DCO Success : Berhasil dihapus.');
+    } else if (stdoutStr.contains('SecurityException') ||
+        stderrStr.contains('SecurityException')) {
+      _log(
+        'Error : DCO tidak ditemukan atau Anda tidak memiliki akses untuk menghapusnya.',
+      );
+    } else {
+      _log('Selesai memproses penghapusan DCO.');
+    }
   }
 
   Future<void> _listOwners() async {
-    _log('Listing owners...');
-    await _runAdbCommand(['shell', 'dpm', 'list-owners'], silent: false);
+    _log('Mencari data Owner (UserO)...');
+    final adbPath = await _getAdbPath();
+    final result = await Process.run(adbPath, ['shell', 'dpm', 'list-owners']);
+
+    if (result.stdout.toString().isNotEmpty) {
+      final lines = result.stdout.toString().split('\n');
+      bool found = false;
+      for (var line in lines) {
+        if (line.toLowerCase().contains('admin=')) {
+          found = true;
+          final comp = line
+              .trim()
+              .replaceAll('admin=ComponentInfo{', '')
+              .replaceAll('}', '');
+          final pkg = comp.split('/').first;
+          _log('UserO Ditemukan : $pkg');
+        }
+      }
+      if (!found) {
+        _log('Status : Tidak ada UserO yang aktif.');
+      }
+    } else {
+      _log('Gagal membaca data Owner.');
+    }
   }
 
   // ---------------------------------------------------------------------------
