@@ -2170,24 +2170,20 @@ class _AdbManagerPromoPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     _buildFeatureItem(
-                      Icons.wifi_rounded,
-                      'Connect via IP secara mudah dan stabil.',
-                    ),
-                    _buildFeatureItem(
                       Icons.install_mobile_rounded,
-                      'Install / Uninstall aplikasi (APK) dengan 1 klik.',
+                      'Tools spesifik untuk install APK ke perangkat melalui jaringan (Network/Wi-Fi) ataupun kabel USB secara langsung tanpa flashdisk.',
                     ),
                     _buildFeatureItem(
                       Icons.tv_rounded,
-                      'Enable / Disable IPTV Launcher sebagai default launcher.',
+                      'Enable / Disable IPTV Launcher sebagai aplikasi utama (Default Launcher).',
                     ),
                     _buildFeatureItem(
                       Icons.admin_panel_settings_rounded,
-                      'Manajemen DCO (Device Control Owner) secara otomatis (Clear Cache, Set, Verify, Remove).',
+                      'Manajemen DCO secara otomatis (Clear Cache, Set, Verify, Remove).',
                     ),
                     _buildFeatureItem(
                       Icons.people_rounded,
-                      'Hapus User atau Account tidak terpakai dari TV.',
+                      'Hapus User atau Account sistem yang tidak terpakai dari TV.',
                     ),
                     const SizedBox(height: 28),
                     SizedBox(
@@ -2195,8 +2191,10 @@ class _AdbManagerPromoPage extends StatelessWidget {
                       height: 52,
                       child: FilledButton.icon(
                         onPressed: () {
-                          // Placeholder link
-                          openExternalUrl('https://costikstudio.com');
+                          // ADB Manager Google Drive download link
+                          openExternalUrl(
+                            'https://drive.google.com/drive/folders/153-9t8cYYZFX_aOfaVI52KRSjKk1mYOT?usp=drive_link',
+                          );
                         },
                         icon: const Icon(Icons.download_rounded),
                         label: const Text('Download .EXE (Windows Only)'),
