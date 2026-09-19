@@ -231,4 +231,14 @@ class _FakeSignageAdminRepository extends SignageAdminRepository {
 
   @override
   Future<void> deleteDevice(String deviceId) async {}
+
+  @override
+  Future<void> updateDeviceQrOverlay(
+    String deviceId, {
+    required bool qrEnabled,
+    String? qrUrl,
+  }) {
+    // TODO: implement updateDeviceQrOverlay
+    throw UnimplementedError();
+  }
 }
