@@ -45,6 +45,7 @@ enum _DashboardTab {
   apps,
   signageAdmin,
   subscriptions,
+  adbManager,
   billing,
   activity,
   invoices,
@@ -57,6 +58,7 @@ extension _DashboardTabRoute on _DashboardTab {
     _DashboardTab.apps => 'products',
     _DashboardTab.signageAdmin => 'signage-admin',
     _DashboardTab.subscriptions => 'subscriptions',
+    _DashboardTab.adbManager => 'adb-manager',
     _DashboardTab.billing => 'billing',
     _DashboardTab.activity => 'activity',
     _DashboardTab.invoices => 'invoices',
@@ -69,6 +71,7 @@ extension _DashboardTabRoute on _DashboardTab {
       'products' || 'apps' => _DashboardTab.apps,
       'signage-admin' || 'signage' => _DashboardTab.signageAdmin,
       'subscriptions' || 'subscription' => _DashboardTab.subscriptions,
+      'adb-manager' || 'tools' => _DashboardTab.adbManager,
       'billing' || 'wallet' => _DashboardTab.billing,
       'activity' || 'history' => _DashboardTab.activity,
       'invoices' || 'invoice' => _DashboardTab.invoices,
@@ -365,6 +368,7 @@ class _DashboardPage extends StatelessWidget {
                   autoRenew: autoRenew,
                 ),
       ),
+      _DashboardTab.adbManager => const _AdbManagerPromoPage(),
       _DashboardTab.billing => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -442,6 +446,7 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.apps => 'Produk',
       _DashboardTab.signageAdmin => 'Web Admin Digital Signage',
       _DashboardTab.subscriptions => 'Subscription',
+      _DashboardTab.adbManager => 'ADB Manager Tools',
       _DashboardTab.billing => 'Billing Wallet',
       _DashboardTab.activity => 'Aktivitas Wallet',
       _DashboardTab.invoices => 'Invoice',
@@ -469,6 +474,7 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.signageAdmin => 'Kelola profil hotel, device pairing, Daily Event, media, playlist, dan mode player langsung dari panel member.',
       _DashboardTab.subscriptions =>
         'Pantau paket aktif dan masa berlaku layanan.',
+      _DashboardTab.adbManager => 'Download aplikasi ADB Manager untuk mengeksekusi ADB ke perangkat STB/TV.',
       _DashboardTab.billing =>
         'Top-up saldo, pantau pembayaran pending, dan cek riwayat billing.',
       _DashboardTab.activity =>
@@ -1892,6 +1898,13 @@ class _DashboardNavBar extends StatelessWidget {
           Icons.verified_rounded,
         ),
       ]),
+      _DashboardNavSection('TOOLS', [
+        const _DashboardNavItem(
+          _DashboardTab.adbManager,
+          'ADB Manager',
+          Icons.adb_rounded,
+        ),
+      ]),
       _DashboardNavSection('BILLING', [
         _DashboardNavItem(
           _DashboardTab.billing,
@@ -2058,4 +2071,132 @@ class _DashboardNavItem {
   final String label;
   final IconData icon;
   final bool enabled;
+}
+
+class _AdbManagerPromoPage extends StatelessWidget {
+  const _AdbManagerPromoPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Container(
+                  color: const Color(0xFFF8FAFC),
+                  child: Center(
+                    child: Icon(
+                      Icons.adb_rounded,
+                      size: 84,
+                      color: Colors.blue.withValues(alpha: 0.1),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Download ADB Manager for Windows',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: CostikStudioTheme.navy,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Tools spesifik bagi teknisi instalasi untuk mempercepat proses eksekusi perintah ADB ke Android TV atau Set Top Box. Aplikasi ini berjalan murni di sistem operasi Windows (Desktop) agar dapat mengeksekusi shell lokal.',
+                      style: TextStyle(
+                        height: 1.5,
+                        color: CostikStudioTheme.slate,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Fitur Utama:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: CostikStudioTheme.navy,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildFeatureItem(
+                      Icons.wifi_rounded,
+                      'Connect via IP secara mudah dan stabil.',
+                    ),
+                    _buildFeatureItem(
+                      Icons.install_mobile_rounded,
+                      'Install / Uninstall aplikasi (APK) dengan 1 klik.',
+                    ),
+                    _buildFeatureItem(
+                      Icons.tv_rounded,
+                      'Enable / Disable IPTV Launcher sebagai default launcher.',
+                    ),
+                    _buildFeatureItem(
+                      Icons.admin_panel_settings_rounded,
+                      'Manajemen DCO (Device Control Owner) secara otomatis (Clear Cache, Set, Verify, Remove).',
+                    ),
+                    _buildFeatureItem(
+                      Icons.people_rounded,
+                      'Hapus User atau Account tidak terpakai dari TV.',
+                    ),
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          // Placeholder link
+                          openExternalUrl('https://costikstudio.com');
+                        },
+                        icon: const Icon(Icons.download_rounded),
+                        label: const Text('Download .EXE (Windows Only)'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeatureItem(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: CostikStudioTheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: CostikStudioTheme.slate,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
