@@ -15,6 +15,7 @@ import 'package:costikstudio/features/billing/widgets/invoices_card.dart';
 import 'package:costikstudio/features/billing/widgets/subscriptions_card.dart';
 import 'package:costikstudio/features/billing/widgets/transactions_card.dart';
 import 'package:costikstudio/features/billing/widgets/wallet_card.dart';
+import 'package:costikstudio/features/billing/widgets/dashboard_tutorial_page.dart';
 import 'package:costikstudio/features/shared/widgets/product_card.dart';
 import 'package:costikstudio/features/shared/widgets/product_gallery_strip.dart';
 import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
@@ -47,6 +48,7 @@ enum _DashboardTab {
   apps,
   signageAdmin,
   subscriptions,
+  tutorial,
   adbManager,
   billing,
   activity,
@@ -60,6 +62,7 @@ extension _DashboardTabRoute on _DashboardTab {
     _DashboardTab.apps => 'products',
     _DashboardTab.signageAdmin => 'signage-admin',
     _DashboardTab.subscriptions => 'subscriptions',
+    _DashboardTab.tutorial => 'tutorial',
     _DashboardTab.adbManager => 'adb-manager',
     _DashboardTab.billing => 'billing',
     _DashboardTab.activity => 'activity',
@@ -73,6 +76,7 @@ extension _DashboardTabRoute on _DashboardTab {
       'products' || 'apps' => _DashboardTab.apps,
       'signage-admin' || 'signage' => _DashboardTab.signageAdmin,
       'subscriptions' || 'subscription' => _DashboardTab.subscriptions,
+      'tutorial' => _DashboardTab.tutorial,
       'adb-manager' || 'tools' => _DashboardTab.adbManager,
       'billing' || 'wallet' => _DashboardTab.billing,
       'activity' || 'history' => _DashboardTab.activity,
@@ -320,6 +324,7 @@ class _DashboardPage extends StatelessWidget {
     return switch (selectedTab) {
       _DashboardTab.apps => _buildAppsTab(context),
       _DashboardTab.signageAdmin => const SignageAdminPage(isEmbedded: true),
+      _DashboardTab.tutorial => const DashboardTutorialPage(),
       _DashboardTab.subscriptions => SubscriptionsCard(
         products: snapshot.products,
         plans: snapshot.plans,
@@ -448,6 +453,7 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.apps => 'Produk',
       _DashboardTab.signageAdmin => 'Web Admin Digital Signage',
       _DashboardTab.subscriptions => 'Subscription',
+      _DashboardTab.tutorial => 'Video Tutorial',
       _DashboardTab.adbManager => 'ADB Manager Tools',
       _DashboardTab.billing => 'Billing Wallet',
       _DashboardTab.activity => 'Aktivitas Wallet',
@@ -476,6 +482,7 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.signageAdmin => 'Kelola profil hotel, device pairing, Daily Event, media, playlist, dan mode player langsung dari panel member.',
       _DashboardTab.subscriptions =>
         'Pantau paket aktif dan masa berlaku layanan.',
+      _DashboardTab.tutorial => 'Pelajari panduan instalasi, konfigurasi DCO, dan penggunaan admin melalui video berikut.',
       _DashboardTab.adbManager => 'Download aplikasi ADB Manager untuk mengeksekusi ADB ke perangkat STB/TV.',
       _DashboardTab.billing =>
         'Top-up saldo, pantau pembayaran pending, dan cek riwayat billing.',
@@ -1898,6 +1905,13 @@ class _DashboardNavBar extends StatelessWidget {
           _DashboardTab.subscriptions,
           'Subscription',
           Icons.verified_rounded,
+        ),
+      ]),
+      _DashboardNavSection('TUTORIAL', [
+        const _DashboardNavItem(
+          _DashboardTab.tutorial,
+          'Panduan Video',
+          Icons.play_circle_outline_rounded,
         ),
       ]),
       _DashboardNavSection('TOOLS', [
