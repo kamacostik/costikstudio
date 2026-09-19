@@ -314,7 +314,7 @@ class CostikStudioShell extends StatelessWidget {
                 ],
               ];
 
-        if (isAdminApp) {
+        if (isAdminApp && location != AppRoutes.login) {
           return Scaffold(
             backgroundColor: const Color(
               0xFFF1F5F9,
