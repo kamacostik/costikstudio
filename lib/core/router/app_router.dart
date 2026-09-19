@@ -2,6 +2,7 @@ import 'package:costikstudio/app/app_experience.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/account/view/account_page.dart';
+import 'package:costikstudio/features/adb_manager/view/adb_manager_page.dart';
 import 'package:costikstudio/features/admin_dashboard/view/admin_dashboard_page.dart';
 import 'package:costikstudio/features/admin_product_gallery/view/admin_product_gallery_page.dart';
 import 'package:costikstudio/features/apps/view/apps_page.dart';
@@ -31,6 +32,7 @@ GoRouter createAppRouter(
   AuthState authState = const AuthState(),
 }) {
   final isAdminApp = experience == AppExperience.admin;
+  final isAdbApp = experience == AppExperience.adb;
 
   return GoRouter(
     initialLocation: _initialLocationFor(experience, authState),
@@ -42,7 +44,7 @@ GoRouter createAppRouter(
         builder: (context, state, child) =>
             CostikStudioShell(experience: experience, child: child),
         routes: [
-          if (!isAdminApp) ...[
+          if (!isAdminApp && !isAdbApp) ...[
             GoRoute(
               path: AppRoutes.home,
               name: AppRouteNames.home,
@@ -251,6 +253,29 @@ GoRouter createAppRouter(
               redirect: (context, state) => AppRoutes.adminDashboard,
             ),
           ],
+          if (isAdbApp) ...[
+            GoRoute(
+              path: AppRoutes.login,
+              name: AppRouteNames.login,
+              builder: (context, state) => const LoginPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.adbManager,
+              name: AppRouteNames.adbManager,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAuthenticated) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
+              builder: (context, state) => const AdbManagerPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.home,
+              redirect: (context, state) => AppRoutes.adbManager,
+            ),
+          ],
         ],
       ),
     ],
@@ -260,6 +285,9 @@ GoRouter createAppRouter(
 String _initialLocationFor(AppExperience experience, AuthState authState) {
   if (experience == AppExperience.admin) {
     return AppRoutes.adminDashboard;
+  }
+  if (experience == AppExperience.adb) {
+    return authState.isAuthenticated ? AppRoutes.adbManager : AppRoutes.login;
   }
   return authState.isAuthenticated ? AppRoutes.billing : AppRoutes.home;
 }
@@ -294,9 +322,65 @@ class CostikStudioShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final isAdminApp = experience == AppExperience.admin;
+    final isAdbApp = experience == AppExperience.adb;
 
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
+        // ADB App: clean layout — login gets bare scaffold, manager gets mini appbar
+        if (isAdbApp) {
+          if (location == AppRoutes.login) {
+            return Scaffold(
+              backgroundColor: const Color(0xFFF8FAFC),
+              body: child,
+            );
+          }
+          return Scaffold(
+            backgroundColor: const Color(0xFFF1F5F9),
+            appBar: AppBar(
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/logo/costik-studio-logo.png',
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, _, _) =>
+                          const Icon(Icons.adb_rounded, size: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'ADB Manager',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+              actions: [
+                if (authState.isAuthenticated) ...[
+                  Icon(
+                    Icons.admin_panel_settings_rounded,
+                    size: 18,
+                    color: Colors.blue.shade700,
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: () {
+                      context.read<AuthCubit>().logout();
+                      context.go(AppRoutes.login);
+                    },
+                    child: const Text('Keluar'),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+              ],
+            ),
+            body: child,
+          );
+        }
+
         final navItems = isAdminApp
             ? const [
                 _NavItem('Dashboard', AppRoutes.adminDashboard),

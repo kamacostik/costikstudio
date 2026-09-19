@@ -24,9 +24,11 @@ class CostikStudioApp extends StatelessWidget {
           buildWhen: (previous, current) =>
               previous.isSessionRestored != current.isSessionRestored,
           builder: (context, authState) {
-            final title = experience == AppExperience.admin
-                ? 'CostikStudio Admin'
-                : 'CostikStudio';
+            final title = switch (experience) {
+              AppExperience.admin => 'CostikStudio Admin',
+              AppExperience.adb => 'CostikStudio ADB Manager',
+              AppExperience.user => 'CostikStudio',
+            };
             if (!authState.isSessionRestored) {
               return MaterialApp(
                 title: title,
