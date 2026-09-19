@@ -94,6 +94,7 @@ const dummyProducts = <ProductItem>[
       'Enable/Disable IPTV Launcher sebagai default launcher',
       'Hapus User atau Account sistem yang tidak terpakai dari TV',
     ],
+    isHidden: true, // Sembunyikan dari halaman publik
   ),
 ];
 
@@ -106,6 +107,6 @@ ProductItem? findProductById(String id) {
 
 List<ProductItem> productsByCategory(ProductCategory category) {
   return dummyProducts
-      .where((product) => product.category == category)
+      .where((product) => product.category == category && !product.isHidden)
       .toList();
 }

@@ -40,6 +40,7 @@ class ProductItem {
     this.images = const [],
     this.isFree = false,
     this.isNew = false,
+    this.isHidden = false,
   });
 
   final String id;
@@ -56,6 +57,7 @@ class ProductItem {
   final List<ProductImage> images;
   final bool isFree;
   final bool isNew;
+  final bool isHidden;
 
   bool get hasAdmin => adminUrl != null && adminUrl!.isNotEmpty;
   bool get hasDownload => downloadUrl != null && downloadUrl!.isNotEmpty;
@@ -91,6 +93,7 @@ class ProductItem {
       images: images ?? this.images,
       isFree: isFree,
       isNew: isNew,
+      isHidden: isHidden,
     );
   }
 }
