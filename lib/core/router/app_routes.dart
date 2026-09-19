@@ -14,6 +14,7 @@ class AppRoutes {
   static const adminDashboard = '/admin/dashboard';
   static const adminSignage = '/admin/signage';
   static const adminProductGallery = '/admin/product-gallery';
+  static const adminTutorial = '/admin/tutorial';
   static const support = '/support';
   static const signageAdmin = '/signage/admin';
   static const subscribeIptv = '/products/costik-iptv/subscribe';
@@ -39,6 +40,7 @@ class AppRouteNames {
   static const adminDashboard = 'admin-dashboard';
   static const adminSignage = 'admin-signage';
   static const adminProductGallery = 'admin-product-gallery';
+  static const adminTutorial = 'admin-tutorial';
   static const support = 'support';
   static const signageAdmin = 'signage-admin';
   static const adbManager = 'adb-manager';

@@ -5,6 +5,7 @@ import 'package:costikstudio/features/account/view/account_page.dart';
 import 'package:costikstudio/features/adb_manager/view/adb_manager_page.dart';
 import 'package:costikstudio/features/admin_dashboard/view/admin_dashboard_page.dart';
 import 'package:costikstudio/features/admin_product_gallery/view/admin_product_gallery_page.dart';
+import 'package:costikstudio/features/admin_tutorial/view/admin_tutorial_page.dart';
 import 'package:costikstudio/features/apps/view/apps_page.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:costikstudio/features/auth/view/login_page.dart';
@@ -249,6 +250,18 @@ GoRouter createAppRouter(
               builder: (context, state) => const AdminProductGalleryPage(),
             ),
             GoRoute(
+              path: AppRoutes.adminTutorial,
+              name: AppRouteNames.adminTutorial,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAdmin) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
+              builder: (context, state) => const AdminTutorialPage(),
+            ),
+            GoRoute(
               path: AppRoutes.home,
               redirect: (context, state) => AppRoutes.adminDashboard,
             ),
@@ -387,6 +400,7 @@ class CostikStudioShell extends StatelessWidget {
                 _NavItem('Billing', AppRoutes.adminBilling),
                 _NavItem('Signage', AppRoutes.adminSignage),
                 _NavItem('Gallery', AppRoutes.adminProductGallery),
+                _NavItem('Tutorial', AppRoutes.adminTutorial),
                 _NavItem('Account', AppRoutes.account),
               ]
             : [
