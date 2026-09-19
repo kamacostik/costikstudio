@@ -528,48 +528,48 @@ class _KpiCard extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(data.icon, color: color, size: 22),
+                  child: Icon(data.icon, color: color, size: 18),
                 ),
                 if (data.isAlert)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 6,
+                      vertical: 2,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.redAccent.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Text(
                       'Action Needed',
                       style: TextStyle(
                         color: Colors.redAccent,
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Text(
               data.value,
               maxLines: 1,
@@ -577,34 +577,20 @@ class _KpiCard extends StatelessWidget {
               style: TextStyle(
                 color: data.isAlert ? Colors.redAccent : CostikStudioTheme.navy,
                 fontWeight: FontWeight.w900,
-                fontSize: 28,
-                letterSpacing: -0.5,
+                fontSize: 20,
                 height: 1,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 2),
             Text(
-              data.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              '${data.label} • ${data.trend}',
               style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
                 color: CostikStudioTheme.slate,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
               ),
-            ),
-            const Spacer(),
-            Text(
-              data.trend,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: data.isAlert
-                    ? Colors.redAccent.withValues(alpha: 0.8)
-                    : const Color(0xFF16A34A),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
             ),
           ],
         ),
