@@ -55,7 +55,7 @@ class _AdminBillingView extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Dummy backoffice for approving manual top ups, checking customer wallets, and monitoring subscriptions.',
+                  'Sistem pusat pengelolaan saldo (Top Up), lisensi aktif (Subscriptions), dan riwayat tagihan customer Costik Studio.',
                   style: Theme.of(context).textTheme.titleMedium
                       ?.copyWith(color: CostikStudioTheme.slate, height: 1.5),
                 ),
