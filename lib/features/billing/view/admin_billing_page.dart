@@ -267,8 +267,11 @@ class _AdminBillingTablesState extends State<_AdminBillingTables> {
       columns: [
         signageDataColumn('Pelanggan'),
         signageDataColumn('Produk'),
-        signageDataColumn('Status / Expired'),
-        signageDataColumn('Aksi (Manual)'),
+        signageDataColumn('Dev'),
+        signageDataColumn('Siklus'),
+        signageDataColumn('Expired'),
+        signageDataColumn('Status'),
+        signageDataColumn('Aksi'),
       ],
       rows: [
         for (final sub in widget.snapshot.allSubscriptions)
@@ -280,7 +283,7 @@ class _AdminBillingTablesState extends State<_AdminBillingTables> {
                   iconColor: Colors.deepPurple,
                   title: sub.customerEmail,
                   reference:
-                      'Dev: ${sub.deviceCount} | Siklus: ${sub.billingCycleMonths} bln',
+                      'ID: ${sub.id.length > 8 ? sub.id.substring(0, 8) : sub.id}',
                 ),
               ),
               DataCell(
@@ -290,25 +293,27 @@ class _AdminBillingTablesState extends State<_AdminBillingTables> {
                 ),
               ),
               DataCell(
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SignageStatusBadge(
-                      label: sub.statusText.toUpperCase(),
-                      color: sub.statusText == 'active'
-                          ? Colors.green
-                          : Colors.red,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Exp: ${_formatShortDate(sub.expiresAt)}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: CostikStudioTheme.slate,
-                      ),
-                    ),
-                  ],
+                Text(
+                  '${sub.deviceCount}',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              DataCell(
+                Text(
+                  '${sub.billingCycleMonths} bln',
+                  style: const TextStyle(color: CostikStudioTheme.slate),
+                ),
+              ),
+              DataCell(
+                Text(
+                  _formatShortDate(sub.expiresAt),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              DataCell(
+                SignageStatusBadge(
+                  label: sub.statusText.toUpperCase(),
+                  color: sub.statusText == 'active' ? Colors.green : Colors.red,
                 ),
               ),
               DataCell(
