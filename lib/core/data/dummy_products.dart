@@ -76,6 +76,25 @@ const dummyProducts = <ProductItem>[
       'Low-stock and operational stock reports',
     ],
   ),
+  ProductItem(
+    id: 'adb-manager',
+    name: 'ADB Manager',
+    tagline: 'Windows Desktop tool for managing Android TV devices via ADB.',
+    description: 'Tools spesifik bagi teknisi instalasi untuk mempercepat proses eksekusi perintah ADB ke Android TV atau Set Top Box. Aplikasi ini berjalan murni di sistem operasi Windows.',
+    category: ProductCategory.productivity,
+    status: ProductStatus.beta,
+    accentHex: 0xFFF97316,
+    productUrl: 'https://costikstudio.com',
+    downloadUrl: 'https://drive.google.com/drive/folders/153-9t8cYYZFX_aOfaVI52KRSjKk1mYOT?usp=drive_link',
+    isFree: true,
+    isNew: true,
+    features: [
+      'Instalasi aplikasi (APK) instan melalui jaringan atau kabel USB',
+      'Manajemen DCO (Clear Cache, Set, Verify, Remove)',
+      'Enable/Disable IPTV Launcher sebagai default launcher',
+      'Hapus User atau Account sistem yang tidak terpakai dari TV',
+    ],
+  ),
 ];
 
 ProductItem? findProductById(String id) {
