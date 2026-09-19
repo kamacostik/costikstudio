@@ -264,6 +264,52 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
     ], silent: silent);
   }
 
+  Future<void> _confirmEnableIptvLauncher() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+              SizedBox(width: 12),
+              Text(
+                'Konfirmasi Pengaturan Launcher',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Mengaktifkan fitur ini akan menjadikan aplikasi IPTV sebagai Launcher Utama (Default) di Android TV.\n\n'
+            'Jika setelah proses ini fungsi navigasi atau remote control (seperti tombol Home) tidak merespons dengan normal, Anda dapat mengembalikannya ke pengaturan pabrik dengan menekan tombol "Disable IPTV Launcher".\n\n'
+            'Apakah Anda yakin ingin melanjutkan eksekusi?',
+            style: TextStyle(height: 1.5, fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.blue.shade700,
+              ),
+              child: const Text('Ya, Lanjutkan'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      await _enableIptvLauncher();
+    }
+  }
+
   Future<void> _enableIptvLauncher() async {
     _log('Mengaktifkan IPTV Launcher...');
     bool r1 = await _setHomeActivity(silent: true);
@@ -747,7 +793,7 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
                             FilledButton.icon(
                               onPressed: _isLoading
                                   ? null
-                                  : _enableIptvLauncher,
+                                  : _confirmEnableIptvLauncher,
                               icon: const Icon(
                                 Icons.play_arrow_rounded,
                                 size: 16,
