@@ -17,6 +17,8 @@ import 'package:costikstudio/features/billing/widgets/transactions_card.dart';
 import 'package:costikstudio/features/billing/widgets/wallet_card.dart';
 import 'package:costikstudio/features/shared/widgets/product_card.dart';
 import 'package:costikstudio/features/shared/widgets/product_gallery_strip.dart';
+import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:costikstudio/features/signage/view/signage_admin_page.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
 import 'package:costikstudio/features/subscription/view/signage_subscription_page.dart';
@@ -2107,8 +2109,60 @@ class _DashboardNavItem {
   final bool isNew;
 }
 
-class _AdbManagerPromoPage extends StatelessWidget {
+class _AdbManagerPromoPage extends StatefulWidget {
   const _AdbManagerPromoPage();
+
+  @override
+  State<_AdbManagerPromoPage> createState() => _AdbManagerPromoPageState();
+}
+
+class _AdbManagerPromoPageState extends State<_AdbManagerPromoPage> {
+  String? _imageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCoverImage();
+  }
+
+  Future<void> _loadCoverImage() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('product_images')
+          .select('image_url')
+          .eq('product_id', 'adb-manager')
+          .eq('is_cover', true)
+          .eq('is_active', true)
+          .maybeSingle();
+
+      if (response != null && response['image_url'] != null) {
+        if (mounted) {
+          setState(() {
+            _imageUrl = response['image_url'] as String;
+          });
+        }
+      } else {
+        // Fallback to any active image if no cover is explicitly set
+        final anyResponse = await Supabase.instance.client
+            .from('product_images')
+            .select('image_url')
+            .eq('product_id', 'adb-manager')
+            .eq('is_active', true)
+            .limit(1)
+            .maybeSingle();
+
+        if (anyResponse != null && anyResponse['image_url'] != null) {
+          if (mounted) {
+            setState(() {
+              _imageUrl = anyResponse['image_url'] as String;
+            });
+          }
+        }
+      }
+    } catch (_) {
+      // Ignore network or db errors, just show fallback
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2128,16 +2182,12 @@ class _AdbManagerPromoPage extends StatelessWidget {
             children: [
               AspectRatio(
                 aspectRatio: 16 / 9,
-                child: Container(
-                  color: const Color(0xFFF8FAFC),
-                  child: Center(
-                    child: Icon(
-                      Icons.adb_rounded,
-                      size: 84,
-                      color: Colors.blue.withValues(alpha: 0.1),
-                    ),
-                  ),
-                ),
+                child: _imageUrl != null
+                    ? CachedGalleryImage(
+                        imageUrl: _imageUrl!,
+                        fallback: _buildFallbackIcon(),
+                      )
+                    : _buildFallbackIcon(),
               ),
               Padding(
                 padding: const EdgeInsets.all(24),
@@ -2238,6 +2288,19 @@ class _AdbManagerPromoPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFallbackIcon() {
+    return Container(
+      color: const Color(0xFFF8FAFC),
+      child: Center(
+        child: Icon(
+          Icons.adb_rounded,
+          size: 84,
+          color: Colors.blue.withValues(alpha: 0.1),
+        ),
+      ),
     );
   }
 
