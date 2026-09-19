@@ -1903,6 +1903,7 @@ class _DashboardNavBar extends StatelessWidget {
           _DashboardTab.adbManager,
           'ADB Manager',
           Icons.adb_rounded,
+          isNew: true,
         ),
       ]),
       _DashboardNavSection('BILLING', [
@@ -2033,15 +2034,46 @@ class _DashboardNavButton extends StatelessWidget {
               Icon(item.icon, color: color, size: 18),
               const SizedBox(width: 10),
               Flexible(
-                child: Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
-                    fontSize: 14,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: color,
+                          fontWeight: selected
+                              ? FontWeight.w900
+                              : FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    if (item.isNew && !isCompact) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'NEW',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],
@@ -2065,12 +2097,14 @@ class _DashboardNavItem {
     this.label,
     this.icon, {
     this.enabled = true,
+    this.isNew = false,
   });
 
   final _DashboardTab tab;
   final String label;
   final IconData icon;
   final bool enabled;
+  final bool isNew;
 }
 
 class _AdbManagerPromoPage extends StatelessWidget {
