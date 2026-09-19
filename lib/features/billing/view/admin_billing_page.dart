@@ -1,8 +1,10 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
+import 'package:costikstudio/core/supabase/supabase_config.dart';
 import 'package:costikstudio/features/billing/admin/admin_billing_cubit.dart';
 import 'package:costikstudio/features/billing/admin/admin_billing_repository.dart';
 import 'package:costikstudio/features/billing/admin/dummy_admin_billing_repository.dart';
+import 'package:costikstudio/features/billing/admin/supabase_admin_billing_repository.dart';
 import 'package:costikstudio/features/billing/widgets/billing_notice.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
@@ -14,8 +16,11 @@ class AdminBillingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          AdminBillingCubit(repository: DummyAdminBillingRepository())..load(),
+      create: (_) => AdminBillingCubit(
+        repository: SupabaseConfig.isConfigured
+            ? const SupabaseAdminBillingRepository()
+            : DummyAdminBillingRepository(),
+      )..load(),
       child: const _AdminBillingView(),
     );
   }
