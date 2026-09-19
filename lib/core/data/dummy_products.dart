@@ -89,7 +89,7 @@ const dummyProducts = <ProductItem>[
     isFree: true,
     isNew: true,
     features: [
-      'Instalasi aplikasi (APK) instan melalui jaringan atau kabel USB',
+      'Instalasi & Update aplikasi (APK) instan melalui jaringan atau kabel USB',
       'Manajemen DCO (Clear Cache, Set, Verify, Remove)',
       'Enable/Disable IPTV Launcher sebagai default launcher',
       'Hapus User atau Account sistem yang tidak terpakai dari TV',

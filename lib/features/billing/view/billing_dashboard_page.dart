@@ -2171,7 +2171,7 @@ class _AdbManagerPromoPage extends StatelessWidget {
                     const SizedBox(height: 12),
                     _buildFeatureItem(
                       Icons.install_mobile_rounded,
-                      'Tools spesifik untuk install APK ke perangkat melalui jaringan (Network/Wi-Fi) ataupun kabel USB secara langsung tanpa flashdisk.',
+                      'Tools spesifik untuk install dan update APK ke perangkat melalui jaringan (Network/Wi-Fi) ataupun kabel USB secara langsung tanpa flashdisk.',
                     ),
                     _buildFeatureItem(
                       Icons.tv_rounded,
