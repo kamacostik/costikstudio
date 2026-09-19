@@ -2185,6 +2185,37 @@ class _AdbManagerPromoPage extends StatelessWidget {
                       Icons.people_rounded,
                       'Hapus User atau Account sistem yang tidak terpakai dari TV.',
                     ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            size: 20,
+                            color: Colors.orange.shade800,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'PERINGATAN: Fitur Enable IPTV Launcher, Manajemen DCO, dan Hapus User bersifat KHUSUS untuk produk Costik IPTV. DILARANG KERAS menggunakan fungsi-fungsi tersebut untuk perangkat/STB Digital Signage agar sistem operasi pabrik tidak terkunci.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.orange.shade900,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 28),
                     SizedBox(
                       width: double.infinity,
