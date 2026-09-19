@@ -446,8 +446,7 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'ADB Manager memerlukan akses proses sistem lokal (adb.exe) '
-                      'yang hanya dapat dijalankan pada aplikasi Windows Desktop.',
+                      'ADB Manager memerlukan akses proses sistem lokal (adb.exe) yang hanya dapat dijalankan pada aplikasi Windows Desktop.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 13,
@@ -467,324 +466,567 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Icon(Icons.adb_rounded, size: 28, color: theme.primaryColor),
-                const SizedBox(width: 12),
-                Text(
-                  'ADB Manager',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Kelola koneksi Android TV dan install aplikasi melalui ADB.',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 24),
-
-            // 1) Device Connection
-            _SectionCard(
-              icon: Icons.wifi_rounded,
-              title: 'Device Connection',
-              child: Row(
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // LEFT PANEL: Controls (Grid)
+          Expanded(
+            flex: 5,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.adb_rounded,
+                        size: 28,
+                        color: theme.primaryColor,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'ADB Manager',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (_isLoading)
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Kelola koneksi Android TV dan install aplikasi melalui ADB.',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 24),
+
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: [
+                      // 1) Device Connection
+                      _CompactCard(
+                        icon: Icons.wifi_rounded,
+                        title: 'Device Connection',
+                        width: 320,
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _ipController,
+                              style: const TextStyle(fontSize: 13),
+                              decoration: const InputDecoration(
+                                hintText: 'IP Address (192.168.1.8:5555)',
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: FilledButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _connectToDevice,
+                                    child: const Text(
+                                      'Connect',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _disconnectAll,
+                                    child: const Text(
+                                      'Disconnect',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                onPressed: _isLoading ? null : _checkDevices,
+                                child: const Text(
+                                  'List Devices',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // 2) Install Application
+                      _CompactCard(
+                        icon: Icons.install_mobile_rounded,
+                        title: 'Install Application',
+                        width: 320,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _apkPathController,
+                                    readOnly: true,
+                                    style: const TextStyle(fontSize: 13),
+                                    decoration: const InputDecoration(
+                                      hintText: 'Pilih file APK',
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 12,
+                                      ),
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton.outlined(
+                                  onPressed: _isLoading ? null : _pickApk,
+                                  icon: const Icon(
+                                    Icons.folder_open_rounded,
+                                    size: 18,
+                                  ),
+                                  tooltip: 'Browse',
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: _isLoading ? null : _installApk,
+                                icon: const Icon(
+                                  Icons.download_rounded,
+                                  size: 16,
+                                ),
+                                label: const Text(
+                                  'Install APK',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.redAccent,
+                                ),
+                                onPressed: _isLoading
+                                    ? null
+                                    : _uninstallIptvApp,
+                                child: const Text(
+                                  'Uninstall IPTV App',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // 3) IPTV Launcher Setup
+                      _CompactCard(
+                        icon: Icons.tv_rounded,
+                        title: 'IPTV Launcher Setup',
+                        width: 320,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: _isLoading
+                                  ? null
+                                  : _enableIptvLauncher,
+                              icon: const Icon(
+                                Icons.play_arrow_rounded,
+                                size: 16,
+                              ),
+                              label: const Text(
+                                'Enable IPTV Launcher',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            OutlinedButton(
+                              onPressed: _isLoading
+                                  ? null
+                                  : _disableIptvLauncher,
+                              child: const Text(
+                                'Disable IPTV Launcher',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            OutlinedButton(
+                              onPressed: _isLoading ? null : _findLaunchers,
+                              child: const Text(
+                                'Find Launchers',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // 4) User Management
+                      _CompactCard(
+                        icon: Icons.people_rounded,
+                        title: 'User Management',
+                        width: 320,
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _userIdController,
+                              style: const TextStyle(fontSize: 13),
+                              decoration: const InputDecoration(
+                                hintText: 'User ID (misal 10)',
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _isLoading ? null : _listUsers,
+                                    child: const Text(
+                                      'List Users',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.redAccent,
+                                    ),
+                                    onPressed: _isLoading ? null : _removeUser,
+                                    child: const Text(
+                                      'Remove User',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // 5) Custom Command
+                      _CompactCard(
+                        icon: Icons.terminal_rounded,
+                        title: 'Custom Command',
+                        width: 320,
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _customCommandController,
+                              style: const TextStyle(fontSize: 13),
+                              decoration: const InputDecoration(
+                                hintText: 'adb shell pm list packages',
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(),
+                              ),
+                              onSubmitted: (_) => _runCustomCommand(),
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: _isLoading
+                                    ? null
+                                    : _runCustomCommand,
+                                icon: const Icon(
+                                  Icons.play_arrow_rounded,
+                                  size: 16,
+                                ),
+                                label: const Text(
+                                  'Run Command',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // 6) DCO Set (Device Owner)
+                      _CompactCard(
+                        icon: Icons.admin_panel_settings_rounded,
+                        title: 'Device Owner (DCO)',
+                        width: 320,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: FilledButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _setDeviceOwner,
+                                    child: const Text(
+                                      'Set DCO',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _checkDeviceOwner,
+                                    child: const Text(
+                                      'Verify',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _checkAccounts,
+                                    child: const Text(
+                                      'Accounts',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _isLoading ? null : _listOwners,
+                                    child: const Text(
+                                      'Owners',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _clearGsfCache,
+                                    child: const Text(
+                                      'Clear GSF',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.redAccent,
+                                    ),
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _removeDeviceOwner,
+                                    child: const Text(
+                                      'Rm DCO',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // RIGHT PANEL: Console Output
+          Expanded(
+            flex: 3,
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(0, 24, 24, 24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E2E),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.black12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Console Header
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      border: const Border(
+                        bottom: BorderSide(color: Colors.white10),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.terminal_rounded,
+                          size: 16,
+                          color: Colors.white70,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Terminal Output',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        InkWell(
+                          onTap: () => setState(() => _consoleOutput = ''),
+                          borderRadius: BorderRadius.circular(4),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            child: Text(
+                              'Clear',
+                              style: TextStyle(
+                                color: Colors.blueAccent,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Console Body
                   Expanded(
-                    child: TextField(
-                      controller: _ipController,
-                      decoration: const InputDecoration(
-                        hintText: 'Alamat IP (misal 192.168.1.8:5555)',
-                        isDense: true,
-                        border: OutlineInputBorder(),
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      child: SelectableText(
+                        _consoleOutput.isEmpty ? '>_ Ready...' : _consoleOutput,
+                        style: TextStyle(
+                          color: _consoleOutput.isEmpty
+                              ? Colors.white38
+                              : const Color(0xFF00FF88),
+                          fontFamily: 'Consolas',
+                          fontSize: 12,
+                          height: 1.5,
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  FilledButton.icon(
-                    onPressed: _isLoading ? null : _connectToDevice,
-                    icon: const Icon(Icons.link_rounded, size: 16),
-                    label: const Text('Connect'),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton(
-                    onPressed: _isLoading ? null : _disconnectAll,
-                    child: const Text('Disconnect All'),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton(
-                    onPressed: _isLoading ? null : _checkDevices,
-                    child: const Text('List Devices'),
-                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // 2) Install Application
-            _SectionCard(
-              icon: Icons.install_mobile_rounded,
-              title: 'Install Application',
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _apkPathController,
-                      readOnly: true,
-                      decoration: const InputDecoration(
-                        hintText: 'Pilih file APK',
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  OutlinedButton(
-                    onPressed: _isLoading ? null : _pickApk,
-                    child: const Text('Browse...'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.icon(
-                    onPressed: _isLoading ? null : _installApk,
-                    icon: const Icon(Icons.download_rounded, size: 16),
-                    label: const Text('Install APK'),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                    ),
-                    onPressed: _isLoading ? null : _uninstallIptvApp,
-                    child: const Text('Uninstall IPTV'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 3) IPTV Launcher Setup
-            _SectionCard(
-              icon: Icons.tv_rounded,
-              title: 'IPTV Launcher Setup',
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  FilledButton.icon(
-                    onPressed: _isLoading ? null : _enableIptvLauncher,
-                    icon: const Icon(Icons.play_arrow_rounded, size: 16),
-                    label: const Text('Enable IPTV Launcher'),
-                  ),
-                  OutlinedButton(
-                    onPressed: _isLoading ? null : _disableIptvLauncher,
-                    child: const Text('Disable IPTV Launcher'),
-                  ),
-                  OutlinedButton(
-                    onPressed: _isLoading ? null : _findLaunchers,
-                    child: const Text('Find Launchers'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 4) DCO Set
-            _SectionCard(
-              icon: Icons.admin_panel_settings_rounded,
-              title: 'Device Control Owner (DCO)',
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  OutlinedButton(
-                    onPressed: _isLoading ? null : _checkAccounts,
-                    child: const Text('Check Accounts'),
-                  ),
-                  OutlinedButton(
-                    onPressed: _isLoading ? null : _clearGsfCache,
-                    child: const Text('Clear GSF Cache'),
-                  ),
-                  FilledButton(
-                    onPressed: _isLoading ? null : _setDeviceOwner,
-                    child: const Text('Set DCO'),
-                  ),
-                  OutlinedButton(
-                    onPressed: _isLoading ? null : _checkDeviceOwner,
-                    child: const Text('Verify DCO'),
-                  ),
-                  OutlinedButton(
-                    onPressed: _isLoading ? null : _listOwners,
-                    child: const Text('List UserO'),
-                  ),
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                    ),
-                    onPressed: _isLoading ? null : _removeDeviceOwner,
-                    child: const Text('Remove DCO'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 5) User Management
-            _SectionCard(
-              icon: Icons.people_rounded,
-              title: 'User Management',
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _userIdController,
-                      decoration: const InputDecoration(
-                        hintText: 'User ID (misal 10)',
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  OutlinedButton(
-                    onPressed: _isLoading ? null : _listUsers,
-                    child: const Text('List Users'),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                    ),
-                    onPressed: _isLoading ? null : _removeUser,
-                    child: const Text('Remove User'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 6) Custom Command
-            _SectionCard(
-              icon: Icons.terminal_rounded,
-              title: 'Custom Command',
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _customCommandController,
-                      decoration: const InputDecoration(
-                        hintText: 'Perintah ADB (misal shell pm list packages)',
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                      ),
-                      onSubmitted: (_) => _runCustomCommand(),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  FilledButton.icon(
-                    onPressed: _isLoading ? null : _runCustomCommand,
-                    icon: const Icon(Icons.play_arrow_rounded, size: 16),
-                    label: const Text('Run'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 7) Console Output
-            _SectionCard(
-              icon: Icons.code_rounded,
-              title: 'Console Output',
-              trailing: TextButton.icon(
-                onPressed: () => setState(() => _consoleOutput = ''),
-                icon: const Icon(Icons.clear_all_rounded, size: 16),
-                label: const Text('Clear'),
-              ),
-              child: Container(
-                height: 300,
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E2E),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  child: SelectableText(
-                    _consoleOutput.isEmpty
-                        ? '// Output akan muncul di sini...'
-                        : _consoleOutput,
-                    style: TextStyle(
-                      color: _consoleOutput.isEmpty
-                          ? Colors.grey
-                          : const Color(0xFF00FF88),
-                      fontFamily: 'Consolas',
-                      fontSize: 13,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            if (_isLoading)
-              const Padding(
-                padding: EdgeInsets.only(top: 12),
-                child: LinearProgressIndicator(),
-              ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Reusable card section widget for ADB Manager.
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({
+/// Reusable compact card for ADB Manager Grid layout.
+class _CompactCard extends StatelessWidget {
+  const _CompactCard({
     required this.icon,
     required this.title,
     required this.child,
-    this.trailing,
+    this.width,
   });
 
   final IconData icon;
   final String title;
   final Widget child;
-  final Widget? trailing;
+  final double? width;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    return Container(
+      width: width,
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, size: 18, color: Colors.blue.shade700),
+                Icon(icon, size: 16, color: Colors.blue.shade700),
                 const SizedBox(width: 8),
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                if (trailing != null) ...[const Spacer(), trailing!],
               ],
             ),
             const SizedBox(height: 14),
