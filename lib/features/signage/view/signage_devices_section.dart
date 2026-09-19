@@ -389,223 +389,246 @@ class _DeviceSettingsAction extends StatelessWidget {
           ),
           content: SizedBox(
             width: (MediaQuery.sizeOf(context).width - 48)
-                .clamp(320, 460)
+                .clamp(600, 800)
                 .toDouble(),
             child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Mode Aplikasi',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: CostikStudioTheme.navy,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Pilih tampilan utama pada layar TV.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: CostikStudioTheme.slate,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  DropdownButtonFormField<SignageAppMode>(
-                    initialValue: appMode,
-                    decoration: inputDecoration.copyWith(
-                      prefixIcon: const Icon(Icons.apps_rounded),
-                    ),
-                    items: [
-                      for (final mode in SignageAppMode.values)
-                        DropdownMenuItem(value: mode, child: Text(mode.label)),
-                    ],
-                    onChanged: (mode) {
-                      if (mode != null) setState(() => appMode = mode);
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Tema Event Schedule',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: CostikStudioTheme.navy,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Pilih gaya tampilan jadwal event untuk device ini.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: CostikStudioTheme.slate,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  DropdownButtonFormField<SignageEventTheme>(
-                    initialValue: eventTheme,
-                    decoration: inputDecoration.copyWith(
-                      prefixIcon: const Icon(Icons.palette_rounded),
-                    ),
-                    items: [
-                      for (final theme in SignageEventTheme.values)
-                        DropdownMenuItem(
-                          value: theme,
-                          child: Text(theme.label),
-                        ),
-                    ],
-                    onChanged: (theme) {
-                      if (theme != null) setState(() => eventTheme = theme);
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Background (Tanpa Event)',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: CostikStudioTheme.navy,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Gambar yang tampil jika tidak ada event hari ini.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: CostikStudioTheme.slate,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  DropdownButtonFormField<String?>(
-                    initialValue: eventBackgroundUrl,
-                    isExpanded: true,
-                    decoration: inputDecoration.copyWith(
-                      prefixIcon: const Icon(Icons.wallpaper_rounded),
-                    ),
-                    items: [
-                      const DropdownMenuItem<String?>(
-                        value: null,
-                        child: Text('Tidak pakai background'),
-                      ),
-                      for (final item in backgroundItems)
-                        DropdownMenuItem<String?>(
-                          value: item.publicUrl,
-                          child: Text(item.fileName),
-                        ),
-                    ],
-                    onChanged: (value) =>
-                        setState(() => eventBackgroundUrl = value),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'QR Code Interaktif',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: CostikStudioTheme.navy,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Tampilkan QR code overlay di sudut layar (untuk link menu, absensi, dsb).',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: CostikStudioTheme.slate,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    value: qrEnabled,
-                    title: const Text('Aktifkan QR Code Overlay'),
-                    onChanged: (value) => setState(() => qrEnabled = value),
-                  ),
-                  if (qrEnabled) ...[
-                    const SizedBox(height: 10),
-                    TextFormField(
-                      controller: qrUrlController,
-                      decoration: inputDecoration.copyWith(
-                        hintText: 'https://...',
-                        prefixIcon: const Icon(Icons.qr_code_2_rounded),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Text Berjalan',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: CostikStudioTheme.navy,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Pesan ticker yang berjalan di bagian bawah layar event.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: CostikStudioTheme.slate,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    value: runningTextEnabled,
-                    title: const Text('Aktifkan text berjalan'),
-                    onChanged: (value) =>
-                        setState(() => runningTextEnabled = value),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: runningTextController,
-                    enabled: runningTextEnabled,
-                    maxLines: 2,
-                    maxLength: 180,
-                    decoration: inputDecoration.copyWith(
-                      prefixIcon: const Icon(Icons.short_text_rounded),
-                      hintText: 'Contoh: Welcome to Costik Hotel • Breakfast starts at 06:00',
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Durasi Slide Event',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: CostikStudioTheme.navy,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Lama tiap gambar event tampil (berlaku jika event > 4).',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: CostikStudioTheme.slate,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Slider(
-                          value: slideDuration.toDouble(),
-                          min: 3,
-                          max: 60,
-                          divisions: 57,
-                          label: '$slideDuration detik',
-                          onChanged: (value) =>
-                              setState(() => slideDuration = value.round()),
-                        ),
-                      ),
-                      Container(
-                        width: 50,
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          '${slideDuration}s',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: CostikStudioTheme.primary,
-                            fontSize: 15,
+                  // Left Column: Layout & Appearance
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Mode Aplikasi',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Pilih tampilan utama pada layar TV.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<SignageAppMode>(
+                          initialValue: appMode,
+                          decoration: inputDecoration.copyWith(
+                            prefixIcon: const Icon(Icons.apps_rounded),
+                          ),
+                          items: [
+                            for (final mode in SignageAppMode.values)
+                              DropdownMenuItem(
+                                value: mode,
+                                child: Text(mode.label),
+                              ),
+                          ],
+                          onChanged: (mode) {
+                            if (mode != null) setState(() => appMode = mode);
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Tema Event Schedule',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Pilih gaya tampilan jadwal event untuk device ini.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<SignageEventTheme>(
+                          initialValue: eventTheme,
+                          decoration: inputDecoration.copyWith(
+                            prefixIcon: const Icon(Icons.palette_rounded),
+                          ),
+                          items: [
+                            for (final theme in SignageEventTheme.values)
+                              DropdownMenuItem(
+                                value: theme,
+                                child: Text(theme.label),
+                              ),
+                          ],
+                          onChanged: (theme) {
+                            if (theme != null)
+                              setState(() => eventTheme = theme);
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Background (Tanpa Event)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Gambar yang tampil jika tidak ada event hari ini.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<String?>(
+                          initialValue: eventBackgroundUrl,
+                          isExpanded: true,
+                          decoration: inputDecoration.copyWith(
+                            prefixIcon: const Icon(Icons.wallpaper_rounded),
+                          ),
+                          items: [
+                            const DropdownMenuItem<String?>(
+                              value: null,
+                              child: Text('Tidak pakai background'),
+                            ),
+                            for (final item in backgroundItems)
+                              DropdownMenuItem<String?>(
+                                value: item.publicUrl,
+                                child: Text(item.fileName),
+                              ),
+                          ],
+                          onChanged: (value) =>
+                              setState(() => eventBackgroundUrl = value),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 32),
+                  // Right Column: Overlays & Behaviours
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'QR Code Interaktif',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Tampilkan QR code overlay di sudut layar (untuk link menu, absensi, dsb).',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          value: qrEnabled,
+                          title: const Text('Aktifkan QR Code Overlay'),
+                          onChanged: (value) =>
+                              setState(() => qrEnabled = value),
+                        ),
+                        if (qrEnabled) ...[
+                          const SizedBox(height: 10),
+                          TextFormField(
+                            controller: qrUrlController,
+                            decoration: inputDecoration.copyWith(
+                              hintText: 'https://...',
+                              prefixIcon: const Icon(Icons.qr_code_2_rounded),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Text Berjalan',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Pesan ticker yang berjalan di bagian bawah layar event.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          value: runningTextEnabled,
+                          title: const Text('Aktifkan text berjalan'),
+                          onChanged: (value) =>
+                              setState(() => runningTextEnabled = value),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: runningTextController,
+                          enabled: runningTextEnabled,
+                          maxLines: 2,
+                          maxLength: 180,
+                          decoration: inputDecoration.copyWith(
+                            prefixIcon: const Icon(Icons.short_text_rounded),
+                            hintText: 'Contoh: Welcome to Costik Hotel • Breakfast starts at 06:00',
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Durasi Slide Event',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Lama tiap gambar event tampil (berlaku jika event > 4).',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Slider(
+                                value: slideDuration.toDouble(),
+                                min: 3,
+                                max: 60,
+                                divisions: 57,
+                                label: '$slideDuration detik',
+                                onChanged: (value) => setState(
+                                  () => slideDuration = value.round(),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 50,
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                '${slideDuration}s',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: CostikStudioTheme.primary,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
