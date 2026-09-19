@@ -296,10 +296,26 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
 
   Future<void> _checkAccounts() async {
     _log('Mengecek akun, harap tunggu...');
-    await _runAdbCommand([
-      'shell',
-      'dumpsys account | grep "Account {"',
-    ], silent: false);
+    // Kita jalankan dumpsys murni, lalu saring (grep) hasilnya di Dart
+    // supaya aman berjalan di berbagai OS maupun versi Android.
+    final adbPath = await _getAdbPath();
+    final result = await Process.run(adbPath, ['shell', 'dumpsys', 'account']);
+
+    if (result.stdout.toString().isNotEmpty) {
+      final lines = result.stdout.toString().split('\n');
+      final accountLines = lines.where((l) => l.contains('Account {')).toList();
+
+      if (accountLines.isNotEmpty) {
+        _log('Ditemukan ${accountLines.length} akun:');
+        for (var line in accountLines) {
+          _log(line.trim());
+        }
+      } else {
+        _log('Tidak ada akun yang tersimpan di perangkat.');
+      }
+    } else {
+      _log('Gagal membaca data akun atau perangkat tidak merespon.');
+    }
   }
 
   Future<void> _clearGsfCache() async {
@@ -328,10 +344,29 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
 
   Future<void> _checkDeviceOwner() async {
     _log('Verifikasi DCO, harap tunggu...');
-    await _runAdbCommand([
+    final adbPath = await _getAdbPath();
+    final result = await Process.run(adbPath, [
       'shell',
-      'dumpsys device_policy | grep -i "Device Owner"',
-    ], silent: false);
+      'dumpsys',
+      'device_policy',
+    ]);
+
+    if (result.stdout.toString().isNotEmpty) {
+      final lines = result.stdout.toString().split('\n');
+      final dcoLines = lines
+          .where((l) => l.toLowerCase().contains('device owner'))
+          .toList();
+
+      if (dcoLines.isNotEmpty) {
+        for (var line in dcoLines) {
+          _log(line.trim());
+        }
+      } else {
+        _log('Status: Tidak ada Device Owner (DCO) yang aktif.');
+      }
+    } else {
+      _log('Gagal membaca device policy atau perangkat tidak merespon.');
+    }
   }
 
   Future<void> _removeDeviceOwner() async {
