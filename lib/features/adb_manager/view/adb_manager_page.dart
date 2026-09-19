@@ -299,7 +299,7 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
     await _runAdbCommand([
       'shell',
       'dumpsys account | grep "Account {"',
-    ], silent: true);
+    ], silent: false);
   }
 
   Future<void> _clearGsfCache() async {
@@ -309,7 +309,7 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
       'pm',
       'clear',
       'com.google.android.gsf',
-    ], silent: true);
+    ], silent: false);
   }
 
   Future<void> _setDeviceOwner() async {
@@ -323,7 +323,7 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
       'dpm',
       'set-device-owner',
       _deviceOwnerController.text,
-    ], silent: true);
+    ], silent: false);
   }
 
   Future<void> _checkDeviceOwner() async {
@@ -331,7 +331,7 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
     await _runAdbCommand([
       'shell',
       'dumpsys device_policy | grep -i "Device Owner"',
-    ], silent: true);
+    ], silent: false);
   }
 
   Future<void> _removeDeviceOwner() async {
@@ -345,12 +345,12 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
       'dpm',
       'remove-active-admin',
       _deviceOwnerController.text,
-    ], silent: true);
+    ], silent: false);
   }
 
   Future<void> _listOwners() async {
     _log('Listing owners...');
-    await _runAdbCommand(['shell', 'dpm', 'list-owners'], silent: true);
+    await _runAdbCommand(['shell', 'dpm', 'list-owners'], silent: false);
   }
 
   // ---------------------------------------------------------------------------
@@ -739,48 +739,6 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
                         ),
                       ),
 
-                      // 5) Custom Command
-                      _CompactCard(
-                        icon: Icons.terminal_rounded,
-                        title: 'Custom Command',
-                        width: 320,
-                        child: Column(
-                          children: [
-                            TextField(
-                              controller: _customCommandController,
-                              style: const TextStyle(fontSize: 13),
-                              decoration: const InputDecoration(
-                                hintText: 'adb shell pm list packages',
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                                border: OutlineInputBorder(),
-                              ),
-                              onSubmitted: (_) => _runCustomCommand(),
-                            ),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton.icon(
-                                onPressed: _isLoading
-                                    ? null
-                                    : _runCustomCommand,
-                                icon: const Icon(
-                                  Icons.play_arrow_rounded,
-                                  size: 16,
-                                ),
-                                label: const Text(
-                                  'Run Command',
-                                  style: TextStyle(fontSize: 12),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
                       // 6) DCO Set (Device Owner)
                       _CompactCard(
                         icon: Icons.admin_panel_settings_rounded,
@@ -789,6 +747,34 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _checkAccounts,
+                                    child: const Text(
+                                      'Check Accounts',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : _clearGsfCache,
+                                    child: const Text(
+                                      'Clear GSF',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
                             Row(
                               children: [
                                 Expanded(
@@ -809,7 +795,7 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
                                         ? null
                                         : _checkDeviceOwner,
                                     child: const Text(
-                                      'Verify',
+                                      'Verify DCO',
                                       style: TextStyle(fontSize: 12),
                                     ),
                                   ),
@@ -819,39 +805,11 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: _isLoading
-                                        ? null
-                                        : _checkAccounts,
-                                    child: const Text(
-                                      'Accounts',
-                                      style: TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
                                 Expanded(
                                   child: OutlinedButton(
                                     onPressed: _isLoading ? null : _listOwners,
                                     child: const Text(
-                                      'Owners',
-                                      style: TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: _isLoading
-                                        ? null
-                                        : _clearGsfCache,
-                                    child: const Text(
-                                      'Clear GSF',
+                                      'List UserO',
                                       style: TextStyle(fontSize: 12),
                                     ),
                                   ),
@@ -881,93 +839,168 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
                 ],
               ),
             ),
-          ),
-
-          // RIGHT PANEL: Console Output
+          ), // RIGHT PANEL: Custom Command & Console Output
           Expanded(
             flex: 3,
             child: Container(
               margin: const EdgeInsets.fromLTRB(0, 24, 24, 24),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E2E),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.black12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Console Header
+                  // Custom Command Input
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      border: const Border(
-                        bottom: BorderSide(color: Colors.white10),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.terminal_rounded,
-                          size: 16,
-                          color: Colors.white70,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Terminal Output',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Spacer(),
-                        InkWell(
-                          onTap: () => setState(() => _consoleOutput = ''),
-                          borderRadius: BorderRadius.circular(4),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            child: Text(
-                              'Clear',
-                              style: TextStyle(
-                                color: Colors.blueAccent,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.terminal_rounded,
+                            size: 20,
+                            color: Colors.blue.shade700,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextField(
+                              controller: _customCommandController,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontFamily: 'Consolas',
+                              ),
+                              decoration: const InputDecoration(
+                                hintText:
+                                    'Ketik perintah custom lalu tekan Enter',
+                                hintStyle: TextStyle(fontFamily: 'Roboto'),
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(),
+                              ),
+                              textInputAction: TextInputAction.send,
+                              onSubmitted: (_) => _runCustomCommand(),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          FilledButton.icon(
+                            onPressed: _isLoading ? null : _runCustomCommand,
+                            icon: const Icon(
+                              Icons.play_arrow_rounded,
+                              size: 16,
+                            ),
+                            label: const Text(
+                              'Run',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  // Console Body
+                  const SizedBox(height: 16),
+
+                  // Console Output
                   Expanded(
-                    child: SingleChildScrollView(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
-                      child: SelectableText(
-                        _consoleOutput.isEmpty ? '>_ Ready...' : _consoleOutput,
-                        style: TextStyle(
-                          color: _consoleOutput.isEmpty
-                              ? Colors.white38
-                              : const Color(0xFF00FF88),
-                          fontFamily: 'Consolas',
-                          fontSize: 12,
-                          height: 1.5,
-                        ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E2E),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.black12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Console Header
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              border: const Border(
+                                bottom: BorderSide(color: Colors.white10),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.code_rounded,
+                                  size: 16,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Terminal Output',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const Spacer(),
+                                InkWell(
+                                  onTap: () =>
+                                      setState(() => _consoleOutput = ''),
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    child: Text(
+                                      'Clear',
+                                      style: TextStyle(
+                                        color: Colors.blueAccent,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Console Body
+                          Expanded(
+                            child: SingleChildScrollView(
+                              controller: _scrollController,
+                              padding: const EdgeInsets.all(16),
+                              child: SelectableText(
+                                _consoleOutput.isEmpty
+                                    ? '>_ Ready...'
+                                    : _consoleOutput,
+                                style: TextStyle(
+                                  color: _consoleOutput.isEmpty
+                                      ? Colors.white38
+                                      : const Color(0xFF00FF88),
+                                  fontFamily: 'Consolas',
+                                  fontSize: 12,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
