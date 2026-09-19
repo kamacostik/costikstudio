@@ -1,42 +1,108 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class TutorialVideo {
   const TutorialVideo({
+    required this.id,
     required this.title,
     required this.videoId,
     required this.description,
   });
 
+  factory TutorialVideo.fromJson(Map<String, dynamic> json) {
+    return TutorialVideo(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      videoId: json['video_id'] as String,
+      description: json['description'] as String? ?? '',
+    );
+  }
+
+  final String id;
   final String title;
   final String videoId;
   final String description;
 }
 
-const _tutorialVideos = [
-  TutorialVideo(
-    title: 'Konfigurasi DCO (Device Owner)',
-    videoId: 'dQw4w9WgXcQ', // Placeholder
-    description: 'Panduan lengkap cara mengaktifkan dan mengonfigurasi Device Owner pada STB/TV via ADB Manager.',
-  ),
-  TutorialVideo(
-    title: 'Instalasi Aplikasi via Jaringan',
-    videoId: 'dQw4w9WgXcQ', // Placeholder
-    description: 'Cara melakukan install dan update aplikasi IPTV secara massal melalui jaringan.',
-  ),
-  TutorialVideo(
-    title: 'Penggunaan Web Admin IPTV',
-    videoId: 'dQw4w9WgXcQ', // Placeholder
-    description: 'Panduan navigasi Web Admin untuk mengatur channel, VOD, dan layanan tamu hotel.',
-  ),
-];
-
-class DashboardTutorialPage extends StatelessWidget {
+class DashboardTutorialPage extends StatefulWidget {
   const DashboardTutorialPage({super.key});
 
   @override
+  State<DashboardTutorialPage> createState() => _DashboardTutorialPageState();
+}
+
+class _DashboardTutorialPageState extends State<DashboardTutorialPage> {
+  List<TutorialVideo> _videos = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchVideos();
+  }
+
+  Future<void> _fetchVideos() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('tutorial_videos')
+          .select()
+          .eq('is_active', true)
+          .order('sort_order', ascending: true)
+          .order('created_at', ascending: true);
+
+      final videos = (response as List)
+          .map((data) => TutorialVideo.fromJson(data as Map<String, dynamic>))
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          _videos = videos;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Gagal memuat tutorial: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(48),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_error != null) {
+      return Padding(
+        padding: const EdgeInsets.all(48),
+        child: Center(
+          child: Text(_error!, style: const TextStyle(color: Colors.red)),
+        ),
+      );
+    }
+
+    if (_videos.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(48),
+        child: Center(
+          child: Text(
+            'Belum ada video tutorial yang tersedia.',
+            style: TextStyle(color: CostikStudioTheme.slate),
+          ),
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isCompact = constraints.maxWidth < 600;
@@ -53,10 +119,9 @@ class DashboardTutorialPage extends StatelessWidget {
             crossAxisSpacing: 24,
             childAspectRatio: 0.85,
           ),
-          itemCount: _tutorialVideos.length,
+          itemCount: _videos.length,
           itemBuilder: (context, index) {
-            final video = _tutorialVideos[index];
-            return _TutorialVideoCard(video: video);
+            return _TutorialVideoCard(video: _videos[index]);
           },
         );
       },
