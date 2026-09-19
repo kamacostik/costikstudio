@@ -2204,7 +2204,7 @@ class _AdbManagerPromoPage extends StatelessWidget {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'PERINGATAN: Fitur Enable IPTV Launcher, Manajemen DCO, dan Hapus User bersifat KHUSUS untuk produk Costik IPTV. DILARANG KERAS menggunakan fungsi-fungsi tersebut untuk perangkat/STB Digital Signage agar sistem operasi pabrik tidak terkunci.',
+                              'PERINGATAN: Fitur Enable IPTV Launcher, Manajemen DCO, dan Hapus User bersifat KHUSUS untuk produk Costik IPTV. DILARANG KERAS menggunakan fungsi-fungsi tersebut untuk perangkat/STB Digital Signage agar sistem operasi pabrik tidak terkunci.\n\nNamun, untuk perangkat Digital Signage, Anda tetap DIPERBOLEHKAN menggunakan fungsi "Install Application" melalui jaringan secara aman.',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
