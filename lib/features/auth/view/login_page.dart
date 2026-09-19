@@ -40,7 +40,22 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (success) {
-      final isAdminApp = AppExperienceScope.of(context) == AppExperience.admin;
+      final experience = AppExperienceScope.of(context);
+
+      if (experience == AppExperience.adb) {
+        if (!authCubit.state.isAdmin) {
+          await authCubit.logout();
+          if (!mounted) return;
+          setState(() {
+            _errorMessage = 'Akses ditolak. ADB Manager hanya untuk admin.';
+          });
+          return;
+        }
+        context.go(AppRoutes.adbManager);
+        return;
+      }
+
+      final isAdminApp = experience == AppExperience.admin;
       if (authCubit.state.isAdmin) {
         context.go(isAdminApp ? AppRoutes.adminDashboard : AppRoutes.billing);
       } else if (isAdminApp) {
