@@ -830,6 +830,38 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
                           icon: Icons.admin_panel_settings_rounded,
                           title: 'DCO Control',
                           children: [
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.blue.withValues(alpha: 0.15),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline_rounded,
+                                    size: 20,
+                                    color: Colors.blue.shade700,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Untuk menggunakan fungsi ini, rekomendasi terbaik adalah menggunakan sambungan USB dari komputer/laptop ke TV atau STB. Pastikan Anda sudah menonton tutorial penggunaan DCO sebelum mengeksekusi fitur ini.',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.blue.shade900,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                             OutlinedButton(
                               onPressed: _isLoading ? null : _checkAccounts,
                               child: const Text(
