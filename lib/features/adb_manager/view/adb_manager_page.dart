@@ -353,15 +353,18 @@ class _AdbManagerPageState extends State<AdbManagerPage> {
 
     if (result.stdout.toString().isNotEmpty) {
       final lines = result.stdout.toString().split('\n');
-      final dcoLines = lines
-          .where((l) => l.toLowerCase().contains('device owner'))
-          .toList();
-
-      if (dcoLines.isNotEmpty) {
-        for (var line in dcoLines) {
-          _log(line.trim());
+      bool found = false;
+      for (int i = 0; i < lines.length; i++) {
+        if (lines[i].toLowerCase().contains('device owner:')) {
+          found = true;
+          for (int j = i; j < i + 4 && j < lines.length; j++) {
+            _log(lines[j].trim());
+          }
+          break;
         }
-      } else {
+      }
+
+      if (!found) {
         _log('Status: Tidak ada Device Owner (DCO) yang aktif.');
       }
     } else {
