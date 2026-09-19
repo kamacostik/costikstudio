@@ -116,22 +116,16 @@ class _AdminBillingTablesState extends State<_AdminBillingTables> {
           ],
         ),
         const SizedBox(height: 18),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
+        Card(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            width: double.infinity,
             child: _buildActiveTab(context),
           ),
         ),
