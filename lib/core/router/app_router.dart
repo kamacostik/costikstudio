@@ -332,6 +332,13 @@ class CostikStudioShell extends StatelessWidget {
           );
         }
 
+        if (location == AppRoutes.login) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF8FAFC),
+            body: child,
+          );
+        }
+
         return Scaffold(
           appBar: AppBar(
             title: InkWell(
