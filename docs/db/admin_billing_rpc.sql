@@ -39,13 +39,14 @@ begin
   from (
     select
       p.id,
-      coalesce(pr.company_name, pr.full_name, 'Unknown User') as customer_name,
+      coalesce(pr.company_name, pr.full_name, au.email, 'Unknown') as customer_name,
       p.amount,
       p.provider as method,
       p.status,
       p.created_at,
       p.external_reference
     from public.payment_orders p
+    left join auth.users au on au.id = p.user_id
     left join public.profiles pr on pr.id = p.user_id
     where p.type = 'wallet_topup'
     order by p.created_at desc
@@ -57,9 +58,10 @@ begin
   into v_wallets
   from (
     select
-      coalesce(pr.company_name, pr.full_name, 'Unknown User') as customer_name,
+      coalesce(pr.company_name, pr.full_name, au.email, 'Unknown') as customer_name,
       w.balance
     from public.wallets w
+    left join auth.users au on au.id = w.user_id
     left join public.profiles pr on pr.id = w.user_id
     order by w.balance desc
     limit 20
@@ -72,7 +74,7 @@ begin
     select
       s.id,
       s.user_id,
-      coalesce(pr.company_name, pr.full_name, 'Unknown User') as customer_email,
+      coalesce(pr.company_name, pr.full_name, au.email, 'Unknown') as customer_email,
       s.product_id as product_name,
       s.device_count,
       s.billing_cycle_months,
@@ -80,6 +82,7 @@ begin
       s.created_at as started_at,
       s.expires_at
     from public.subscriptions s
+    left join auth.users au on au.id = s.user_id
     left join public.profiles pr on pr.id = s.user_id
     order by s.created_at desc
     limit 50
