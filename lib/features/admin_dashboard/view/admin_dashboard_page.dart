@@ -39,20 +39,27 @@ class _AdminDashboardView extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final pendingTopUps = snapshot.pendingTopUps.length;
+        final pendingTopUps = snapshot.pendingTopUps
+            .where((t) => t.method.toLowerCase().contains('pending'))
+            .length;
         final activeSubs =
             snapshot.subscriptionMetrics
-                .where((m) => m.label == 'Active Subscriptions')
+                .where((m) => m.label.contains('Active Sub'))
                 .map((m) => m.value)
                 .firstOrNull ??
             '-';
         final totalDevices =
             snapshot.subscriptionMetrics
-                .where((m) => m.label == 'Total Devices Monitored')
+                .where((m) => m.label.contains('Total Devices'))
                 .map((m) => m.value)
                 .firstOrNull ??
             '-';
-        final totalCustomers = snapshot.customerWallets.length;
+        final totalCustomers =
+            snapshot.subscriptionMetrics
+                .where((m) => m.label == 'Total Customers')
+                .map((m) => m.value)
+                .firstOrNull ??
+            '-';
 
         return SingleChildScrollView(
           child: ResponsiveSection(
@@ -117,7 +124,7 @@ class _AdminDashboardView extends StatelessWidget {
                         _KpiData(
                           icon: Icons.account_balance_wallet_outlined,
                           label: 'Top Up Pending',
-                          value: '$pendingTopUps',
+                          value: pendingTopUps.toString(),
                           trend: 'Butuh approval',
                           isAlert: pendingTopUps > 0,
                         ),

@@ -10,7 +10,15 @@ declare
   v_subscriptions jsonb;
   v_revenue_today numeric;
   v_revenue_month numeric;
+  v_total_users integer;
+  v_active_subs integer;
+  v_total_devices integer;
 begin
+  -- Calculate overall metrics
+  select count(*) into v_total_users from public.profiles;
+  select count(*) into v_active_subs from public.subscriptions where status = 'active';
+  select coalesce(sum(device_count), 0) into v_total_devices from public.subscriptions where status = 'active';
+
   -- Calculate Revenue Today (Top Ups Paid Today)
   select coalesce(sum(amount), 0)
   into v_revenue_today
@@ -82,7 +90,10 @@ begin
     'customerWallets', v_wallets,
     'allSubscriptions', v_subscriptions,
     'revenueToday', v_revenue_today,
-    'revenueMonth', v_revenue_month
+    'revenueMonth', v_revenue_month,
+    'totalUsers', v_total_users,
+    'activeSubs', v_active_subs,
+    'totalDevices', v_total_devices
   );
 end;
 $$;

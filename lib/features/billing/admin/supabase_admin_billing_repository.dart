@@ -58,17 +58,15 @@ class SupabaseAdminBillingRepository implements AdminBillingRepository {
       subscriptionMetrics: [
         SubscriptionMetric(
           label: 'Total Customers',
-          value: '${allSubscriptions.length}',
+          value: '${response['totalUsers'] ?? allSubscriptions.length}',
         ),
         SubscriptionMetric(
           label: 'Total Devices',
-          value:
-              '${allSubscriptions.fold<int>(0, (sum, item) => sum + item.deviceCount)}',
+          value: '${response['totalDevices'] ?? allSubscriptions.fold<int>(0, (sum, item) => sum + item.deviceCount)}',
         ),
         SubscriptionMetric(
           label: 'Active Sub',
-          value:
-              '${allSubscriptions.where((s) => s.statusText == 'active').length}',
+          value: '${response['activeSubs'] ?? allSubscriptions.where((s) => s.statusText == 'active').length}',
         ),
       ],
       allSubscriptions: allSubscriptions,
