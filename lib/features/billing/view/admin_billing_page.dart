@@ -41,6 +41,7 @@ class _AdminBillingView extends StatelessWidget {
 
         return SingleChildScrollView(
           child: ResponsiveSection(
+            maxWidth: double.infinity,
             padding: const EdgeInsets.fromLTRB(24, 56, 24, 80),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

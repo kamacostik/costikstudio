@@ -1,4 +1,5 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
+import 'package:costikstudio/core/billing/billing_format.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/billing/admin/admin_billing_cubit.dart';
 import 'package:costikstudio/features/billing/admin/dummy_admin_billing_repository.dart';
@@ -55,7 +56,8 @@ class _AdminDashboardView extends StatelessWidget {
 
         return SingleChildScrollView(
           child: ResponsiveSection(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 56),
+            maxWidth: double.infinity,
+            padding: const EdgeInsets.fromLTRB(24, 56, 24, 80),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -79,8 +81,12 @@ class _AdminDashboardView extends StatelessWidget {
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 1080;
 
-                    final revenueTodayStr = formatRupiah(snapshot.revenueToday.toInt());
-                    final revenueMonthStr = formatRupiah(snapshot.revenueMonth.toInt());
+                    final revenueTodayStr = formatRupiah(
+                      snapshot.revenueToday.toInt(),
+                    );
+                    final revenueMonthStr = formatRupiah(
+                      snapshot.revenueMonth.toInt(),
+                    );
 
                     final kpis = _KpiGrid(
                       cards: [
@@ -491,8 +497,8 @@ class _KpiGrid extends StatelessWidget {
         final crossAxisCount = constraints.maxWidth > 1200
             ? 3
             : constraints.maxWidth > 800
-                ? 2
-                : 2;
+            ? 2
+            : 2;
         return GridView.builder(
           itemCount: cards.length,
           shrinkWrap: true,
