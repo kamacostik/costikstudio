@@ -45,7 +45,8 @@ class SignageHotelProfile extends Equatable {
 
 enum SignageAppMode {
   dailyEvent('daily_event', 'Daily Event'),
-  videoPlayer('video_player', 'Video Player');
+  videoPlayer('video_player', 'Video Player'),
+  splitScreen('split_screen', 'Split Screen');
 
   const SignageAppMode(this.value, this.label);
 
@@ -95,6 +96,8 @@ class SignageDevice extends Equatable {
     this.runningTextEnabled = false,
     this.runningText,
     this.eventBackgroundUrl,
+    this.qrUrl,
+    this.qrEnabled = false,
     required this.isActive,
     this.pairingCode,
     this.pairingExpiresAt,
@@ -114,6 +117,8 @@ class SignageDevice extends Equatable {
   final bool runningTextEnabled;
   final String? runningText;
   final String? eventBackgroundUrl;
+  final String? qrUrl;
+  final bool qrEnabled;
   final bool isActive;
   final String? pairingCode;
   final DateTime? pairingExpiresAt;
@@ -146,6 +151,8 @@ class SignageDevice extends Equatable {
       runningTextEnabled: map['running_text_enabled'] as bool? ?? false,
       runningText: map['running_text'] as String?,
       eventBackgroundUrl: map['event_background_url'] as String?,
+      qrUrl: map['qr_url'] as String?,
+      qrEnabled: map['qr_enabled'] as bool? ?? false,
       isActive: map['is_active'] as bool? ?? true,
       pairingCode: map['pairing_code'] as String?,
       pairingExpiresAt: DateTime.tryParse(
@@ -170,12 +177,57 @@ class SignageDevice extends Equatable {
     runningTextEnabled,
     runningText,
     eventBackgroundUrl,
+    qrUrl,
+    qrEnabled,
     isActive,
     pairingCode,
     pairingExpiresAt,
     activatedAt,
     lastSeenAt,
   ];
+
+  SignageDevice copyWith({
+    String? name,
+    bool? isVideo,
+    bool? isPromo,
+    double? promoDuration,
+    int? tableColumn,
+    int? eventSlideDurationSeconds,
+    SignageAppMode? appMode,
+    SignageEventTheme? eventTheme,
+    bool? runningTextEnabled,
+    String? runningText,
+    String? eventBackgroundUrl,
+    String? qrUrl,
+    bool? qrEnabled,
+    bool? isActive,
+    String? pairingCode,
+    DateTime? pairingExpiresAt,
+    DateTime? activatedAt,
+    DateTime? lastSeenAt,
+  }) {
+    return SignageDevice(
+      id: id,
+      name: name ?? this.name,
+      isVideo: isVideo ?? this.isVideo,
+      isPromo: isPromo ?? this.isPromo,
+      promoDuration: promoDuration ?? this.promoDuration,
+      tableColumn: tableColumn ?? this.tableColumn,
+      eventSlideDurationSeconds: eventSlideDurationSeconds ?? this.eventSlideDurationSeconds,
+      appMode: appMode ?? this.appMode,
+      eventTheme: eventTheme ?? this.eventTheme,
+      runningTextEnabled: runningTextEnabled ?? this.runningTextEnabled,
+      runningText: runningText ?? this.runningText,
+      eventBackgroundUrl: eventBackgroundUrl ?? this.eventBackgroundUrl,
+      qrUrl: qrUrl ?? this.qrUrl,
+      qrEnabled: qrEnabled ?? this.qrEnabled,
+      isActive: isActive ?? this.isActive,
+      pairingCode: pairingCode ?? this.pairingCode,
+      pairingExpiresAt: pairingExpiresAt ?? this.pairingExpiresAt,
+      activatedAt: activatedAt ?? this.activatedAt,
+      lastSeenAt: lastSeenAt ?? this.lastSeenAt,
+    );
+  }
 }
 
 class SignageMediaItem extends Equatable {
@@ -455,6 +507,11 @@ abstract class SignageAdminRepository {
   Future<void> updateDeviceEventBackground(
     String deviceId, {
     String? eventBackgroundUrl,
+  });
+  Future<void> updateDeviceQrOverlay(
+    String deviceId, {
+    required bool qrEnabled,
+    String? qrUrl,
   });
   Future<void> deleteDevice(String deviceId);
 }
@@ -871,6 +928,26 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
           'event_background_url': trimmed == null || trimmed.isEmpty
               ? null
               : trimmed,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', deviceId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
+  Future<void> updateDeviceQrOverlay(
+    String deviceId, {
+    required bool qrEnabled,
+    String? qrUrl,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    final trimmed = qrUrl?.trim();
+    await _supabase
+        .from('sg_devices')
+        .update({
+          'qr_enabled': qrEnabled,
+          'qr_url': trimmed == null || trimmed.isEmpty ? null : trimmed,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', deviceId)

@@ -168,7 +168,9 @@ begin
       'running_text_enabled', v_device.running_text_enabled,
       'running_text', v_device.running_text,
       'event_theme', v_device.event_theme,
-      'app_mode', v_device.app_mode
+      'app_mode', v_device.app_mode,
+      'qr_enabled', v_device.qr_enabled,
+      'qr_url', v_device.qr_url
     ),
     'tenant_id', v_device.tenant_id,
     'hotel', coalesce(v_hotel, 'null'::jsonb),

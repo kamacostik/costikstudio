@@ -490,6 +490,34 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     }
   }
 
+  Future<void> updateDeviceQrOverlay(
+    String deviceId, {
+    required bool qrEnabled,
+    String? qrUrl,
+  }) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.updateDeviceQrOverlay(
+        deviceId,
+        qrEnabled: qrEnabled,
+        qrUrl: qrUrl,
+      );
+      final devices = await _repository.fetchDevices();
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          successMessage: 'QR Code overlay device berhasil disimpan.',
+        ),
+      );
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE QR ===');
+      print(e);
+      print(stack);
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
   Future<void> updateDeviceEventBackground(
     String deviceId, {
     String? eventBackgroundUrl,

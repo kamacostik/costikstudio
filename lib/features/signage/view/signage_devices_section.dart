@@ -316,6 +316,8 @@ class _DeviceSettingsAction extends StatelessWidget {
     final runningTextController = TextEditingController(
       text: device.runningText ?? '',
     );
+    var qrEnabled = device.qrEnabled;
+    final qrUrlController = TextEditingController(text: device.qrUrl ?? '');
     var eventBackgroundUrl = device.eventBackgroundUrl;
     final backgroundItems = mediaItems
         .where(
@@ -495,6 +497,39 @@ class _DeviceSettingsAction extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   const Text(
+                    'QR Code Interaktif',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: CostikStudioTheme.navy,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Tampilkan QR code overlay di sudut layar (untuk link menu, absensi, dsb).',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: CostikStudioTheme.slate,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    value: qrEnabled,
+                    title: const Text('Aktifkan QR Code Overlay'),
+                    onChanged: (value) => setState(() => qrEnabled = value),
+                  ),
+                  if (qrEnabled) ...[
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: qrUrlController,
+                      decoration: inputDecoration.copyWith(
+                        hintText: 'https://...',
+                        prefixIcon: const Icon(Icons.qr_code_2_rounded),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  const Text(
                     'Text Berjalan',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
@@ -608,7 +643,19 @@ class _DeviceSettingsAction extends StatelessWidget {
         runningText: nextRunningText,
       );
     }
+
+    final nextQrUrl = qrUrlController.text.trim();
+    if (qrEnabled != device.qrEnabled ||
+        nextQrUrl != (device.qrUrl ?? '').trim()) {
+      await cubit.updateDeviceQrOverlay(
+        device.id,
+        qrEnabled: qrEnabled,
+        qrUrl: nextQrUrl,
+      );
+    }
+
     runningTextController.dispose();
+    qrUrlController.dispose();
     if (eventBackgroundUrl != device.eventBackgroundUrl) {
       await cubit.updateDeviceEventBackground(
         device.id,
