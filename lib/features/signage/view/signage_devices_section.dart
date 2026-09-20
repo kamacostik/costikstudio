@@ -109,6 +109,7 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                _DevicePromoCardsAction(device: device),
                                 _DeviceSettingsAction(
                                   device: device,
                                   mediaItems: state.mediaItems,
@@ -704,6 +705,209 @@ class _DeviceSettingsAction extends StatelessWidget {
         device.id,
         durationSeconds: slideDuration,
       );
+    }
+  }
+}
+
+class _DevicePromoCardsAction extends StatelessWidget {
+  const _DevicePromoCardsAction({required this.device});
+
+  final SignageDevice device;
+
+  @override
+  Widget build(BuildContext context) {
+    if (device.appMode != SignageAppMode.splitScreen) {
+      return const SizedBox.shrink();
+    }
+    return IconButton(
+      tooltip: 'Set Promo Cards',
+      icon: const Icon(Icons.style_rounded),
+      color: CostikStudioTheme.primary,
+      onPressed: () => _showPromoDialog(context),
+    );
+  }
+
+  Future<void> _showPromoDialog(BuildContext context) async {
+    final cubit = context.read<SignageAdminCubit>();
+
+    // Convert existing promoCards into mutable controllers
+    final List<Map<String, dynamic>> currentCards = List.from(
+      device.promoCards,
+    );
+    while (currentCards.length < 3) {
+      currentCards.add({'icon': 'star', 'title': '', 'subtitle': ''});
+    }
+
+    final controllers = List.generate(3, (i) {
+      return {
+        'icon': currentCards[i]['icon'] as String? ?? 'star',
+        'title': TextEditingController(
+          text: currentCards[i]['title'] as String? ?? '',
+        ),
+        'subtitle': TextEditingController(
+          text: currentCards[i]['subtitle'] as String? ?? '',
+        ),
+      };
+    });
+
+    final iconsList = [
+      'star',
+      'spa',
+      'room_service',
+      'tv',
+      'restaurant',
+      'pool',
+      'fitness_center',
+      'wifi',
+      'local_bar',
+      'local_cafe',
+      'cleaning_services',
+      'ac_unit',
+    ];
+
+    final inputDecoration = InputDecoration(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+    );
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          titlePadding: EdgeInsets.zero,
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          title: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: CostikStudioTheme.primary.withValues(alpha: 0.10),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
+            ),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  foregroundColor: CostikStudioTheme.primary,
+                  child: Icon(Icons.style_rounded),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('3 Promo Cards (Split Screen)'),
+                      const SizedBox(height: 4),
+                      Text(device.name, style: const TextStyle(fontSize: 14)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          content: SizedBox(
+            width: 500,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(3, (index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Promo Card ${index + 1}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: DropdownButtonFormField<String>(
+                                value: controllers[index]['icon'] as String,
+                                decoration: inputDecoration.copyWith(
+                                  labelText: 'Icon',
+                                ),
+                                items: iconsList.map((icon) {
+                                  return DropdownMenuItem(
+                                    value: icon,
+                                    child: Text(icon),
+                                  );
+                                }).toList(),
+                                onChanged: (v) {
+                                  if (v != null)
+                                    setState(
+                                      () => controllers[index]['icon'] = v,
+                                    );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: TextField(
+                                controller:
+                                    controllers[index]['title']
+                                        as TextEditingController,
+                                decoration: inputDecoration.copyWith(
+                                  labelText: 'Judul (Title)',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller:
+                              controllers[index]['subtitle']
+                                  as TextEditingController,
+                          decoration: inputDecoration.copyWith(
+                            labelText: 'Sub Judul (Subtitle)',
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Batal'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              icon: const Icon(Icons.check_rounded),
+              label: const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved == true && context.mounted) {
+      final newPromoCards = controllers.map((c) {
+        return {
+          'icon': c['icon'] as String,
+          'title': (c['title'] as TextEditingController).text.trim(),
+          'subtitle': (c['subtitle'] as TextEditingController).text.trim(),
+        };
+      }).toList();
+
+      await cubit.updateDevicePromoCards(device.id, promoCards: newPromoCards);
     }
   }
 }

@@ -100,6 +100,7 @@ class SignageDevice extends Equatable {
     this.qrUrl,
     this.qrTitle,
     this.qrEnabled = false,
+    this.promoCards = const [],
     required this.isActive,
     this.pairingCode,
     this.pairingExpiresAt,
@@ -122,6 +123,7 @@ class SignageDevice extends Equatable {
   final String? qrUrl;
   final String? qrTitle;
   final bool qrEnabled;
+  final List<Map<String, dynamic>> promoCards;
   final bool isActive;
   final String? pairingCode;
   final DateTime? pairingExpiresAt;
@@ -157,6 +159,10 @@ class SignageDevice extends Equatable {
       qrUrl: map['qr_url'] as String?,
       qrTitle: map['qr_title'] as String?,
       qrEnabled: map['qr_enabled'] as bool? ?? false,
+      promoCards: (map['promo_cards'] as List?)
+              ?.map((e) => e as Map<String, dynamic>)
+              .toList() ??
+          [],
       isActive: map['is_active'] as bool? ?? true,
       pairingCode: map['pairing_code'] as String?,
       pairingExpiresAt: DateTime.tryParse(
@@ -184,6 +190,7 @@ class SignageDevice extends Equatable {
     qrUrl,
     qrTitle,
     qrEnabled,
+    promoCards,
     isActive,
     pairingCode,
     pairingExpiresAt,
@@ -520,6 +527,10 @@ abstract class SignageAdminRepository {
     required bool qrEnabled,
     String? qrUrl,
     String? qrTitle,
+  });
+  Future<void> updateDevicePromoCards(
+    String deviceId, {
+    required List<Map<String, dynamic>> promoCards,
   });
   Future<void> deleteDevice(String deviceId);
 }
@@ -959,6 +970,23 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
           'qr_enabled': qrEnabled,
           'qr_url': trimmedUrl == null || trimmedUrl.isEmpty ? null : trimmedUrl,
           'qr_title': trimmedTitle == null || trimmedTitle.isEmpty ? null : trimmedTitle,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', deviceId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
+  Future<void> updateDevicePromoCards(
+    String deviceId, {
+    required List<Map<String, dynamic>> promoCards,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    await _supabase
+        .from('sg_devices')
+        .update({
+          'promo_cards': promoCards,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', deviceId)

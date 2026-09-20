@@ -509,14 +509,41 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         state.copyWith(
           isSaving: false,
           devices: devices,
-          successMessage: 'QR Code overlay device berhasil disimpan.',
+          successMessage: 'Pengaturan Smart QR Code berhasil diperbarui.',
         ),
       );
-    } catch (e, stack) {
-      print('=== ERROR SAVING DEVICE QR ===');
-      print(e);
-      print(stack);
-      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    } catch (e) {
+      _safeEmit(
+        state.copyWith(isSaving: false, errorMessage: 'Gagal update QR: $e'),
+      );
+    }
+  }
+
+  Future<void> updateDevicePromoCards(
+    String deviceId, {
+    required List<Map<String, dynamic>> promoCards,
+  }) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.updateDevicePromoCards(
+        deviceId,
+        promoCards: promoCards,
+      );
+      final devices = await _repository.fetchDevices();
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          successMessage: 'Promo Card berhasil diperbarui.',
+        ),
+      );
+    } catch (e) {
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          errorMessage: 'Gagal update Promo Card: $e',
+        ),
+      );
     }
   }
 
