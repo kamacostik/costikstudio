@@ -46,7 +46,8 @@ class SignageHotelProfile extends Equatable {
 enum SignageAppMode {
   dailyEvent('daily_event', 'Daily Event'),
   videoPlayer('video_player', 'Video Player'),
-  splitScreen('split_screen', 'Split Screen');
+  splitScreen('split_screen', 'Split Screen'),
+  glassOverlay('glass_overlay', 'Glass Overlay');
 
   const SignageAppMode(this.value, this.label);
 
