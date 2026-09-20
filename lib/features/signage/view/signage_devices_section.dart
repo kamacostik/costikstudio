@@ -834,6 +834,7 @@ class _DevicePromoCardsAction extends StatelessWidget {
                             Expanded(
                               flex: 1,
                               child: DropdownButtonFormField<String>(
+                                isExpanded: true,
                                 value: controllers[index]['icon'] as String,
                                 decoration: inputDecoration.copyWith(
                                   labelText: 'Icon',
