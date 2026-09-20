@@ -169,6 +169,7 @@ begin
       'running_text', v_device.running_text,
       'event_theme', v_device.event_theme,
       'app_mode', v_device.app_mode,
+      'promo_cards', v_device.promo_cards,
       'qr_enabled', v_device.qr_enabled,
       'qr_title', v_device.qr_title,
       'qr_url', v_device.qr_url
