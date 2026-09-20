@@ -78,10 +78,25 @@ class SignageMediaSection extends StatelessWidget {
           icon: Icons.perm_media_rounded,
           title: 'Media',
           subtitle: 'Daftarkan URL/path gambar atau video yang akan dipakai playlist.',
-          action: FilledButton.icon(
-            onPressed: state.isSaving ? null : () => _showMediaDialog(context),
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('Tambah Media'),
+          action: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FilledButton.icon(
+                onPressed: state.isSaving
+                    ? null
+                    : () => _showMediaDialog(context, type: 'image'),
+                icon: const Icon(Icons.image_rounded),
+                label: const Text('Tambah Image'),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.icon(
+                onPressed: state.isSaving
+                    ? null
+                    : () => _showMediaDialog(context, type: 'video'),
+                icon: const Icon(Icons.movie_rounded),
+                label: const Text('Tambah Video'),
+              ),
+            ],
           ),
           child: SignageDataTable(
             emptyIcon: Icons.perm_media_rounded,
@@ -130,7 +145,8 @@ class SignageMediaSection extends StatelessWidget {
                             icon: const Icon(Icons.edit_rounded, size: 20),
                             onPressed: state.isSaving
                                 ? null
-                                : () => _showMediaDialog(context, item),
+                                : () =>
+                                      _showMediaDialog(context, existing: item),
                           ),
                           IconButton(
                             tooltip: 'Hapus media',
@@ -157,9 +173,10 @@ class SignageMediaSection extends StatelessWidget {
   }
 
   Future<void> _showMediaDialog(
-    BuildContext context, [
+    BuildContext context, {
     SignageMediaItem? existing,
-  ]) async {
+    String type = 'image',
+  }) async {
     final cubit = context.read<SignageAdminCubit>();
     final nameController = TextEditingController(
       text: existing?.fileName ?? '',
@@ -167,7 +184,7 @@ class SignageMediaSection extends StatelessWidget {
     final pathController = TextEditingController(
       text: existing?.publicUrl ?? existing?.storagePath ?? '',
     );
-    const mediaType = 'image';
+    final mediaType = existing?.mediaType ?? type;
     bool isUploading = false;
     final item = await showDialog<SignageMediaItem>(
       context: context,
@@ -178,7 +195,9 @@ class SignageMediaSection extends StatelessWidget {
           title: _StyledDialogHeader(
             icon: Icons.perm_media_rounded,
             title: existing == null ? 'Tambah Media' : 'Ubah Media',
-            subtitle: 'Upload atau masukkan URL gambar untuk background device signage.',
+            subtitle: mediaType == 'video'
+                ? 'Masukkan link video yang akan dipakai.'
+                : 'Upload atau masukkan URL gambar.',
           ),
           content: SizedBox(
             width: (MediaQuery.sizeOf(context).width - 48)
@@ -197,92 +216,109 @@ class SignageMediaSection extends StatelessWidget {
                 const SizedBox(height: 12),
                 TextField(
                   controller: pathController,
-                  decoration: const InputDecoration(
-                    labelText: 'URL gambar / storage path',
-                    helperText: 'Khusus gambar. URL ini dipakai untuk background device.',
-                    prefixIcon: Icon(Icons.link_rounded),
+                  decoration: InputDecoration(
+                    labelText: mediaType == 'video'
+                        ? 'Link Video URL'
+                        : 'URL gambar / storage path',
+                    helperText: mediaType == 'video'
+                        ? 'Khusus video, cukup paste link video (contoh: https://...)'
+                        : 'Khusus gambar. URL ini dipakai untuk background device.',
+                    prefixIcon: const Icon(Icons.link_rounded),
                   ),
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: isUploading
-                            ? null
-                            : () async {
-                                final file = await FilePicker.pickFile(
-                                  type: FileType.image,
-                                );
-                                if (file == null || !context.mounted) return;
-                                final bytes = await file.readAsBytes();
-                                if (bytes.isEmpty || !dialogContext.mounted)
-                                  return;
-
-                                // Validasi format gambar menggunakan image codec
-                                try {
-                                  final codec = await ui.instantiateImageCodec(
-                                    bytes,
+                if (mediaType == 'image') ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: isUploading
+                              ? null
+                              : () async {
+                                  final file = await FilePicker.pickFile(
+                                    type: FileType.image,
                                   );
-                                  final frame = await codec.getNextFrame();
-                                  frame.image.dispose();
-                                  codec.dispose();
-                                } catch (_) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Format gambar tidak valid. Gunakan PNG, JPG, atau WebP.',
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
+                                  if (file == null || !context.mounted) return;
+                                  final bytes = await file.readAsBytes();
+                                  if (bytes.isEmpty || !dialogContext.mounted)
+                                    return;
+
+                                  // Validasi format gambar menggunakan image codec
+                                  try {
+                                    final codec = await ui
+                                        .instantiateImageCodec(bytes);
+                                    final frame = await codec.getNextFrame();
+                                    frame.image.dispose();
+                                    codec.dispose();
+                                  } catch (_) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Format gambar tidak valid. Gunakan PNG, JPG, atau WebP.',
+                                              ),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                    }
+                                    return;
+                                  }
+
+                                  setState(() => isUploading = true);
+                                  try {
+                                    final url = await cubit.uploadMediaImage(
+                                      bytes: bytes,
+                                      fileName: file.name,
+                                      contentType: _contentTypeFor(file.name),
                                     );
+                                    if (url == null || url.isEmpty) return;
+                                    setState(() {
+                                      nameController.text =
+                                          nameController.text.trim().isEmpty
+                                          ? file.name
+                                          : nameController.text;
+                                      pathController.text = url;
+                                    });
+                                  } finally {
+                                    if (context.mounted) {
+                                      setState(() => isUploading = false);
+                                    }
                                   }
-                                  return;
-                                }
-
-                                setState(() => isUploading = true);
-                                try {
-                                  final url = await cubit.uploadMediaImage(
-                                    bytes: bytes,
-                                    fileName: file.name,
-                                    contentType: _contentTypeFor(file.name),
-                                  );
-                                  if (url == null || url.isEmpty) return;
-                                  setState(() {
-                                    nameController.text =
-                                        nameController.text.trim().isEmpty
-                                        ? file.name
-                                        : nameController.text;
-                                    pathController.text = url;
-                                  });
-                                } finally {
-                                  if (context.mounted) {
-                                    setState(() => isUploading = false);
-                                  }
-                                }
-                              },
-                        icon: isUploading
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.upload_file_rounded),
-                        label: Text(
-                          isUploading ? 'Mengupload...' : 'Upload Gambar',
+                                },
+                          icon: isUploading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.upload_file_rounded),
+                          label: Text(
+                            isUploading ? 'Mengupload...' : 'Upload Gambar',
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Chip(
-                      avatar: Icon(Icons.image_rounded, size: 18),
-                      label: Text('Image'),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 12),
+                      const Chip(
+                        avatar: Icon(Icons.image_rounded, size: 18),
+                        label: Text('Image'),
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      const Chip(
+                        avatar: Icon(Icons.movie_rounded, size: 18),
+                        label: Text('Video'),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
