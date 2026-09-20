@@ -1,11 +1,11 @@
 {
-    "name": "costikstudio",
-    "short_name": "costikstudio",
+    "name": "CostikStudio",
+    "short_name": "CostikStudio",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F3F4F6",
+    "theme_color": "#1B2431",
+    "description": "CostikStudio - Platform Manajemen Dashboard Cerdas untuk Hospitality TV, Digital Signage, dan ADB Management berbasis Cloud.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
