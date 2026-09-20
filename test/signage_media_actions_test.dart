@@ -237,6 +237,7 @@ class _FakeSignageAdminRepository extends SignageAdminRepository {
     String deviceId, {
     required bool qrEnabled,
     String? qrUrl,
+    String? qrTitle,
   }) {
     // TODO: implement updateDeviceQrOverlay
     throw UnimplementedError();
