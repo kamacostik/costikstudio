@@ -494,6 +494,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     String deviceId, {
     required bool qrEnabled,
     String? qrUrl,
+    String? qrTitle,
   }) async {
     _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
@@ -501,6 +502,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
         deviceId,
         qrEnabled: qrEnabled,
         qrUrl: qrUrl,
+        qrTitle: qrTitle,
       );
       final devices = await _repository.fetchDevices();
       _safeEmit(

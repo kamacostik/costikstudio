@@ -318,6 +318,7 @@ class _DeviceSettingsAction extends StatelessWidget {
     );
     var qrEnabled = device.qrEnabled;
     final qrUrlController = TextEditingController(text: device.qrUrl ?? '');
+    final qrTitleController = TextEditingController(text: device.qrTitle ?? '');
     var eventBackgroundUrl = device.eventBackgroundUrl;
     final backgroundItems = mediaItems
         .where(
@@ -543,7 +544,16 @@ class _DeviceSettingsAction extends StatelessWidget {
                             controller: qrUrlController,
                             decoration: inputDecoration.copyWith(
                               hintText: 'https://...',
-                              prefixIcon: const Icon(Icons.qr_code_2_rounded),
+                              prefixIcon: const Icon(Icons.link_rounded),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          TextFormField(
+                            controller: qrTitleController,
+                            maxLength: 24,
+                            decoration: inputDecoration.copyWith(
+                              hintText: 'Judul (cth: Scan Me, Join Member)',
+                              prefixIcon: const Icon(Icons.short_text_rounded),
                             ),
                           ),
                         ],
@@ -668,17 +678,21 @@ class _DeviceSettingsAction extends StatelessWidget {
     }
 
     final nextQrUrl = qrUrlController.text.trim();
+    final nextQrTitle = qrTitleController.text.trim();
     if (qrEnabled != device.qrEnabled ||
-        nextQrUrl != (device.qrUrl ?? '').trim()) {
+        nextQrUrl != (device.qrUrl ?? '').trim() ||
+        nextQrTitle != (device.qrTitle ?? '').trim()) {
       await cubit.updateDeviceQrOverlay(
         device.id,
         qrEnabled: qrEnabled,
         qrUrl: nextQrUrl,
+        qrTitle: nextQrTitle,
       );
     }
 
     runningTextController.dispose();
     qrUrlController.dispose();
+    qrTitleController.dispose();
     if (eventBackgroundUrl != device.eventBackgroundUrl) {
       await cubit.updateDeviceEventBackground(
         device.id,

@@ -97,6 +97,7 @@ class SignageDevice extends Equatable {
     this.runningText,
     this.eventBackgroundUrl,
     this.qrUrl,
+    this.qrTitle,
     this.qrEnabled = false,
     required this.isActive,
     this.pairingCode,
@@ -118,6 +119,7 @@ class SignageDevice extends Equatable {
   final String? runningText;
   final String? eventBackgroundUrl;
   final String? qrUrl;
+  final String? qrTitle;
   final bool qrEnabled;
   final bool isActive;
   final String? pairingCode;
@@ -152,6 +154,7 @@ class SignageDevice extends Equatable {
       runningText: map['running_text'] as String?,
       eventBackgroundUrl: map['event_background_url'] as String?,
       qrUrl: map['qr_url'] as String?,
+      qrTitle: map['qr_title'] as String?,
       qrEnabled: map['qr_enabled'] as bool? ?? false,
       isActive: map['is_active'] as bool? ?? true,
       pairingCode: map['pairing_code'] as String?,
@@ -178,6 +181,7 @@ class SignageDevice extends Equatable {
     runningText,
     eventBackgroundUrl,
     qrUrl,
+    qrTitle,
     qrEnabled,
     isActive,
     pairingCode,
@@ -199,6 +203,7 @@ class SignageDevice extends Equatable {
     String? runningText,
     String? eventBackgroundUrl,
     String? qrUrl,
+    String? qrTitle,
     bool? qrEnabled,
     bool? isActive,
     String? pairingCode,
@@ -220,6 +225,7 @@ class SignageDevice extends Equatable {
       runningText: runningText ?? this.runningText,
       eventBackgroundUrl: eventBackgroundUrl ?? this.eventBackgroundUrl,
       qrUrl: qrUrl ?? this.qrUrl,
+      qrTitle: qrTitle ?? this.qrTitle,
       qrEnabled: qrEnabled ?? this.qrEnabled,
       isActive: isActive ?? this.isActive,
       pairingCode: pairingCode ?? this.pairingCode,
@@ -512,6 +518,7 @@ abstract class SignageAdminRepository {
     String deviceId, {
     required bool qrEnabled,
     String? qrUrl,
+    String? qrTitle,
   });
   Future<void> deleteDevice(String deviceId);
 }
@@ -939,15 +946,18 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
     String deviceId, {
     required bool qrEnabled,
     String? qrUrl,
+    String? qrTitle,
   }) async {
     final tenantId = await currentTenantId();
     if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
-    final trimmed = qrUrl?.trim();
+    final trimmedUrl = qrUrl?.trim();
+    final trimmedTitle = qrTitle?.trim();
     await _supabase
         .from('sg_devices')
         .update({
           'qr_enabled': qrEnabled,
-          'qr_url': trimmed == null || trimmed.isEmpty ? null : trimmed,
+          'qr_url': trimmedUrl == null || trimmedUrl.isEmpty ? null : trimmedUrl,
+          'qr_title': trimmedTitle == null || trimmedTitle.isEmpty ? null : trimmedTitle,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', deviceId)

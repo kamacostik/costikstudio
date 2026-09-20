@@ -170,6 +170,7 @@ begin
       'event_theme', v_device.event_theme,
       'app_mode', v_device.app_mode,
       'qr_enabled', v_device.qr_enabled,
+      'qr_title', v_device.qr_title,
       'qr_url', v_device.qr_url
     ),
     'tenant_id', v_device.tenant_id,
