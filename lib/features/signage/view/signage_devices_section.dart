@@ -109,7 +109,10 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                _DevicePromoCardsAction(device: device),
+                                _DevicePromoCardsAction(
+                                  device: device,
+                                  mediaItems: state.mediaItems,
+                                ),
                                 _DeviceSettingsAction(
                                   device: device,
                                   mediaItems: state.mediaItems,
@@ -710,9 +713,13 @@ class _DeviceSettingsAction extends StatelessWidget {
 }
 
 class _DevicePromoCardsAction extends StatelessWidget {
-  const _DevicePromoCardsAction({required this.device});
+  const _DevicePromoCardsAction({
+    required this.device,
+    required this.mediaItems,
+  });
 
   final SignageDevice device;
+  final List<SignageMediaItem> mediaItems;
 
   @override
   Widget build(BuildContext context) {
@@ -730,16 +737,25 @@ class _DevicePromoCardsAction extends StatelessWidget {
   Future<void> _showPromoDialog(BuildContext context) async {
     final cubit = context.read<SignageAdminCubit>();
 
+    // Prepare image items for banner selector
+    final imageItems = mediaItems
+        .where(
+          (item) =>
+              item.publicUrl != null &&
+              item.publicUrl!.trim().isNotEmpty &&
+              item.mediaType == 'image',
+        )
+        .toList();
+
     // Detect if current promo is a Banner
     bool isBannerMode = false;
-    String initialBannerUrl = '';
+    String? bannerUrl;
     if (device.promoCards.isNotEmpty &&
         device.promoCards.first['type'] == 'banner') {
       isBannerMode = true;
-      initialBannerUrl = device.promoCards.first['image_url'] as String? ?? '';
+      final savedUrl = device.promoCards.first['image_url'] as String?;
+      bannerUrl = (savedUrl != null && savedUrl.isNotEmpty) ? savedUrl : null;
     }
-
-    final bannerUrlController = TextEditingController(text: initialBannerUrl);
 
     // Convert existing promoCards into mutable controllers
     final List<Map<String, dynamic>> currentCards = List.from(
@@ -846,16 +862,31 @@ class _DevicePromoCardsAction extends StatelessWidget {
                   const SizedBox(height: 24),
                   if (isBannerMode) ...[
                     const Text(
-                      'Masukkan Link URL untuk Gambar Banner Horizontal.\nRekomendasi ukuran: 1440 x 360 pixel (Rasio 4:1)',
+                      'Pilih Gambar Banner Horizontal dari Media.\nRekomendasi resolusi: 1440 x 360 pixel (Rasio 4:1)',
                       style: TextStyle(color: Colors.grey),
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      controller: bannerUrlController,
+                    DropdownButtonFormField<String?>(
+                      value: bannerUrl,
+                      isExpanded: true,
                       decoration: inputDecoration.copyWith(
-                        labelText: 'URL Gambar Banner (https://...)',
+                        labelText: 'Gambar Banner',
                         prefixIcon: const Icon(Icons.panorama_rounded),
                       ),
+                      items: [
+                        const DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('Pilih gambar...'),
+                        ),
+                        for (final item in imageItems)
+                          DropdownMenuItem<String?>(
+                            value: item.publicUrl,
+                            child: Text(item.fileName),
+                          ),
+                      ],
+                      onChanged: (val) {
+                        setState(() => bannerUrl = val);
+                      },
                     ),
                   ] else
                     ...List.generate(3, (index) {
@@ -949,7 +980,7 @@ class _DevicePromoCardsAction extends StatelessWidget {
         newPromoCards = [
           {
             'type': 'banner',
-            'image_url': bannerUrlController.text.trim(),
+            'image_url': bannerUrl?.trim() ?? '',
             'icon': 'star',
             'title': '',
             'subtitle': '',
