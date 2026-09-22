@@ -730,6 +730,17 @@ class _DevicePromoCardsAction extends StatelessWidget {
   Future<void> _showPromoDialog(BuildContext context) async {
     final cubit = context.read<SignageAdminCubit>();
 
+    // Detect if current promo is a Banner
+    bool isBannerMode = false;
+    String initialBannerUrl = '';
+    if (device.promoCards.isNotEmpty &&
+        device.promoCards.first['type'] == 'banner') {
+      isBannerMode = true;
+      initialBannerUrl = device.promoCards.first['image_url'] as String? ?? '';
+    }
+
+    final bannerUrlController = TextEditingController(text: initialBannerUrl);
+
     // Convert existing promoCards into mutable controllers
     final List<Map<String, dynamic>> currentCards = List.from(
       device.promoCards,
@@ -804,7 +815,7 @@ class _DevicePromoCardsAction extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('3 Promo Cards (Split Screen)'),
+                      const Text('Promo Banner / Cards (Split Screen)'),
                       const SizedBox(height: 4),
                       Text(device.name, style: const TextStyle(fontSize: 14)),
                     ],
@@ -818,68 +829,100 @@ class _DevicePromoCardsAction extends StatelessWidget {
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: List.generate(3, (index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Promo Card ${index + 1}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
+                children: [
+                  SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(value: false, label: Text('3 Kartu Ikon')),
+                      ButtonSegment(
+                        value: true,
+                        label: Text('1 Banner Gambar'),
+                      ),
+                    ],
+                    selected: {isBannerMode},
+                    onSelectionChanged: (set) {
+                      setState(() => isBannerMode = set.first);
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  if (isBannerMode) ...[
+                    const Text(
+                      'Masukkan Link URL untuk Gambar Banner Horizontal.\nRekomendasi ukuran: 1440 x 360 pixel (Rasio 4:1)',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: bannerUrlController,
+                      decoration: inputDecoration.copyWith(
+                        labelText: 'URL Gambar Banner (https://...)',
+                        prefixIcon: const Icon(Icons.panorama_rounded),
+                      ),
+                    ),
+                  ] else
+                    ...List.generate(3, (index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              flex: 1,
-                              child: DropdownButtonFormField<String>(
-                                isExpanded: true,
-                                value: controllers[index]['icon'] as String,
-                                decoration: inputDecoration.copyWith(
-                                  labelText: 'Icon',
-                                ),
-                                items: iconsList.map((icon) {
-                                  return DropdownMenuItem(
-                                    value: icon,
-                                    child: Text(icon),
-                                  );
-                                }).toList(),
-                                onChanged: (v) {
-                                  if (v != null)
-                                    setState(
-                                      () => controllers[index]['icon'] = v,
-                                    );
-                                },
+                            Text(
+                              'Promo Card ${index + 1}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              flex: 2,
-                              child: TextField(
-                                controller:
-                                    controllers[index]['title']
-                                        as TextEditingController,
-                                decoration: inputDecoration.copyWith(
-                                  labelText: 'Judul (Title)',
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: DropdownButtonFormField<String>(
+                                    isExpanded: true,
+                                    value: controllers[index]['icon'] as String,
+                                    decoration: inputDecoration.copyWith(
+                                      labelText: 'Icon',
+                                    ),
+                                    items: iconsList.map((icon) {
+                                      return DropdownMenuItem(
+                                        value: icon,
+                                        child: Text(icon),
+                                      );
+                                    }).toList(),
+                                    onChanged: (v) {
+                                      if (v != null)
+                                        setState(
+                                          () => controllers[index]['icon'] = v,
+                                        );
+                                    },
+                                  ),
                                 ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  flex: 2,
+                                  child: TextField(
+                                    controller:
+                                        controllers[index]['title']
+                                            as TextEditingController,
+                                    decoration: inputDecoration.copyWith(
+                                      labelText: 'Judul (Title)',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            TextField(
+                              controller:
+                                  controllers[index]['subtitle']
+                                      as TextEditingController,
+                              decoration: inputDecoration.copyWith(
+                                labelText: 'Sub Judul (Subtitle)',
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller:
-                              controllers[index]['subtitle']
-                                  as TextEditingController,
-                          decoration: inputDecoration.copyWith(
-                            labelText: 'Sub Judul (Subtitle)',
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+                      );
+                    }),
+                ],
               ),
             ),
           ),
@@ -900,13 +943,28 @@ class _DevicePromoCardsAction extends StatelessWidget {
     );
 
     if (saved == true && context.mounted) {
-      final newPromoCards = controllers.map((c) {
-        return {
-          'icon': c['icon'] as String,
-          'title': (c['title'] as TextEditingController).text.trim(),
-          'subtitle': (c['subtitle'] as TextEditingController).text.trim(),
-        };
-      }).toList();
+      List<Map<String, dynamic>> newPromoCards;
+
+      if (isBannerMode) {
+        newPromoCards = [
+          {
+            'type': 'banner',
+            'image_url': bannerUrlController.text.trim(),
+            'icon': 'star',
+            'title': '',
+            'subtitle': '',
+          },
+        ];
+      } else {
+        newPromoCards = controllers.map((c) {
+          return {
+            'type': 'card',
+            'icon': c['icon'] as String,
+            'title': (c['title'] as TextEditingController).text.trim(),
+            'subtitle': (c['subtitle'] as TextEditingController).text.trim(),
+          };
+        }).toList();
+      }
 
       await cubit.updateDevicePromoCards(device.id, promoCards: newPromoCards);
     }
