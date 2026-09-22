@@ -861,11 +861,55 @@ class _DevicePromoCardsAction extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   if (isBannerMode) ...[
-                    const Text(
-                      'Pilih Gambar Banner Horizontal dari Media.\nRekomendasi resolusi: 1440 x 360 pixel (Rasio 4:1)',
-                      style: TextStyle(color: Colors.grey),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        border: Border.all(color: Colors.amber.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.amber.shade800,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  color: Colors.amber.shade900,
+                                  fontSize: 13,
+                                  height: 1.4,
+                                ),
+                                children: const [
+                                  TextSpan(
+                                    text: 'Penting: ',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Pilih Gambar Banner Horizontal dari Media. Agar tampilan sempurna di TV, ',
+                                  ),
+                                  TextSpan(
+                                    text: 'wajib gunakan gambar beresolusi 1440 x 360 pixel ',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(text: '(Rasio 4:1).'),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     DropdownButtonFormField<String?>(
                       value: bannerUrl,
                       isExpanded: true,
