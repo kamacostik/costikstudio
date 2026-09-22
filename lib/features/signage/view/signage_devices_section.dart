@@ -899,12 +899,12 @@ class _DevicePromoCardsAction extends StatelessWidget {
                                     text: 'Pilih Gambar Banner Horizontal dari Media. Agar tampilan sempurna di TV, ',
                                   ),
                                   TextSpan(
-                                    text: 'wajib gunakan gambar beresolusi 1440 x 240 pixel ',
+                                    text: 'wajib gunakan gambar beresolusi 1440 x 180 pixel ',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  TextSpan(text: '(Rasio 6:1).'),
+                                  TextSpan(text: '(Rasio 8:1).'),
                                 ],
                               ),
                             ),
