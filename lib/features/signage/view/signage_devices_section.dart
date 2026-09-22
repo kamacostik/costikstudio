@@ -766,7 +766,10 @@ class _DevicePromoCardsAction extends StatelessWidget {
     }
 
     final controllers = List.generate(3, (i) {
+      final type = currentCards[i]['type'] as String? ?? 'icon';
       return {
+        'type': type == 'card' ? 'icon' : type,
+        'image_url': currentCards[i]['image_url'] as String? ?? '',
         'icon': currentCards[i]['icon'] as String? ?? 'star',
         'title': TextEditingController(
           text: currentCards[i]['title'] as String? ?? '',
@@ -934,65 +937,132 @@ class _DevicePromoCardsAction extends StatelessWidget {
                     ),
                   ] else
                     ...List.generate(3, (index) {
+                      final cardType = controllers[index]['type'] as String;
+                      final isImageCard = cardType == 'image';
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 24.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Promo Card ${index + 1}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: DropdownButtonFormField<String>(
-                                    isExpanded: true,
-                                    value: controllers[index]['icon'] as String,
-                                    decoration: inputDecoration.copyWith(
-                                      labelText: 'Icon',
-                                    ),
-                                    items: iconsList.map((icon) {
-                                      return DropdownMenuItem(
-                                        value: icon,
-                                        child: Text(icon),
-                                      );
-                                    }).toList(),
-                                    onChanged: (v) {
-                                      if (v != null)
-                                        setState(
-                                          () => controllers[index]['icon'] = v,
-                                        );
-                                    },
+                                Text(
+                                  'Promo Card ${index + 1}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  flex: 2,
-                                  child: TextField(
-                                    controller:
-                                        controllers[index]['title']
-                                            as TextEditingController,
-                                    decoration: inputDecoration.copyWith(
-                                      labelText: 'Judul (Title)',
+                                SegmentedButton<String>(
+                                  showSelectedIcon: false,
+                                  style: const ButtonStyle(
+                                    visualDensity: VisualDensity.compact,
+                                    textStyle: WidgetStatePropertyAll(
+                                      TextStyle(fontSize: 12),
                                     ),
                                   ),
+                                  segments: const [
+                                    ButtonSegment(
+                                      value: 'icon',
+                                      label: Text('Ikon & Teks'),
+                                    ),
+                                    ButtonSegment(
+                                      value: 'image',
+                                      label: Text('Gambar (1:1)'),
+                                    ),
+                                  ],
+                                  selected: {cardType},
+                                  onSelectionChanged: (set) {
+                                    setState(
+                                      () => controllers[index]['type'] =
+                                          set.first,
+                                    );
+                                  },
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            TextField(
-                              controller:
-                                  controllers[index]['subtitle']
-                                      as TextEditingController,
-                              decoration: inputDecoration.copyWith(
-                                labelText: 'Sub Judul (Subtitle)',
+                            if (isImageCard) ...[
+                              DropdownButtonFormField<String?>(
+                                value:
+                                    (controllers[index]['image_url'] as String)
+                                        .isEmpty
+                                    ? null
+                                    : controllers[index]['image_url'] as String,
+                                isExpanded: true,
+                                decoration: inputDecoration.copyWith(
+                                  labelText: 'Pilih Gambar (1:1)',
+                                  prefixIcon: const Icon(Icons.image_rounded),
+                                ),
+                                items: [
+                                  const DropdownMenuItem<String?>(
+                                    value: null,
+                                    child: Text('Pilih gambar...'),
+                                  ),
+                                  for (final item in imageItems)
+                                    DropdownMenuItem<String?>(
+                                      value: item.publicUrl,
+                                      child: Text(item.fileName),
+                                    ),
+                                ],
+                                onChanged: (val) {
+                                  setState(
+                                    () => controllers[index]['image_url'] =
+                                        val ?? '',
+                                  );
+                                },
                               ),
-                            ),
+                            ] else ...[
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: 1,
+                                    child: DropdownButtonFormField<String>(
+                                      isExpanded: true,
+                                      value:
+                                          controllers[index]['icon'] as String,
+                                      decoration: inputDecoration.copyWith(
+                                        labelText: 'Icon',
+                                      ),
+                                      items: iconsList.map((icon) {
+                                        return DropdownMenuItem(
+                                          value: icon,
+                                          child: Text(icon),
+                                        );
+                                      }).toList(),
+                                      onChanged: (v) {
+                                        if (v != null)
+                                          setState(
+                                            () =>
+                                                controllers[index]['icon'] = v,
+                                          );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    flex: 2,
+                                    child: TextField(
+                                      controller:
+                                          controllers[index]['title']
+                                              as TextEditingController,
+                                      decoration: inputDecoration.copyWith(
+                                        labelText: 'Judul (Title)',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller:
+                                    controllers[index]['subtitle']
+                                        as TextEditingController,
+                                decoration: inputDecoration.copyWith(
+                                  labelText: 'Sub Judul (Subtitle)',
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       );
@@ -1032,8 +1102,10 @@ class _DevicePromoCardsAction extends StatelessWidget {
         ];
       } else {
         newPromoCards = controllers.map((c) {
+          final isImageCard = c['type'] == 'image';
           return {
-            'type': 'card',
+            'type': isImageCard ? 'image' : 'icon',
+            'image_url': isImageCard ? (c['image_url'] as String) : '',
             'icon': c['icon'] as String,
             'title': (c['title'] as TextEditingController).text.trim(),
             'subtitle': (c['subtitle'] as TextEditingController).text.trim(),
