@@ -468,8 +468,9 @@ class _DeviceSettingsAction extends StatelessWidget {
                               ),
                           ],
                           onChanged: (theme) {
-                            if (theme != null)
+                            if (theme != null) {
                               setState(() => eventTheme = theme);
+                            }
                           },
                         ),
                         const SizedBox(height: 24),
@@ -899,12 +900,12 @@ class _DevicePromoCardsAction extends StatelessWidget {
                                     text: 'Pilih Gambar Banner Horizontal dari Media. Agar tampilan sempurna di TV, ',
                                   ),
                                   TextSpan(
-                                    text: 'wajib gunakan gambar beresolusi 1440 x 180 pixel ',
+                                    text: 'wajib gunakan gambar beresolusi 1440 x 240 pixel ',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  TextSpan(text: '(Rasio 8:1).'),
+                                  TextSpan(text: '(Rasio 6:1).'),
                                 ],
                               ),
                             ),
@@ -914,7 +915,7 @@ class _DevicePromoCardsAction extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String?>(
-                      value: bannerUrl,
+                      initialValue: bannerUrl,
                       isExpanded: true,
                       decoration: inputDecoration.copyWith(
                         labelText: 'Gambar Banner',
@@ -984,7 +985,7 @@ class _DevicePromoCardsAction extends StatelessWidget {
                             const SizedBox(height: 12),
                             if (isImageCard) ...[
                               DropdownButtonFormField<String?>(
-                                value:
+                                initialValue:
                                     (controllers[index]['image_url'] as String)
                                         .isEmpty
                                     ? null
@@ -1019,7 +1020,7 @@ class _DevicePromoCardsAction extends StatelessWidget {
                                     flex: 1,
                                     child: DropdownButtonFormField<String>(
                                       isExpanded: true,
-                                      value:
+                                      initialValue:
                                           controllers[index]['icon'] as String,
                                       decoration: inputDecoration.copyWith(
                                         labelText: 'Icon',
@@ -1031,11 +1032,12 @@ class _DevicePromoCardsAction extends StatelessWidget {
                                         );
                                       }).toList(),
                                       onChanged: (v) {
-                                        if (v != null)
+                                        if (v != null) {
                                           setState(
                                             () =>
                                                 controllers[index]['icon'] = v,
                                           );
+                                        }
                                       },
                                     ),
                                   ),
