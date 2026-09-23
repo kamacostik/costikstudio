@@ -109,6 +109,10 @@ class _SignageDevicesSectionState extends State<SignageDevicesSection> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                _DevicePromoCardsAction(
+                                  device: device,
+                                  mediaItems: state.mediaItems,
+                                ),
                                 _DeviceSettingsAction(
                                   device: device,
                                   mediaItems: state.mediaItems,
@@ -311,6 +315,14 @@ class _DeviceSettingsAction extends StatelessWidget {
   Future<void> _showSettingsDialog(BuildContext context) async {
     var slideDuration = device.eventSlideDurationSeconds.clamp(3, 60);
     var appMode = device.appMode;
+    var eventTheme = device.eventTheme;
+    var runningTextEnabled = device.runningTextEnabled;
+    final runningTextController = TextEditingController(
+      text: device.runningText ?? '',
+    );
+    var qrEnabled = device.qrEnabled;
+    final qrUrlController = TextEditingController(text: device.qrUrl ?? '');
+    final qrTitleController = TextEditingController(text: device.qrTitle ?? '');
     var eventBackgroundUrl = device.eventBackgroundUrl;
     final backgroundItems = mediaItems
         .where(
@@ -341,12 +353,16 @@ class _DeviceSettingsAction extends StatelessWidget {
         builder: (context, setState) => AlertDialog(
           titlePadding: EdgeInsets.zero,
           contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
           title: Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
               color: CostikStudioTheme.primary.withValues(alpha: 0.10),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
             ),
             child: Row(
               children: [
@@ -378,104 +394,256 @@ class _DeviceSettingsAction extends StatelessWidget {
           ),
           content: SizedBox(
             width: (MediaQuery.sizeOf(context).width - 48)
-                .clamp(320, 460)
+                .clamp(600, 800)
                 .toDouble(),
             child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Mode Aplikasi',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: CostikStudioTheme.navy),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Pilih tampilan utama pada layar TV.',
-                    style: TextStyle(fontSize: 13, color: CostikStudioTheme.slate),
-                  ),
-                  const SizedBox(height: 10),
-                  DropdownButtonFormField<SignageAppMode>(
-                    initialValue: appMode,
-                    decoration: inputDecoration.copyWith(
-                      prefixIcon: const Icon(Icons.apps_rounded),
-                    ),
-                    items: [
-                      for (final mode in SignageAppMode.values)
-                        DropdownMenuItem(value: mode, child: Text(mode.label)),
-                    ],
-                    onChanged: (mode) {
-                      if (mode != null) setState(() => appMode = mode);
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Background (Tanpa Event)',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: CostikStudioTheme.navy),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Gambar yang tampil jika tidak ada event hari ini.',
-                    style: TextStyle(fontSize: 13, color: CostikStudioTheme.slate),
-                  ),
-                  const SizedBox(height: 10),
-                  DropdownButtonFormField<String?>(
-                    initialValue: eventBackgroundUrl,
-                    isExpanded: true,
-                    decoration: inputDecoration.copyWith(
-                      prefixIcon: const Icon(Icons.wallpaper_rounded),
-                    ),
-                    items: [
-                      const DropdownMenuItem<String?>(
-                        value: null,
-                        child: Text('Tidak pakai background'),
-                      ),
-                      for (final item in backgroundItems)
-                        DropdownMenuItem<String?>(
-                          value: item.publicUrl,
-                          child: Text(item.fileName),
-                        ),
-                    ],
-                    onChanged: (value) =>
-                        setState(() => eventBackgroundUrl = value),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Durasi Slide Event',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: CostikStudioTheme.navy),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Lama tiap gambar event tampil (berlaku jika event > 4).',
-                    style: TextStyle(fontSize: 13, color: CostikStudioTheme.slate),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Slider(
-                          value: slideDuration.toDouble(),
-                          min: 3,
-                          max: 60,
-                          divisions: 57,
-                          label: '$slideDuration detik',
-                          onChanged: (value) =>
-                              setState(() => slideDuration = value.round()),
-                        ),
-                      ),
-                      Container(
-                        width: 50,
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          '${slideDuration}s',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: CostikStudioTheme.primary,
-                            fontSize: 15,
+                  // Left Column: Layout & Appearance
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Mode Aplikasi',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Pilih tampilan utama pada layar TV.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<SignageAppMode>(
+                          initialValue: appMode,
+                          decoration: inputDecoration.copyWith(
+                            prefixIcon: const Icon(Icons.apps_rounded),
+                          ),
+                          items: [
+                            for (final mode in SignageAppMode.values)
+                              DropdownMenuItem(
+                                value: mode,
+                                child: Text(mode.label),
+                              ),
+                          ],
+                          onChanged: (mode) {
+                            if (mode != null) setState(() => appMode = mode);
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Tema Event Schedule',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Pilih gaya tampilan jadwal event untuk device ini.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<SignageEventTheme>(
+                          initialValue: eventTheme,
+                          decoration: inputDecoration.copyWith(
+                            prefixIcon: const Icon(Icons.palette_rounded),
+                          ),
+                          items: [
+                            for (final theme in SignageEventTheme.values)
+                              DropdownMenuItem(
+                                value: theme,
+                                child: Text(theme.label),
+                              ),
+                          ],
+                          onChanged: (theme) {
+                            if (theme != null) {
+                              setState(() => eventTheme = theme);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Background (Tanpa Event)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Gambar yang tampil jika tidak ada event hari ini.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<String?>(
+                          initialValue: eventBackgroundUrl,
+                          isExpanded: true,
+                          decoration: inputDecoration.copyWith(
+                            prefixIcon: const Icon(Icons.wallpaper_rounded),
+                          ),
+                          items: [
+                            const DropdownMenuItem<String?>(
+                              value: null,
+                              child: Text('Tidak pakai background'),
+                            ),
+                            for (final item in backgroundItems)
+                              DropdownMenuItem<String?>(
+                                value: item.publicUrl,
+                                child: Text(item.fileName),
+                              ),
+                          ],
+                          onChanged: (value) =>
+                              setState(() => eventBackgroundUrl = value),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 32),
+                  // Right Column: Overlays & Behaviours
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'QR Code Interaktif',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Tampilkan QR code overlay di sudut layar (untuk link menu, absensi, dsb).',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          value: qrEnabled,
+                          title: const Text('Aktifkan QR Code Overlay'),
+                          onChanged: (value) =>
+                              setState(() => qrEnabled = value),
+                        ),
+                        if (qrEnabled) ...[
+                          const SizedBox(height: 10),
+                          TextFormField(
+                            controller: qrUrlController,
+                            decoration: inputDecoration.copyWith(
+                              hintText: 'https://...',
+                              prefixIcon: const Icon(Icons.link_rounded),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          TextFormField(
+                            controller: qrTitleController,
+                            maxLength: 24,
+                            decoration: inputDecoration.copyWith(
+                              hintText: 'Judul (cth: Scan Me, Join Member)',
+                              prefixIcon: const Icon(Icons.short_text_rounded),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Text Berjalan',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Pesan ticker yang berjalan di bagian bawah layar event.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          value: runningTextEnabled,
+                          title: const Text('Aktifkan text berjalan'),
+                          onChanged: (value) =>
+                              setState(() => runningTextEnabled = value),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: runningTextController,
+                          enabled: runningTextEnabled,
+                          maxLines: 2,
+                          maxLength: 180,
+                          decoration: inputDecoration.copyWith(
+                            prefixIcon: const Icon(Icons.short_text_rounded),
+                            hintText: 'Contoh: Welcome to Costik Hotel • Breakfast starts at 06:00',
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Durasi Slide Event',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: CostikStudioTheme.navy,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Lama tiap gambar event tampil (berlaku jika event > 4).',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: CostikStudioTheme.slate,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Slider(
+                                value: slideDuration.toDouble(),
+                                min: 3,
+                                max: 60,
+                                divisions: 57,
+                                label: '$slideDuration detik',
+                                onChanged: (value) => setState(
+                                  () => slideDuration = value.round(),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 50,
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                '${slideDuration}s',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: CostikStudioTheme.primary,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -501,6 +669,35 @@ class _DeviceSettingsAction extends StatelessWidget {
     if (appMode != device.appMode) {
       await cubit.updateDeviceAppMode(device.id, appMode: appMode);
     }
+    if (eventTheme != device.eventTheme) {
+      await cubit.updateDeviceEventTheme(device.id, eventTheme: eventTheme);
+    }
+    final nextRunningText = runningTextController.text.trim();
+    if (runningTextEnabled != device.runningTextEnabled ||
+        nextRunningText != (device.runningText ?? '').trim()) {
+      await cubit.updateDeviceRunningText(
+        device.id,
+        runningTextEnabled: runningTextEnabled,
+        runningText: nextRunningText,
+      );
+    }
+
+    final nextQrUrl = qrUrlController.text.trim();
+    final nextQrTitle = qrTitleController.text.trim();
+    if (qrEnabled != device.qrEnabled ||
+        nextQrUrl != (device.qrUrl ?? '').trim() ||
+        nextQrTitle != (device.qrTitle ?? '').trim()) {
+      await cubit.updateDeviceQrOverlay(
+        device.id,
+        qrEnabled: qrEnabled,
+        qrUrl: nextQrUrl,
+        qrTitle: nextQrTitle,
+      );
+    }
+
+    runningTextController.dispose();
+    qrUrlController.dispose();
+    qrTitleController.dispose();
     if (eventBackgroundUrl != device.eventBackgroundUrl) {
       await cubit.updateDeviceEventBackground(
         device.id,
@@ -512,6 +709,413 @@ class _DeviceSettingsAction extends StatelessWidget {
         device.id,
         durationSeconds: slideDuration,
       );
+    }
+  }
+}
+
+class _DevicePromoCardsAction extends StatelessWidget {
+  const _DevicePromoCardsAction({
+    required this.device,
+    required this.mediaItems,
+  });
+
+  final SignageDevice device;
+  final List<SignageMediaItem> mediaItems;
+
+  @override
+  Widget build(BuildContext context) {
+    if (device.appMode != SignageAppMode.splitScreen) {
+      return const SizedBox.shrink();
+    }
+    return IconButton(
+      tooltip: 'Set Promo Cards',
+      icon: const Icon(Icons.style_rounded),
+      color: CostikStudioTheme.primary,
+      onPressed: () => _showPromoDialog(context),
+    );
+  }
+
+  Future<void> _showPromoDialog(BuildContext context) async {
+    final cubit = context.read<SignageAdminCubit>();
+
+    // Prepare image items for banner selector
+    final imageItems = mediaItems
+        .where(
+          (item) =>
+              item.publicUrl != null &&
+              item.publicUrl!.trim().isNotEmpty &&
+              item.mediaType == 'image',
+        )
+        .toList();
+
+    // Detect if current promo is a Banner
+    bool isBannerMode = false;
+    String? bannerUrl;
+    if (device.promoCards.isNotEmpty &&
+        device.promoCards.first['type'] == 'banner') {
+      isBannerMode = true;
+      final savedUrl = device.promoCards.first['image_url'] as String?;
+      bannerUrl = (savedUrl != null && savedUrl.isNotEmpty) ? savedUrl : null;
+    }
+
+    // Convert existing promoCards into mutable controllers
+    final List<Map<String, dynamic>> currentCards = List.from(
+      device.promoCards,
+    );
+    while (currentCards.length < 3) {
+      currentCards.add({'icon': 'star', 'title': '', 'subtitle': ''});
+    }
+
+    final controllers = List.generate(3, (i) {
+      final type = currentCards[i]['type'] as String? ?? 'icon';
+      return {
+        'type': type == 'card' ? 'icon' : type,
+        'image_url': currentCards[i]['image_url'] as String? ?? '',
+        'icon': currentCards[i]['icon'] as String? ?? 'star',
+        'title': TextEditingController(
+          text: currentCards[i]['title'] as String? ?? '',
+        ),
+        'subtitle': TextEditingController(
+          text: currentCards[i]['subtitle'] as String? ?? '',
+        ),
+      };
+    });
+
+    final iconsList = [
+      'star',
+      'spa',
+      'room_service',
+      'tv',
+      'restaurant',
+      'pool',
+      'fitness_center',
+      'wifi',
+      'local_bar',
+      'local_cafe',
+      'cleaning_services',
+      'ac_unit',
+    ];
+
+    final inputDecoration = InputDecoration(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+    );
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          titlePadding: EdgeInsets.zero,
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          title: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: CostikStudioTheme.primary.withValues(alpha: 0.10),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
+            ),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  foregroundColor: CostikStudioTheme.primary,
+                  child: Icon(Icons.style_rounded),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Promo Banner / Cards (Split Screen)'),
+                      const SizedBox(height: 4),
+                      Text(device.name, style: const TextStyle(fontSize: 14)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          content: SizedBox(
+            width: 500,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(value: false, label: Text('3 Kartu Ikon')),
+                      ButtonSegment(
+                        value: true,
+                        label: Text('1 Banner Gambar'),
+                      ),
+                    ],
+                    selected: {isBannerMode},
+                    onSelectionChanged: (set) {
+                      setState(() => isBannerMode = set.first);
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  if (isBannerMode) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        border: Border.all(color: Colors.amber.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.amber.shade800,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  color: Colors.amber.shade900,
+                                  fontSize: 13,
+                                  height: 1.4,
+                                ),
+                                children: const [
+                                  TextSpan(
+                                    text: 'Penting: ',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Pilih Gambar Banner Horizontal dari Media. Agar tampilan sempurna di TV, ',
+                                  ),
+                                  TextSpan(
+                                    text: 'wajib gunakan gambar beresolusi 1440 x 240 pixel ',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(text: '(Rasio 6:1).'),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String?>(
+                      initialValue: bannerUrl,
+                      isExpanded: true,
+                      decoration: inputDecoration.copyWith(
+                        labelText: 'Gambar Banner',
+                        prefixIcon: const Icon(Icons.panorama_rounded),
+                      ),
+                      items: [
+                        const DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('Pilih gambar...'),
+                        ),
+                        for (final item in imageItems)
+                          DropdownMenuItem<String?>(
+                            value: item.publicUrl,
+                            child: Text(item.fileName),
+                          ),
+                      ],
+                      onChanged: (val) {
+                        setState(() => bannerUrl = val);
+                      },
+                    ),
+                  ] else
+                    ...List.generate(3, (index) {
+                      final cardType = controllers[index]['type'] as String;
+                      final isImageCard = cardType == 'image';
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Promo Card ${index + 1}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SegmentedButton<String>(
+                                  showSelectedIcon: false,
+                                  style: const ButtonStyle(
+                                    visualDensity: VisualDensity.compact,
+                                    textStyle: WidgetStatePropertyAll(
+                                      TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  segments: const [
+                                    ButtonSegment(
+                                      value: 'icon',
+                                      label: Text('Ikon & Teks'),
+                                    ),
+                                    ButtonSegment(
+                                      value: 'image',
+                                      label: Text('Gambar (1:1)'),
+                                    ),
+                                  ],
+                                  selected: {cardType},
+                                  onSelectionChanged: (set) {
+                                    setState(
+                                      () => controllers[index]['type'] =
+                                          set.first,
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            if (isImageCard) ...[
+                              DropdownButtonFormField<String?>(
+                                initialValue:
+                                    (controllers[index]['image_url'] as String)
+                                        .isEmpty
+                                    ? null
+                                    : controllers[index]['image_url'] as String,
+                                isExpanded: true,
+                                decoration: inputDecoration.copyWith(
+                                  labelText: 'Pilih Gambar (1:1)',
+                                  prefixIcon: const Icon(Icons.image_rounded),
+                                ),
+                                items: [
+                                  const DropdownMenuItem<String?>(
+                                    value: null,
+                                    child: Text('Pilih gambar...'),
+                                  ),
+                                  for (final item in imageItems)
+                                    DropdownMenuItem<String?>(
+                                      value: item.publicUrl,
+                                      child: Text(item.fileName),
+                                    ),
+                                ],
+                                onChanged: (val) {
+                                  setState(
+                                    () => controllers[index]['image_url'] =
+                                        val ?? '',
+                                  );
+                                },
+                              ),
+                            ] else ...[
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: 1,
+                                    child: DropdownButtonFormField<String>(
+                                      isExpanded: true,
+                                      initialValue:
+                                          controllers[index]['icon'] as String,
+                                      decoration: inputDecoration.copyWith(
+                                        labelText: 'Icon',
+                                      ),
+                                      items: iconsList.map((icon) {
+                                        return DropdownMenuItem(
+                                          value: icon,
+                                          child: Text(icon),
+                                        );
+                                      }).toList(),
+                                      onChanged: (v) {
+                                        if (v != null) {
+                                          setState(
+                                            () =>
+                                                controllers[index]['icon'] = v,
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    flex: 2,
+                                    child: TextField(
+                                      controller:
+                                          controllers[index]['title']
+                                              as TextEditingController,
+                                      decoration: inputDecoration.copyWith(
+                                        labelText: 'Judul (Title)',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller:
+                                    controllers[index]['subtitle']
+                                        as TextEditingController,
+                                decoration: inputDecoration.copyWith(
+                                  labelText: 'Sub Judul (Subtitle)',
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    }),
+                ],
+              ),
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Batal'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              icon: const Icon(Icons.check_rounded),
+              label: const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved == true && context.mounted) {
+      List<Map<String, dynamic>> newPromoCards;
+
+      if (isBannerMode) {
+        newPromoCards = [
+          {
+            'type': 'banner',
+            'image_url': bannerUrl?.trim() ?? '',
+            'icon': 'star',
+            'title': '',
+            'subtitle': '',
+          },
+        ];
+      } else {
+        newPromoCards = controllers.map((c) {
+          final isImageCard = c['type'] == 'image';
+          return {
+            'type': isImageCard ? 'image' : 'icon',
+            'image_url': isImageCard ? (c['image_url'] as String) : '',
+            'icon': c['icon'] as String,
+            'title': (c['title'] as TextEditingController).text.trim(),
+            'subtitle': (c['subtitle'] as TextEditingController).text.trim(),
+          };
+        }).toList();
+      }
+
+      await cubit.updateDevicePromoCards(device.id, promoCards: newPromoCards);
     }
   }
 }
@@ -533,12 +1137,16 @@ class _DeviceDeleteAction extends StatelessWidget {
           builder: (dialogContext) => AlertDialog(
             titlePadding: EdgeInsets.zero,
             contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
             title: Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 color: Colors.red.withValues(alpha: 0.10),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
               ),
               child: Row(
                 children: [
@@ -586,7 +1194,9 @@ class _DeviceDeleteAction extends StatelessWidget {
                 child: const Text('Batal'),
               ),
               FilledButton.icon(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade600),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.red.shade600,
+                ),
                 onPressed: () => Navigator.of(dialogContext).pop(true),
                 icon: const Icon(Icons.delete_outline_rounded),
                 label: const Text('Ya, Hapus'),

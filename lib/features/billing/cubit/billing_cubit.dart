@@ -143,12 +143,14 @@ class BillingCubit extends Cubit<BillingState> {
     required int deviceCount,
     required int billingCycleMonths,
     bool autoRenew = false,
+    String? voucherCode,
   }) async {
     await _runMutation(
       () => repository.checkoutSignageSubscription(
         deviceCount: deviceCount,
         billingCycleMonths: billingCycleMonths,
         autoRenew: autoRenew,
+        voucherCode: voucherCode,
       ),
     );
   }

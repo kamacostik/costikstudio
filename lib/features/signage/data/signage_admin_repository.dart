@@ -45,7 +45,9 @@ class SignageHotelProfile extends Equatable {
 
 enum SignageAppMode {
   dailyEvent('daily_event', 'Daily Event'),
-  videoPlayer('video_player', 'Video Player');
+  videoPlayer('video_player', 'Video Player'),
+  splitScreen('split_screen', 'Split Screen'),
+  glassOverlay('glass_overlay', 'Glass Overlay');
 
   const SignageAppMode(this.value, this.label);
 
@@ -60,6 +62,27 @@ enum SignageAppMode {
   }
 }
 
+enum SignageEventTheme {
+  classic('classic', 'Classic Gold'),
+  modernDark('modern_dark', 'Modern Dark'),
+  hotelElegant('hotel_elegant', 'Hotel Lobby Elegant'),
+  minimalLight('minimal_light', 'Minimal White'),
+  conferenceBoard('conference_board', 'Conference Board'),
+  flightBoard('flight_board', 'Flight Board');
+
+  const SignageEventTheme(this.value, this.label);
+
+  final String value;
+  final String label;
+
+  static SignageEventTheme fromValue(String? value) {
+    return SignageEventTheme.values.firstWhere(
+      (theme) => theme.value == value,
+      orElse: () => SignageEventTheme.classic,
+    );
+  }
+}
+
 class SignageDevice extends Equatable {
   const SignageDevice({
     required this.id,
@@ -70,7 +93,14 @@ class SignageDevice extends Equatable {
     required this.tableColumn,
     this.eventSlideDurationSeconds = 7,
     this.appMode = SignageAppMode.dailyEvent,
+    this.eventTheme = SignageEventTheme.classic,
+    this.runningTextEnabled = false,
+    this.runningText,
     this.eventBackgroundUrl,
+    this.qrUrl,
+    this.qrTitle,
+    this.qrEnabled = false,
+    this.promoCards = const [],
     required this.isActive,
     this.pairingCode,
     this.pairingExpiresAt,
@@ -86,7 +116,14 @@ class SignageDevice extends Equatable {
   final int tableColumn;
   final int eventSlideDurationSeconds;
   final SignageAppMode appMode;
+  final SignageEventTheme eventTheme;
+  final bool runningTextEnabled;
+  final String? runningText;
   final String? eventBackgroundUrl;
+  final String? qrUrl;
+  final String? qrTitle;
+  final bool qrEnabled;
+  final List<Map<String, dynamic>> promoCards;
   final bool isActive;
   final String? pairingCode;
   final DateTime? pairingExpiresAt;
@@ -115,7 +152,17 @@ class SignageDevice extends Equatable {
       eventSlideDurationSeconds:
           (map['event_slide_duration_seconds'] as num?)?.round() ?? 7,
       appMode: SignageAppMode.fromValue(map['app_mode'] as String?),
+      eventTheme: SignageEventTheme.fromValue(map['event_theme'] as String?),
+      runningTextEnabled: map['running_text_enabled'] as bool? ?? false,
+      runningText: map['running_text'] as String?,
       eventBackgroundUrl: map['event_background_url'] as String?,
+      qrUrl: map['qr_url'] as String?,
+      qrTitle: map['qr_title'] as String?,
+      qrEnabled: map['qr_enabled'] as bool? ?? false,
+      promoCards: (map['promo_cards'] as List?)
+              ?.map((e) => e as Map<String, dynamic>)
+              .toList() ??
+          [],
       isActive: map['is_active'] as bool? ?? true,
       pairingCode: map['pairing_code'] as String?,
       pairingExpiresAt: DateTime.tryParse(
@@ -136,13 +183,65 @@ class SignageDevice extends Equatable {
     tableColumn,
     eventSlideDurationSeconds,
     appMode,
+    eventTheme,
+    runningTextEnabled,
+    runningText,
     eventBackgroundUrl,
+    qrUrl,
+    qrTitle,
+    qrEnabled,
+    promoCards,
     isActive,
     pairingCode,
     pairingExpiresAt,
     activatedAt,
     lastSeenAt,
   ];
+
+  SignageDevice copyWith({
+    String? name,
+    bool? isVideo,
+    bool? isPromo,
+    double? promoDuration,
+    int? tableColumn,
+    int? eventSlideDurationSeconds,
+    SignageAppMode? appMode,
+    SignageEventTheme? eventTheme,
+    bool? runningTextEnabled,
+    String? runningText,
+    String? eventBackgroundUrl,
+    String? qrUrl,
+    String? qrTitle,
+    bool? qrEnabled,
+    bool? isActive,
+    String? pairingCode,
+    DateTime? pairingExpiresAt,
+    DateTime? activatedAt,
+    DateTime? lastSeenAt,
+  }) {
+    return SignageDevice(
+      id: id,
+      name: name ?? this.name,
+      isVideo: isVideo ?? this.isVideo,
+      isPromo: isPromo ?? this.isPromo,
+      promoDuration: promoDuration ?? this.promoDuration,
+      tableColumn: tableColumn ?? this.tableColumn,
+      eventSlideDurationSeconds: eventSlideDurationSeconds ?? this.eventSlideDurationSeconds,
+      appMode: appMode ?? this.appMode,
+      eventTheme: eventTheme ?? this.eventTheme,
+      runningTextEnabled: runningTextEnabled ?? this.runningTextEnabled,
+      runningText: runningText ?? this.runningText,
+      eventBackgroundUrl: eventBackgroundUrl ?? this.eventBackgroundUrl,
+      qrUrl: qrUrl ?? this.qrUrl,
+      qrTitle: qrTitle ?? this.qrTitle,
+      qrEnabled: qrEnabled ?? this.qrEnabled,
+      isActive: isActive ?? this.isActive,
+      pairingCode: pairingCode ?? this.pairingCode,
+      pairingExpiresAt: pairingExpiresAt ?? this.pairingExpiresAt,
+      activatedAt: activatedAt ?? this.activatedAt,
+      lastSeenAt: lastSeenAt ?? this.lastSeenAt,
+    );
+  }
 }
 
 class SignageMediaItem extends Equatable {
@@ -193,6 +292,7 @@ class SignagePlaylistItem extends Equatable {
     this.mediaId,
     this.path,
     this.isEnabled = true,
+    this.targetDeviceIds = const [],
   });
 
   final String? id;
@@ -200,6 +300,7 @@ class SignagePlaylistItem extends Equatable {
   final String? mediaId;
   final String? path;
   final bool isEnabled;
+  final List<String> targetDeviceIds;
 
   factory SignagePlaylistItem.fromMap(Map<String, dynamic> map) {
     return SignagePlaylistItem(
@@ -219,6 +320,7 @@ class SignagePlaylistItem extends Equatable {
       'media_id': mediaId,
       'path_playlist': path,
       'is_enabled': isEnabled,
+      'target_device_ids': targetDeviceIds.isEmpty ? null : targetDeviceIds,
     };
   }
 
@@ -262,6 +364,7 @@ class SignageEventItem extends Equatable {
     this.startDate,
     this.endDate,
     this.isActive = true,
+    this.targetDeviceIds = const [],
   });
 
   final String? id;
@@ -272,6 +375,7 @@ class SignageEventItem extends Equatable {
   final DateTime? startDate;
   final DateTime? endDate;
   final bool isActive;
+  final List<String> targetDeviceIds;
 
   factory SignageEventItem.fromMap(Map<String, dynamic> map) {
     return SignageEventItem(
@@ -283,6 +387,11 @@ class SignageEventItem extends Equatable {
       startDate: DateTime.tryParse(map['start_date'] as String? ?? ''),
       endDate: DateTime.tryParse(map['end_date'] as String? ?? ''),
       isActive: map['is_active'] as bool? ?? true,
+      targetDeviceIds:
+          (map['target_device_ids'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
   }
 
@@ -297,6 +406,7 @@ class SignageEventItem extends Equatable {
       'start_date': startDate?.toIso8601String(),
       'end_date': endDate?.toIso8601String(),
       'is_active': isActive,
+      'target_device_ids': targetDeviceIds.isEmpty ? null : targetDeviceIds,
     };
   }
 
@@ -310,6 +420,7 @@ class SignageEventItem extends Equatable {
     startDate,
     endDate,
     isActive,
+    targetDeviceIds,
   ];
 }
 
@@ -398,9 +509,28 @@ abstract class SignageAdminRepository {
     String deviceId, {
     required SignageAppMode appMode,
   });
+  Future<void> updateDeviceEventTheme(
+    String deviceId, {
+    required SignageEventTheme eventTheme,
+  });
+  Future<void> updateDeviceRunningText(
+    String deviceId, {
+    required bool runningTextEnabled,
+    String? runningText,
+  });
   Future<void> updateDeviceEventBackground(
     String deviceId, {
     String? eventBackgroundUrl,
+  });
+  Future<void> updateDeviceQrOverlay(
+    String deviceId, {
+    required bool qrEnabled,
+    String? qrUrl,
+    String? qrTitle,
+  });
+  Future<void> updateDevicePromoCards(
+    String deviceId, {
+    required List<Map<String, dynamic>> promoCards,
   });
   Future<void> deleteDevice(String deviceId);
 }
@@ -767,6 +897,43 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
   }
 
   @override
+  Future<void> updateDeviceEventTheme(
+    String deviceId, {
+    required SignageEventTheme eventTheme,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    await _supabase
+        .from('sg_devices')
+        .update({
+          'event_theme': eventTheme.value,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', deviceId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
+  Future<void> updateDeviceRunningText(
+    String deviceId, {
+    required bool runningTextEnabled,
+    String? runningText,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    final trimmed = runningText?.trim();
+    await _supabase
+        .from('sg_devices')
+        .update({
+          'running_text_enabled': runningTextEnabled,
+          'running_text': trimmed == null || trimmed.isEmpty ? null : trimmed,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', deviceId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
   Future<void> updateDeviceEventBackground(
     String deviceId, {
     String? eventBackgroundUrl,
@@ -780,6 +947,46 @@ class SupabaseSignageAdminRepository extends SignageAdminRepository {
           'event_background_url': trimmed == null || trimmed.isEmpty
               ? null
               : trimmed,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', deviceId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
+  Future<void> updateDeviceQrOverlay(
+    String deviceId, {
+    required bool qrEnabled,
+    String? qrUrl,
+    String? qrTitle,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    final trimmedUrl = qrUrl?.trim();
+    final trimmedTitle = qrTitle?.trim();
+    await _supabase
+        .from('sg_devices')
+        .update({
+          'qr_enabled': qrEnabled,
+          'qr_url': trimmedUrl == null || trimmedUrl.isEmpty ? null : trimmedUrl,
+          'qr_title': trimmedTitle == null || trimmedTitle.isEmpty ? null : trimmedTitle,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', deviceId)
+        .eq('tenant_id', tenantId);
+  }
+
+  @override
+  Future<void> updateDevicePromoCards(
+    String deviceId, {
+    required List<Map<String, dynamic>> promoCards,
+  }) async {
+    final tenantId = await currentTenantId();
+    if (tenantId == null) throw StateError('Tenant Signage belum tersedia.');
+    await _supabase
+        .from('sg_devices')
+        .update({
+          'promo_cards': promoCards,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', deviceId)

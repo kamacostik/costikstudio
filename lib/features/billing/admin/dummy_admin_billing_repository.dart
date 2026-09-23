@@ -141,6 +141,8 @@ class DummyAdminBillingRepository implements AdminBillingRepository {
       ],
       allSubscriptions: List.unmodifiable(_allSubscriptions),
       message: message,
+      revenueToday: 20000,
+      revenueMonth: 125000,
     );
   }
 }

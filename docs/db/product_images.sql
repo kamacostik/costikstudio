@@ -28,6 +28,13 @@ insert into public.products (
     'Event schedule board and fullscreen video signage for hotels.',
     20000,
     jsonb_build_object('gallery_upload_enabled', true, 'billing_product_id', 'costik-signage')
+  ),
+  (
+    'adb-manager',
+    'ADB Manager',
+    'Desktop tool for managing Android TV devices via ADB.',
+    0,
+    jsonb_build_object('gallery_upload_enabled', true)
   )
 on conflict (id) do update set
   name = excluded.name,

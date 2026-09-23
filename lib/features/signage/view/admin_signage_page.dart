@@ -1,9 +1,9 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:costikstudio/features/signage/admin/admin_signage_cubit.dart';
-import 'package:costikstudio/features/signage/admin/admin_signage_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:costikstudio/features/signage/view/widgets/signage_table_widgets.dart';
 
 /// Admin-only tenant overview for Signage.
 ///
@@ -36,6 +36,7 @@ class _AdminSignageView extends StatelessWidget {
 
         return SingleChildScrollView(
           child: ResponsiveSection(
+            maxWidth: double.infinity,
             padding: const EdgeInsets.fromLTRB(24, 56, 24, 80),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,10 +51,8 @@ class _AdminSignageView extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   'Daftar tenant/hotel Signage customer beserta status subscription dan device.',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: CostikStudioTheme.slate,
-                    height: 1.5,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(color: CostikStudioTheme.slate, height: 1.5),
                 ),
                 const SizedBox(height: 28),
                 if (state.errorMessage != null) ...[
@@ -86,117 +85,113 @@ class _AdminSignageView extends StatelessWidget {
                     ),
                   )
                 else
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isWide = constraints.maxWidth > 900;
-                      final cards = [
-                        for (final tenant in state.tenants)
-                          _TenantCard(tenant: tenant),
-                      ];
-                      if (!isWide) {
-                        return Column(
-                          children: [
-                            for (final card in cards) ...[
-                              card,
-                              const SizedBox(height: 12),
-                            ],
-                          ],
-                        );
-                      }
-                      return GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 1.9,
-                        children: cards,
-                      );
-                    },
+                  Card(
+                    elevation: 0,
+                    margin: EdgeInsets.zero,
+                    clipBehavior: Clip.antiAlias,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: SignageDataTable(
+                        emptyIcon: Icons.business_rounded,
+                        emptyMessage: 'Belum ada tenant Signage',
+                        columns: [
+                          signageDataColumn('Tenant (Hotel)'),
+                          signageDataColumn('Owner / Pelanggan'),
+                          signageDataColumn('Kuota Dev'),
+                          signageDataColumn('Device Terpakai'),
+                          signageDataColumn('Expired'),
+                          signageDataColumn('Status'),
+                        ],
+                        rows: [
+                          for (final tenant in state.tenants)
+                            DataRow(
+                              cells: [
+                                DataCell(
+                                  SignageReferenceCell(
+                                    icon: Icons.business_rounded,
+                                    iconColor: Colors.blue,
+                                    title: tenant.tenantName,
+                                    reference:
+                                        'ID: ${tenant.tenantId.length > 8 ? tenant.tenantId.substring(0, 8) : tenant.tenantId}',
+                                  ),
+                                ),
+                                DataCell(
+                                  SignageReferenceCell(
+                                    icon: Icons.person_rounded,
+                                    iconColor: Colors.deepPurple,
+                                    title: tenant.customerName.isNotEmpty
+                                        ? tenant.customerName
+                                        : 'Unknown',
+                                    reference: tenant.customerEmail ?? '-',
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    tenant.subscriptionDeviceCount
+                                            ?.toString() ??
+                                        '-',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${tenant.deviceActive}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          color: tenant.deviceActive > 0
+                                              ? Colors.green
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                      Text(
+                                        ' / ${tenant.deviceTotal} total',
+                                        style: const TextStyle(
+                                          color: CostikStudioTheme.slate,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                DataCell(
+                                  Text(
+                                    tenant.subscriptionExpiresAt != null
+                                        ? '${tenant.subscriptionExpiresAt!.day}/${tenant.subscriptionExpiresAt!.month}/${tenant.subscriptionExpiresAt!.year}'
+                                        : '-',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  SignageStatusBadge(
+                                    label:
+                                        (tenant.subscriptionStatus ?? 'unknown')
+                                            .toUpperCase(),
+                                    color: tenant.subscriptionStatus == 'active'
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
               ],
             ),
           ),
         );
       },
-    );
-  }
-}
-
-class _TenantCard extends StatelessWidget {
-  const _TenantCard({required this.tenant});
-
-  final AdminSignageTenant tenant;
-
-  @override
-  Widget build(BuildContext context) {
-    final status = tenant.subscriptionStatus ?? 'unknown';
-    final isActive = status == 'active';
-    final expiry = tenant.subscriptionExpiresAt;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    tenant.tenantName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? Colors.green.withValues(alpha: 0.1)
-                        : Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    status.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: isActive
-                          ? Colors.green.shade800
-                          : Colors.red.shade800,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              tenant.customerEmail ?? tenant.customerName,
-              style: const TextStyle(
-                color: CostikStudioTheme.slate,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Device aktif ${tenant.deviceActive}/${tenant.deviceTotal}'
-              '${tenant.subscriptionDeviceCount != null ? ' • kuota ${tenant.subscriptionDeviceCount}' : ''}'
-              '${expiry != null ? ' • expired ${expiry.day}/${expiry.month}/${expiry.year}' : ''}',
-              style: const TextStyle(
-                color: CostikStudioTheme.slate,
-                fontSize: 12,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

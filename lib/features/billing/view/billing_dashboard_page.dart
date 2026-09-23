@@ -15,8 +15,11 @@ import 'package:costikstudio/features/billing/widgets/invoices_card.dart';
 import 'package:costikstudio/features/billing/widgets/subscriptions_card.dart';
 import 'package:costikstudio/features/billing/widgets/transactions_card.dart';
 import 'package:costikstudio/features/billing/widgets/wallet_card.dart';
+import 'package:costikstudio/features/billing/widgets/dashboard_tutorial_page.dart';
 import 'package:costikstudio/features/shared/widgets/product_card.dart';
 import 'package:costikstudio/features/shared/widgets/product_gallery_strip.dart';
+import 'package:costikstudio/features/shared/widgets/cached_gallery_image.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:costikstudio/features/signage/view/signage_admin_page.dart';
 import 'package:costikstudio/features/subscription/view/iptv_subscription_page.dart';
 import 'package:costikstudio/features/subscription/view/signage_subscription_page.dart';
@@ -45,6 +48,8 @@ enum _DashboardTab {
   apps,
   signageAdmin,
   subscriptions,
+  tutorial,
+  adbManager,
   billing,
   activity,
   invoices,
@@ -57,6 +62,8 @@ extension _DashboardTabRoute on _DashboardTab {
     _DashboardTab.apps => 'products',
     _DashboardTab.signageAdmin => 'signage-admin',
     _DashboardTab.subscriptions => 'subscriptions',
+    _DashboardTab.tutorial => 'tutorial',
+    _DashboardTab.adbManager => 'adb-manager',
     _DashboardTab.billing => 'billing',
     _DashboardTab.activity => 'activity',
     _DashboardTab.invoices => 'invoices',
@@ -69,6 +76,8 @@ extension _DashboardTabRoute on _DashboardTab {
       'products' || 'apps' => _DashboardTab.apps,
       'signage-admin' || 'signage' => _DashboardTab.signageAdmin,
       'subscriptions' || 'subscription' => _DashboardTab.subscriptions,
+      'tutorial' => _DashboardTab.tutorial,
+      'adb-manager' || 'tools' => _DashboardTab.adbManager,
       'billing' || 'wallet' => _DashboardTab.billing,
       'activity' || 'history' => _DashboardTab.activity,
       'invoices' || 'invoice' => _DashboardTab.invoices,
@@ -315,6 +324,7 @@ class _DashboardPage extends StatelessWidget {
     return switch (selectedTab) {
       _DashboardTab.apps => _buildAppsTab(context),
       _DashboardTab.signageAdmin => const SignageAdminPage(isEmbedded: true),
+      _DashboardTab.tutorial => const DashboardTutorialPage(),
       _DashboardTab.subscriptions => SubscriptionsCard(
         products: snapshot.products,
         plans: snapshot.plans,
@@ -365,6 +375,7 @@ class _DashboardPage extends StatelessWidget {
                   autoRenew: autoRenew,
                 ),
       ),
+      _DashboardTab.adbManager => const _AdbManagerPromoPage(),
       _DashboardTab.billing => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -442,6 +453,8 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.apps => 'Produk',
       _DashboardTab.signageAdmin => 'Web Admin Digital Signage',
       _DashboardTab.subscriptions => 'Subscription',
+      _DashboardTab.tutorial => 'Video Tutorial',
+      _DashboardTab.adbManager => 'ADB Manager Tools',
       _DashboardTab.billing => 'Billing Wallet',
       _DashboardTab.activity => 'Aktivitas Wallet',
       _DashboardTab.invoices => 'Invoice',
@@ -469,6 +482,8 @@ class _DashboardPage extends StatelessWidget {
       _DashboardTab.signageAdmin => 'Kelola profil hotel, device pairing, Daily Event, media, playlist, dan mode player langsung dari panel member.',
       _DashboardTab.subscriptions =>
         'Pantau paket aktif dan masa berlaku layanan.',
+      _DashboardTab.tutorial => 'Pelajari panduan instalasi, konfigurasi DCO, dan penggunaan admin melalui video berikut.',
+      _DashboardTab.adbManager => 'Download aplikasi ADB Manager untuk mengeksekusi ADB ke perangkat STB/TV.',
       _DashboardTab.billing =>
         'Top-up saldo, pantau pembayaran pending, dan cek riwayat billing.',
       _DashboardTab.activity =>
@@ -1892,6 +1907,21 @@ class _DashboardNavBar extends StatelessWidget {
           Icons.verified_rounded,
         ),
       ]),
+      _DashboardNavSection('TUTORIAL', [
+        const _DashboardNavItem(
+          _DashboardTab.tutorial,
+          'Panduan Video',
+          Icons.play_circle_outline_rounded,
+        ),
+      ]),
+      _DashboardNavSection('TOOLS', [
+        const _DashboardNavItem(
+          _DashboardTab.adbManager,
+          'ADB Manager',
+          Icons.adb_rounded,
+          isNew: true,
+        ),
+      ]),
       _DashboardNavSection('BILLING', [
         _DashboardNavItem(
           _DashboardTab.billing,
@@ -2020,15 +2050,46 @@ class _DashboardNavButton extends StatelessWidget {
               Icon(item.icon, color: color, size: 18),
               const SizedBox(width: 10),
               Flexible(
-                child: Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
-                    fontSize: 14,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: color,
+                          fontWeight: selected
+                              ? FontWeight.w900
+                              : FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    if (item.isNew && !isCompact) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'NEW',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],
@@ -2052,10 +2113,230 @@ class _DashboardNavItem {
     this.label,
     this.icon, {
     this.enabled = true,
+    this.isNew = false,
   });
 
   final _DashboardTab tab;
   final String label;
   final IconData icon;
   final bool enabled;
+  final bool isNew;
+}
+
+class _AdbManagerPromoPage extends StatefulWidget {
+  const _AdbManagerPromoPage();
+
+  @override
+  State<_AdbManagerPromoPage> createState() => _AdbManagerPromoPageState();
+}
+
+class _AdbManagerPromoPageState extends State<_AdbManagerPromoPage> {
+  String? _imageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCoverImage();
+  }
+
+  Future<void> _loadCoverImage() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('product_images')
+          .select('image_url')
+          .eq('product_id', 'adb-manager')
+          .eq('is_cover', true)
+          .eq('is_active', true)
+          .maybeSingle();
+
+      if (response != null && response['image_url'] != null) {
+        if (mounted) {
+          setState(() {
+            _imageUrl = response['image_url'] as String;
+          });
+        }
+      } else {
+        // Fallback to any active image if no cover is explicitly set
+        final anyResponse = await Supabase.instance.client
+            .from('product_images')
+            .select('image_url')
+            .eq('product_id', 'adb-manager')
+            .eq('is_active', true)
+            .limit(1)
+            .maybeSingle();
+
+        if (anyResponse != null && anyResponse['image_url'] != null) {
+          if (mounted) {
+            setState(() {
+              _imageUrl = anyResponse['image_url'] as String;
+            });
+          }
+        }
+      }
+    } catch (_) {
+      // Ignore network or db errors, just show fallback
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: _imageUrl != null
+                    ? CachedGalleryImage(
+                        imageUrl: _imageUrl!,
+                        fallback: _buildFallbackIcon(),
+                      )
+                    : _buildFallbackIcon(),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Download ADB Manager for Windows',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: CostikStudioTheme.navy,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Tools spesifik bagi teknisi instalasi untuk mempercepat proses eksekusi perintah ADB ke Android TV atau Set Top Box. Aplikasi ini berjalan murni di sistem operasi Windows (Desktop) agar dapat mengeksekusi shell lokal.',
+                      style: TextStyle(
+                        height: 1.5,
+                        color: CostikStudioTheme.slate,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Fitur Utama:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: CostikStudioTheme.navy,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildFeatureItem(
+                      Icons.install_mobile_rounded,
+                      'Tools spesifik untuk install dan update APK ke perangkat melalui jaringan (Network/Wi-Fi) ataupun kabel USB secara langsung tanpa flashdisk.',
+                    ),
+                    _buildFeatureItem(
+                      Icons.tv_rounded,
+                      'Enable / Disable IPTV Launcher sebagai aplikasi utama (Default Launcher).',
+                    ),
+                    _buildFeatureItem(
+                      Icons.admin_panel_settings_rounded,
+                      'Manajemen DCO secara otomatis (Clear Cache, Set, Verify, Remove).',
+                    ),
+                    _buildFeatureItem(
+                      Icons.people_rounded,
+                      'Hapus User atau Account sistem yang tidak terpakai dari TV.',
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            size: 20,
+                            color: Colors.orange.shade800,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'PERINGATAN: Fitur Enable IPTV Launcher, Manajemen DCO, dan Hapus User bersifat KHUSUS untuk produk Costik IPTV. DILARANG KERAS menggunakan fungsi-fungsi tersebut untuk perangkat/STB Digital Signage agar sistem operasi pabrik tidak terkunci.\n\nNamun, untuk perangkat Digital Signage, Anda tetap DIPERBOLEHKAN menggunakan fungsi "Install Application" melalui jaringan secara aman.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.orange.shade900,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          // ADB Manager Google Drive download link
+                          openExternalUrl(
+                            'https://drive.google.com/drive/folders/153-9t8cYYZFX_aOfaVI52KRSjKk1mYOT?usp=drive_link',
+                          );
+                        },
+                        icon: const Icon(Icons.download_rounded),
+                        label: const Text('Download .EXE (Windows Only)'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFallbackIcon() {
+    return Container(
+      color: const Color(0xFFF8FAFC),
+      child: Center(
+        child: Icon(
+          Icons.adb_rounded,
+          size: 84,
+          color: Colors.blue.withValues(alpha: 0.1),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureItem(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: CostikStudioTheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: CostikStudioTheme.slate,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

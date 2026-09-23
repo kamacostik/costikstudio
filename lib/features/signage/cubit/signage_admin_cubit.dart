@@ -132,7 +132,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Profil hotel Signage berhasil disimpan.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -199,7 +202,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Media berhasil disimpan.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -218,7 +224,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Media berhasil dihapus.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -237,7 +246,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Playlist berhasil disimpan.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -247,6 +259,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
     required String name,
     required List<String> mediaIds,
     required bool isEnabled,
+    required List<String> targetDeviceIds,
   }) async {
     _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
     try {
@@ -257,6 +270,7 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           mediaId: mediaIds.isNotEmpty ? mediaIds.first : existing?.mediaId,
           path: existing?.path,
           isEnabled: isEnabled,
+          targetDeviceIds: targetDeviceIds,
         ),
       );
       if (saved.id != null && saved.id!.isNotEmpty) {
@@ -274,7 +288,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
               : 'Playlist berhasil diubah.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -293,7 +310,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Playlist berhasil dihapus.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -314,7 +334,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Event berhasil disimpan.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -331,7 +354,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Event berhasil dihapus.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -353,7 +379,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Kode pairing device berhasil dibuat.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -376,7 +405,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Durasi slide Daily Event berhasil disimpan.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -396,8 +428,122 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Mode aplikasi device berhasil disimpan.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> updateDeviceEventTheme(
+    String deviceId, {
+    required SignageEventTheme eventTheme,
+  }) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.updateDeviceEventTheme(
+        deviceId,
+        eventTheme: eventTheme,
+      );
+      final devices = await _repository.fetchDevices();
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          successMessage: 'Tema Event Schedule device berhasil disimpan.',
+        ),
+      );
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> updateDeviceRunningText(
+    String deviceId, {
+    required bool runningTextEnabled,
+    String? runningText,
+  }) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.updateDeviceRunningText(
+        deviceId,
+        runningTextEnabled: runningTextEnabled,
+        runningText: runningText,
+      );
+      final devices = await _repository.fetchDevices();
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          successMessage: 'Text berjalan device berhasil disimpan.',
+        ),
+      );
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
+      _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> updateDeviceQrOverlay(
+    String deviceId, {
+    required bool qrEnabled,
+    String? qrUrl,
+    String? qrTitle,
+  }) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.updateDeviceQrOverlay(
+        deviceId,
+        qrEnabled: qrEnabled,
+        qrUrl: qrUrl,
+        qrTitle: qrTitle,
+      );
+      final devices = await _repository.fetchDevices();
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          successMessage: 'Pengaturan Smart QR Code berhasil diperbarui.',
+        ),
+      );
+    } catch (e) {
+      _safeEmit(
+        state.copyWith(isSaving: false, errorMessage: 'Gagal update QR: $e'),
+      );
+    }
+  }
+
+  Future<void> updateDevicePromoCards(
+    String deviceId, {
+    required List<Map<String, dynamic>> promoCards,
+  }) async {
+    _safeEmit(state.copyWith(isSaving: true, clearMessages: true));
+    try {
+      await _repository.updateDevicePromoCards(
+        deviceId,
+        promoCards: promoCards,
+      );
+      final devices = await _repository.fetchDevices();
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          devices: devices,
+          successMessage: 'Promo Card berhasil diperbarui.',
+        ),
+      );
+    } catch (e) {
+      _safeEmit(
+        state.copyWith(
+          isSaving: false,
+          errorMessage: 'Gagal update Promo Card: $e',
+        ),
+      );
     }
   }
 
@@ -419,7 +565,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Background Daily Event device berhasil disimpan.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -438,7 +587,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Device Signage berhasil dihapus.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }
@@ -458,7 +610,10 @@ class SignageAdminCubit extends Cubit<SignageAdminState> {
           successMessage: 'Kode pairing device berhasil dibuat ulang.',
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('=== ERROR SAVING DEVICE SETTING ===');
+      print(e);
+      print(stack);
       _safeEmit(state.copyWith(isSaving: false, errorMessage: e.toString()));
     }
   }

@@ -1,9 +1,12 @@
 import 'package:costikstudio/app/theme/costik_studio_theme.dart';
 import 'package:costikstudio/core/billing/billing_format.dart';
+import 'package:costikstudio/core/supabase/supabase_config.dart';
 import 'package:costikstudio/features/billing/admin/admin_billing_cubit.dart';
 import 'package:costikstudio/features/billing/admin/admin_billing_repository.dart';
 import 'package:costikstudio/features/billing/admin/dummy_admin_billing_repository.dart';
+import 'package:costikstudio/features/billing/admin/supabase_admin_billing_repository.dart';
 import 'package:costikstudio/features/billing/widgets/billing_notice.dart';
+import 'package:costikstudio/features/signage/view/widgets/signage_table_widgets.dart';
 import 'package:costikstudio/features/shared/widgets/responsive_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,8 +17,11 @@ class AdminBillingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          AdminBillingCubit(repository: DummyAdminBillingRepository())..load(),
+      create: (_) => AdminBillingCubit(
+        repository: SupabaseConfig.isConfigured
+            ? const SupabaseAdminBillingRepository()
+            : DummyAdminBillingRepository(),
+      )..load(),
       child: const _AdminBillingView(),
     );
   }
@@ -35,6 +41,7 @@ class _AdminBillingView extends StatelessWidget {
 
         return SingleChildScrollView(
           child: ResponsiveSection(
+            maxWidth: double.infinity,
             padding: const EdgeInsets.fromLTRB(24, 56, 24, 80),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,7 +55,7 @@ class _AdminBillingView extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Dummy backoffice for approving manual top ups, checking customer wallets, and monitoring subscriptions.',
+                  'Sistem pusat pengelolaan saldo (Top Up), lisensi aktif (Subscriptions), dan riwayat tagihan customer Costik Studio.',
                   style: Theme.of(context).textTheme.titleMedium
                       ?.copyWith(color: CostikStudioTheme.slate, height: 1.5),
                 ),
@@ -57,65 +64,7 @@ class _AdminBillingView extends StatelessWidget {
                   BillingNotice(message: snapshot.message!),
                   const SizedBox(height: 18),
                 ],
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide = constraints.maxWidth > 900;
-                    final cards = [
-                      _PendingTopUpsCard(
-                        pendingTopUps: snapshot.pendingTopUps,
-                        onApprove: (id) =>
-                            context.read<AdminBillingCubit>().approveTopUp(id),
-                      ),
-                      _CustomerWalletsCard(
-                        customerWallets: snapshot.customerWallets,
-                      ),
-                      _SubscriptionOverviewCard(
-                        metrics: snapshot.subscriptionMetrics,
-                        allSubscriptions: snapshot.allSubscriptions,
-                        onExtend: (subId, months) => context
-                            .read<AdminBillingCubit>()
-                            .adminExtendSubscription(
-                              subscriptionId: subId,
-                              additionalMonths: months,
-                            ),
-                        onUpdateDevices: (subId, count) => context
-                            .read<AdminBillingCubit>()
-                            .adminUpdateDevices(
-                              subscriptionId: subId,
-                              newDeviceCount: count,
-                            ),
-                      ),
-                    ];
-
-                    if (!isWide) {
-                      return Column(
-                        children: [
-                          for (final card in cards) ...[
-                            card,
-                            const SizedBox(height: 18),
-                          ],
-                        ],
-                      );
-                    }
-
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: cards[0]),
-                        const SizedBox(width: 18),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              cards[1],
-                              const SizedBox(height: 18),
-                              cards[2],
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                _AdminBillingTables(snapshot: snapshot),
               ],
             ),
           ),
@@ -125,221 +74,268 @@ class _AdminBillingView extends StatelessWidget {
   }
 }
 
-class _PendingTopUpsCard extends StatelessWidget {
-  const _PendingTopUpsCard({
-    required this.pendingTopUps,
-    required this.onApprove,
-  });
+class _AdminBillingTables extends StatefulWidget {
+  const _AdminBillingTables({required this.snapshot});
+  final AdminBillingSnapshot snapshot;
 
-  final List<dynamic> pendingTopUps;
-  final ValueChanged<String> onApprove;
+  @override
+  State<_AdminBillingTables> createState() => _AdminBillingTablesState();
+}
+
+class _AdminBillingTablesState extends State<_AdminBillingTables> {
+  int _tabIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SignageTableTabBar(
           children: [
-            Text(
-              'Pending top ups',
-              style: Theme.of(context).textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w900),
+            SignageTableTab(
+              label: 'Riwayat Top Up',
+              icon: Icons.account_balance_wallet_rounded,
+              count: widget.snapshot.pendingTopUps.length,
+              isSelected: _tabIndex == 0,
+              onTap: () => setState(() => _tabIndex = 0),
             ),
-            const SizedBox(height: 16),
-            if (pendingTopUps.isEmpty)
-              const Text('No pending top ups')
-            else
-              ...pendingTopUps.map(
-                (topUp) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.pending_actions_rounded,
-                    color: CostikStudioTheme.amber,
-                  ),
-                  title: Text(topUp.customerName),
-                  subtitle: Text('${topUp.method} • waiting approval'),
-                  trailing: FilledButton(
-                    onPressed: () => onApprove(topUp.id),
-                    child: Text('Approve ${formatRupiah(topUp.amount)}'),
-                  ),
+            SignageTableTab(
+              label: 'Saldo Customer',
+              icon: Icons.people_alt_rounded,
+              count: widget.snapshot.customerWallets.length,
+              isSelected: _tabIndex == 1,
+              onTap: () => setState(() => _tabIndex = 1),
+            ),
+            SignageTableTab(
+              label: 'Lisensi Langganan',
+              icon: Icons.verified_user_rounded,
+              count: widget.snapshot.allSubscriptions.length,
+              isSelected: _tabIndex == 2,
+              onTap: () => setState(() => _tabIndex = 2),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Card(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          child: SizedBox(
+            width: double.infinity,
+            child: _buildActiveTab(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActiveTab(BuildContext context) {
+    switch (_tabIndex) {
+      case 0:
+        return _buildTopUpsTable(context);
+      case 1:
+        return _buildWalletsTable(context);
+      case 2:
+        return _buildSubscriptionsTable(context);
+      default:
+        return const SizedBox();
+    }
+  }
+
+  Widget _buildTopUpsTable(BuildContext context) {
+    return SignageDataTable(
+      emptyIcon: Icons.account_balance_wallet_rounded,
+      emptyMessage: 'Belum ada riwayat top up',
+      columns: [
+        signageDataColumn('Pelanggan'),
+        signageDataColumn('Nominal'),
+        signageDataColumn('Status / Metode'),
+        signageDataColumn('Aksi'),
+      ],
+      rows: [
+        for (final topUp in widget.snapshot.pendingTopUps)
+          DataRow(
+            cells: [
+              DataCell(
+                SignageReferenceCell(
+                  icon: Icons.person_rounded,
+                  iconColor: Colors.blue,
+                  title: topUp.customerName,
+                  reference:
+                      'ID: ${topUp.id.length > 8 ? topUp.id.substring(0, 8) : topUp.id}',
                 ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CustomerWalletsCard extends StatelessWidget {
-  const _CustomerWalletsCard({required this.customerWallets});
-
-  final List<dynamic> customerWallets;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Customer wallets',
-              style: Theme.of(context).textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 12),
-            ...customerWallets.map(
-              (wallet) => _MetricRow(
-                label: wallet.customerName,
-                value: wallet.statusText,
+              DataCell(
+                Text(
+                  formatRupiah(topUp.amount),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SubscriptionOverviewCard extends StatelessWidget {
-  const _SubscriptionOverviewCard({
-    required this.metrics,
-    this.allSubscriptions = const [],
-    this.onExtend,
-    this.onUpdateDevices,
-  });
-
-  final List<dynamic> metrics;
-  final List<AdminSubscriptionRecord> allSubscriptions;
-  final void Function(String subId, int months)? onExtend;
-  final void Function(String subId, int count)? onUpdateDevices;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Subscription overview',
-              style: Theme.of(context).textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 12),
-            ...metrics.map(
-              (metric) => _MetricRow(label: metric.label, value: metric.value),
-            ),
-            if (allSubscriptions.isNotEmpty) ...[
-              const Divider(height: 32),
-              Text(
-                'Daftar Lisensi Customer',
-                style: Theme.of(context).textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+              DataCell(
+                SignageStatusBadge(
+                  label: topUp.method.toUpperCase(),
+                  color: topUp.method.toLowerCase().contains('pending')
+                      ? Colors.orange
+                      : Colors.green,
+                ),
               ),
-              const SizedBox(height: 12),
-              for (final sub in allSubscriptions)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              sub.customerEmail,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+              DataCell(
+                topUp.method.toLowerCase().contains('pending')
+                    ? FilledButton.tonal(
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: sub.statusText == 'active'
-                                  ? Colors.green.withValues(alpha: 0.1)
-                                  : Colors.red.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              sub.statusText.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: sub.statusText == 'active'
-                                    ? Colors.green.shade800
-                                    : Colors.red.shade800,
-                              ),
-                            ),
+                          textStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${sub.productName} • ${sub.deviceCount} Devices • Expired: ${_formatShortDate(sub.expiresAt)}',
-                        style: const TextStyle(
-                          color: CostikStudioTheme.slate,
-                          fontSize: 12,
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              textStyle: const TextStyle(fontSize: 12),
-                            ),
-                            onPressed: onExtend == null
-                                ? null
-                                : () => _showAdminExtendDialog(context, sub),
-                            icon: const Icon(Icons.more_time_rounded, size: 14),
-                            label: const Text('Extend Expiry'),
-                          ),
-                          OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              textStyle: const TextStyle(fontSize: 12),
-                            ),
-                            onPressed: onUpdateDevices == null
-                                ? null
-                                : () => _showAdminDeviceDialog(context, sub),
-                            icon: const Icon(Icons.edit_rounded, size: 14),
-                            label: const Text('Set Devices'),
-                          ),
-                        ],
-                      ),
-                    ],
+                        onPressed: () => context
+                            .read<AdminBillingCubit>()
+                            .approveTopUp(topUp.id),
+                        child: const Text('Approve Manual'),
+                      )
+                    : const Text('-', style: TextStyle(color: Colors.grey)),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildWalletsTable(BuildContext context) {
+    return SignageDataTable(
+      emptyIcon: Icons.people_alt_rounded,
+      emptyMessage: 'Belum ada data pelanggan',
+      columns: [
+        signageDataColumn('Pelanggan'),
+        signageDataColumn('Saldo Saat Ini'),
+      ],
+      rows: [
+        for (final wallet in widget.snapshot.customerWallets)
+          DataRow(
+            cells: [
+              DataCell(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.business_rounded,
+                      size: 18,
+                      color: CostikStudioTheme.slate,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      wallet.customerName,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+              ),
+              DataCell(
+                Text(
+                  wallet.statusText,
+                  style: const TextStyle(
+                    color: CostikStudioTheme.primary,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
                   ),
                 ),
+              ),
             ],
-          ],
-        ),
-      ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSubscriptionsTable(BuildContext context) {
+    return SignageDataTable(
+      emptyIcon: Icons.verified_user_rounded,
+      emptyMessage: 'Belum ada data langganan',
+      columns: [
+        signageDataColumn('Pelanggan'),
+        signageDataColumn('Produk'),
+        signageDataColumn('Dev'),
+        signageDataColumn('Siklus'),
+        signageDataColumn('Expired'),
+        signageDataColumn('Status'),
+        signageDataColumn('Aksi'),
+      ],
+      rows: [
+        for (final sub in widget.snapshot.allSubscriptions)
+          DataRow(
+            cells: [
+              DataCell(
+                SignageReferenceCell(
+                  icon: Icons.email_rounded,
+                  iconColor: Colors.deepPurple,
+                  title: sub.customerEmail,
+                  reference:
+                      'ID: ${sub.id.length > 8 ? sub.id.substring(0, 8) : sub.id}',
+                ),
+              ),
+              DataCell(
+                Text(
+                  sub.productName,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              DataCell(
+                Text(
+                  '${sub.deviceCount}',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              DataCell(
+                Text(
+                  '${sub.billingCycleMonths} bln',
+                  style: const TextStyle(color: CostikStudioTheme.slate),
+                ),
+              ),
+              DataCell(
+                Text(
+                  _formatShortDate(sub.expiresAt),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              DataCell(
+                SignageStatusBadge(
+                  label: sub.statusText.toUpperCase(),
+                  color: sub.statusText == 'active' ? Colors.green : Colors.red,
+                ),
+              ),
+              DataCell(
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Perpanjang Manual',
+                      icon: const Icon(
+                        Icons.more_time_rounded,
+                        color: Colors.blue,
+                      ),
+                      onPressed: () => _showAdminExtendDialog(context, sub),
+                    ),
+                    IconButton(
+                      tooltip: 'Ubah Kuota Device',
+                      icon: const Icon(
+                        Icons.devices_rounded,
+                        color: Colors.orange,
+                      ),
+                      onPressed: () => _showAdminDeviceDialog(context, sub),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+      ],
     );
   }
 
@@ -355,9 +351,7 @@ class _SubscriptionOverviewCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Pilih durasi perpanjangan admin (manual grant/bypassed billing):',
-            ),
+            const Text('Pilih durasi perpanjangan admin (manual grant):'),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -366,7 +360,10 @@ class _SubscriptionOverviewCard extends StatelessWidget {
                   FilledButton.tonal(
                     onPressed: () {
                       Navigator.of(dialogCtx).pop();
-                      onExtend?.call(sub.id, months);
+                      context.read<AdminBillingCubit>().adminExtendSubscription(
+                        subscriptionId: sub.id,
+                        additionalMonths: months,
+                      );
                     },
                     child: Text('+$months Bulan'),
                   ),
@@ -421,7 +418,10 @@ class _SubscriptionOverviewCard extends StatelessWidget {
               final count = int.tryParse(controller.text);
               if (count != null && count > 0) {
                 Navigator.of(dialogCtx).pop();
-                onUpdateDevices?.call(sub.id, count);
+                context.read<AdminBillingCubit>().adminUpdateDevices(
+                  subscriptionId: sub.id,
+                  newDeviceCount: count,
+                );
               }
             },
             child: const Text('Simpan'),
@@ -433,32 +433,5 @@ class _SubscriptionOverviewCard extends StatelessWidget {
 
   String _formatShortDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
-  }
-}
-
-class _MetricRow extends StatelessWidget {
-  const _MetricRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(value, style: const TextStyle(color: CostikStudioTheme.slate)),
-        ],
-      ),
-    );
   }
 }

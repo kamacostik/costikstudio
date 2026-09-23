@@ -2,8 +2,10 @@ import 'package:costikstudio/app/app_experience.dart';
 import 'package:costikstudio/core/data/dummy_products.dart';
 import 'package:costikstudio/core/router/app_routes.dart';
 import 'package:costikstudio/features/account/view/account_page.dart';
+import 'package:costikstudio/features/adb_manager/view/adb_manager_page.dart';
 import 'package:costikstudio/features/admin_dashboard/view/admin_dashboard_page.dart';
 import 'package:costikstudio/features/admin_product_gallery/view/admin_product_gallery_page.dart';
+import 'package:costikstudio/features/admin_tutorial/view/admin_tutorial_page.dart';
 import 'package:costikstudio/features/apps/view/apps_page.dart';
 import 'package:costikstudio/features/auth/cubit/auth_cubit.dart';
 import 'package:costikstudio/features/auth/view/login_page.dart';
@@ -31,6 +33,7 @@ GoRouter createAppRouter(
   AuthState authState = const AuthState(),
 }) {
   final isAdminApp = experience == AppExperience.admin;
+  final isAdbApp = experience == AppExperience.adb;
 
   return GoRouter(
     initialLocation: _initialLocationFor(experience, authState),
@@ -42,7 +45,7 @@ GoRouter createAppRouter(
         builder: (context, state, child) =>
             CostikStudioShell(experience: experience, child: child),
         routes: [
-          if (!isAdminApp) ...[
+          if (!isAdminApp && !isAdbApp) ...[
             GoRoute(
               path: AppRoutes.home,
               name: AppRouteNames.home,
@@ -176,7 +179,7 @@ GoRouter createAppRouter(
               },
               builder: (context, state) => const SignageAdminPage(),
             ),
-          ] else ...[
+          ] else if (isAdminApp) ...[
             GoRoute(
               path: AppRoutes.login,
               name: AppRouteNames.login,
@@ -247,8 +250,43 @@ GoRouter createAppRouter(
               builder: (context, state) => const AdminProductGalleryPage(),
             ),
             GoRoute(
+              path: AppRoutes.adminTutorial,
+              name: AppRouteNames.adminTutorial,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAdmin) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
+              builder: (context, state) => const AdminTutorialPage(),
+            ),
+            GoRoute(
               path: AppRoutes.home,
               redirect: (context, state) => AppRoutes.adminDashboard,
+            ),
+          ],
+          if (isAdbApp) ...[
+            GoRoute(
+              path: AppRoutes.login,
+              name: AppRouteNames.login,
+              builder: (context, state) => const LoginPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.adbManager,
+              name: AppRouteNames.adbManager,
+              redirect: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                if (!authCubit.state.isAuthenticated) {
+                  return AppRoutes.login;
+                }
+                return null;
+              },
+              builder: (context, state) => const AdbManagerPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.home,
+              redirect: (context, state) => AppRoutes.adbManager,
             ),
           ],
         ],
@@ -260,6 +298,9 @@ GoRouter createAppRouter(
 String _initialLocationFor(AppExperience experience, AuthState authState) {
   if (experience == AppExperience.admin) {
     return AppRoutes.adminDashboard;
+  }
+  if (experience == AppExperience.adb) {
+    return authState.isAuthenticated ? AppRoutes.adbManager : AppRoutes.login;
   }
   return authState.isAuthenticated ? AppRoutes.billing : AppRoutes.home;
 }
@@ -294,15 +335,72 @@ class CostikStudioShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final isAdminApp = experience == AppExperience.admin;
+    final isAdbApp = experience == AppExperience.adb;
 
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
+        // ADB App: clean layout — login gets bare scaffold, manager gets mini appbar
+        if (isAdbApp) {
+          if (location == AppRoutes.login) {
+            return Scaffold(
+              backgroundColor: const Color(0xFFF8FAFC),
+              body: child,
+            );
+          }
+          return Scaffold(
+            backgroundColor: const Color(0xFFF1F5F9),
+            appBar: AppBar(
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/logo/costik-studio-logo.png',
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, _, _) =>
+                          const Icon(Icons.adb_rounded, size: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'ADB Manager',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+              actions: [
+                if (authState.isAuthenticated) ...[
+                  Icon(
+                    Icons.admin_panel_settings_rounded,
+                    size: 18,
+                    color: Colors.blue.shade700,
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: () {
+                      context.read<AuthCubit>().logout();
+                      context.go(AppRoutes.login);
+                    },
+                    child: const Text('Keluar'),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+              ],
+            ),
+            body: child,
+          );
+        }
+
         final navItems = isAdminApp
             ? const [
                 _NavItem('Dashboard', AppRoutes.adminDashboard),
                 _NavItem('Billing', AppRoutes.adminBilling),
                 _NavItem('Signage', AppRoutes.adminSignage),
                 _NavItem('Gallery', AppRoutes.adminProductGallery),
+                _NavItem('Tutorial', AppRoutes.adminTutorial),
                 _NavItem('Account', AppRoutes.account),
               ]
             : [
@@ -314,12 +412,35 @@ class CostikStudioShell extends StatelessWidget {
                 ],
               ];
 
+        if (isAdminApp && location != AppRoutes.login) {
+          return Scaffold(
+            backgroundColor: const Color(
+              0xFFF1F5F9,
+            ), // Subtle dashboard background
+            body: Row(
+              children: [
+                _AdminSidebar(
+                  location: location,
+                  navItems: navItems,
+                  authState: authState,
+                ),
+                Expanded(child: child),
+              ],
+            ),
+          );
+        }
+
+        if (location == AppRoutes.login) {
+          return Scaffold(
+            backgroundColor: const Color(0xFFF8FAFC),
+            body: child,
+          );
+        }
+
         return Scaffold(
           appBar: AppBar(
             title: InkWell(
-              onTap: () => context.go(
-                isAdminApp ? AppRoutes.adminDashboard : AppRoutes.home,
-              ),
+              onTap: () => context.go(AppRoutes.home),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -335,9 +456,9 @@ class CostikStudioShell extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Flexible(
+                  const Flexible(
                     child: Text(
-                      isAdminApp ? 'CostikStudio Admin' : 'CostikStudio',
+                      'CostikStudio',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -365,7 +486,7 @@ class CostikStudioShell extends StatelessWidget {
                 OutlinedButton(
                   onPressed: () {
                     context.read<AuthCubit>().logout();
-                    context.go(isAdminApp ? AppRoutes.login : AppRoutes.home);
+                    context.go(AppRoutes.home);
                   },
                   child: const Text('Keluar'),
                 ),
@@ -604,4 +725,171 @@ class _NavItem {
 
   final String label;
   final String path;
+}
+
+class _AdminSidebar extends StatelessWidget {
+  const _AdminSidebar({
+    required this.location,
+    required this.navItems,
+    required this.authState,
+  });
+
+  final String location;
+  final List<_NavItem> navItems;
+  final AuthState authState;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 250,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          right: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/logo/costik-studio-logo.png',
+                  width: 32,
+                  height: 32,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, _, _) =>
+                      const Icon(Icons.layers_rounded, size: 28),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Flexible(
+                child: Text(
+                  'Admin Panel',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            'MENU',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: Colors.grey,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          for (final item in navItems) ...[
+            _AdminSidebarItem(
+              label: item.label,
+              path: item.path,
+              isSelected: location == item.path,
+              icon: _getIconForPath(item.path),
+            ),
+            const SizedBox(height: 4),
+          ],
+          const Spacer(),
+          const Divider(),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Icon(
+                Icons.admin_panel_settings_rounded,
+                color: Colors.blue,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Admin Active',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.blue.shade900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+              foregroundColor: Colors.redAccent,
+              elevation: 0,
+            ),
+            onPressed: () {
+              context.read<AuthCubit>().logout();
+              context.go(AppRoutes.login);
+            },
+            icon: const Icon(Icons.logout_rounded, size: 16),
+            label: const Text('Keluar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getIconForPath(String path) {
+    if (path.contains('dashboard')) return Icons.dashboard_rounded;
+    if (path.contains('billing')) return Icons.account_balance_wallet_rounded;
+    if (path.contains('signage')) return Icons.cast_connected_rounded;
+    if (path.contains('gallery')) return Icons.photo_library_rounded;
+    if (path.contains('account')) return Icons.person_rounded;
+    return Icons.circle_rounded;
+  }
+}
+
+class _AdminSidebarItem extends StatelessWidget {
+  const _AdminSidebarItem({
+    required this.label,
+    required this.path,
+    required this.isSelected,
+    required this.icon,
+  });
+
+  final String label;
+  final String path;
+  final bool isSelected;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isSelected ? Colors.blue : Colors.grey.shade700;
+
+    return Material(
+      color: isSelected
+          ? Colors.blue.withValues(alpha: 0.1)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => context.go(path),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -130,8 +130,10 @@ class DummyBillingRepository implements BillingRepository {
     required int deviceCount,
     required int billingCycleMonths,
     bool autoRenew = false,
+    String? voucherCode,
   }) async {
-    final amount = deviceCount * signagePricePerDevice * billingCycleMonths;
+    final baseAmount = deviceCount * signagePricePerDevice * billingCycleMonths;
+    final amount = (voucherCode == 'HITAINTIM' && deviceCount == 1 && billingCycleMonths == 12) ? 10000 : baseAmount;
     final plan = BillingPlan(
       id: 'costik-signage:custom',
       productId: 'costik-signage',

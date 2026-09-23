@@ -30,6 +30,7 @@ class SignageSubscriptionPage extends StatefulWidget {
 class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
   final _formKey = GlobalKey<FormState>();
   final _deviceCountController = TextEditingController(text: '10');
+  final _voucherCodeController = TextEditingController();
 
   int _deviceCount = 10;
   int _billingCycleMonths = 1; // 1, 3, 6, 12 bulan
@@ -40,6 +41,8 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
     (p) => p.id == 'digital-signage',
     orElse: () => dummyProducts.first,
   );
+
+  String? _appliedVoucherCode;
 
   @override
   void initState() {
@@ -52,6 +55,60 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
     if (parsed != _deviceCount) {
       setState(() {
         _deviceCount = parsed;
+        if (_appliedVoucherCode == 'HITAINTIM' && _deviceCount != 1) {
+          _appliedVoucherCode = null;
+          _voucherCodeController.clear();
+        }
+      });
+    }
+  }
+
+  void _setBillingCycle(int months) {
+    setState(() {
+      _billingCycleMonths = months;
+      if (_appliedVoucherCode == 'HITAINTIM' && _billingCycleMonths != 12) {
+        _appliedVoucherCode = null;
+        _voucherCodeController.clear();
+      }
+    });
+  }
+
+  void _applyVoucher() {
+    final code = _voucherCodeController.text.trim().toUpperCase();
+    if (code.isEmpty) {
+      setState(() {
+        _appliedVoucherCode = null;
+      });
+      return;
+    }
+
+    if (code == 'HITAINTIM') {
+      setState(() {
+        _appliedVoucherCode = 'HITAINTIM';
+        _deviceCount = 1;
+        _deviceCountController.text = '1';
+        _billingCycleMonths = 12;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Voucher berhasil diterapkan! Mengunci ke 1 Device & 1 Tahun.',
+          ),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kode voucher tidak ditemukan atau tidak valid.'),
+          backgroundColor: Colors.redAccent,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      setState(() {
+        _appliedVoucherCode = null;
+        _voucherCodeController.clear();
       });
     }
   }
@@ -59,13 +116,28 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
   @override
   void dispose() {
     _deviceCountController.dispose();
+    _voucherCodeController.dispose();
     super.dispose();
   }
 
+  String? get _voucherCode => _appliedVoucherCode;
+
   int get _effectivePricePerDevice => _pricePerDevice ?? 0;
 
-  int get _totalPrice =>
+  int get _baseTotalPrice =>
       _deviceCount * _effectivePricePerDevice * _billingCycleMonths;
+
+  int get _voucherDiscountAmount {
+    if (_voucherCode == 'HITAINTIM' &&
+        _deviceCount == 1 &&
+        _billingCycleMonths == 12) {
+      final discount = _baseTotalPrice - 10000;
+      return discount > 0 ? discount : 0;
+    }
+    return 0;
+  }
+
+  int get _totalPrice => _baseTotalPrice - _voucherDiscountAmount;
 
   void _syncPriceFromSnapshot(BillingSnapshot? snapshot) {
     if (snapshot == null) return;
@@ -111,6 +183,7 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
       deviceCount: _deviceCount,
       billingCycleMonths: _billingCycleMonths,
       autoRenew: _autoRenew,
+      voucherCode: _voucherCode,
     );
 
     if (!mounted) return;
@@ -147,6 +220,12 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
             _SummaryRow(label: 'Produk', value: 'Costik Signage'),
             _SummaryRow(label: 'Jumlah Device', value: '$_deviceCount Device'),
             _SummaryRow(label: 'Durasi', value: '$_billingCycleMonths Bulan'),
+            if (_voucherDiscountAmount > 0)
+              _SummaryRow(
+                label: 'Voucher',
+                value:
+                    '${_voucherCode ?? '-'} (-${formatRupiah(_voucherDiscountAmount)})',
+              ),
             _SummaryRow(
               label: 'Total Tagihan',
               value: formatRupiah(_totalPrice),
@@ -407,6 +486,39 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
                                 const Divider(),
                                 const SizedBox(height: 18),
 
+                                // Input Voucher
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: TextFormField(
+                                        controller: _voucherCodeController,
+                                        textCapitalization:
+                                            TextCapitalization.characters,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Kode Voucher',
+                                          hintText: 'Masukkan kode voucher jika tersedia',
+                                          helperText: 'Opsional.',
+                                          prefixIcon: Icon(
+                                            Icons.confirmation_number_rounded,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    SizedBox(
+                                      height: 56, // matching text field default height
+                                      child: FilledButton.tonal(
+                                        onPressed: _applyVoucher,
+                                        child: const Text('Terapkan'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 26),
+                                const Divider(),
+                                const SizedBox(height: 18),
+
                                 // Billing duration
                                 Text(
                                   'Durasi Berlangganan',
@@ -436,9 +548,7 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
                                           selected: isSelected,
                                           onSelected: (selected) {
                                             if (selected) {
-                                              setState(() {
-                                                _billingCycleMonths = months;
-                                              });
+                                              _setBillingCycle(months);
                                             }
                                           },
                                         );
@@ -552,6 +662,12 @@ class _SignageSubscriptionPageState extends State<SignageSubscriptionPage> {
                               label: 'Durasi Berlangganan',
                               value: '$_billingCycleMonths Bulan',
                             ),
+                            if (_voucherDiscountAmount > 0)
+                              _OrderSummaryRow(
+                                label: 'Voucher',
+                                value:
+                                    '${_voucherCode ?? '-'} (-${formatRupiah(_voucherDiscountAmount)})',
+                              ),
                             _OrderSummaryRow(
                               label: 'Auto-Renew',
                               value: _autoRenew ? 'Aktif' : 'Mati',

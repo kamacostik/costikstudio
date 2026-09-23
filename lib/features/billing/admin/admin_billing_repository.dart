@@ -54,12 +54,14 @@ class AdminSubscriptionRecord {
 }
 
 class AdminBillingSnapshot {
-  const AdminBillingSnapshot({
+  AdminBillingSnapshot({
     required this.pendingTopUps,
     required this.customerWallets,
     required this.subscriptionMetrics,
     this.allSubscriptions = const [],
     this.message,
+    this.revenueToday = 0,
+    this.revenueMonth = 0,
   });
 
   final List<PendingTopUp> pendingTopUps;
@@ -67,6 +69,8 @@ class AdminBillingSnapshot {
   final List<SubscriptionMetric> subscriptionMetrics;
   final List<AdminSubscriptionRecord> allSubscriptions;
   final String? message;
+  final double revenueToday;
+  final double revenueMonth;
 }
 
 abstract class AdminBillingRepository {

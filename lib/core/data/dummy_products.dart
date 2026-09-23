@@ -33,10 +33,13 @@ const dummyProducts = <ProductItem>[
     accentHex: 0xFF2563EB,
     productUrl: 'https://signage.costikstudio.com',
     adminUrl: 'https://admin.signage.costikstudio.com',
+    isNew: true,
     features: [
-      'Daily Event board with date, start/end time, room, floor, auto-slide, and manual OK refresh',
-      'Fullscreen video player with hotel logo overlay and multi-video playlist order',
-      'TV/browser client pairing with 6-digit code, device quota, online status, and per-device mode',
+      'Digital Signage dengan tema Flight Board / FIDS terbaru',
+      'Daily Event board dengan animasi arah (direction) dan status event real-time (Upcoming, Ongoing, Finished)',
+      'Live Weather info dan Running Text per-device untuk pengumuman hotel',
+      'Fullscreen video player dengan playlist dan overlay logo hotel',
+      'TV/browser client pairing dengan 6-digit code dan manajemen kuota device',
     ],
   ),
   ProductItem(
@@ -73,6 +76,26 @@ const dummyProducts = <ProductItem>[
       'Low-stock and operational stock reports',
     ],
   ),
+  ProductItem(
+    id: 'adb-manager',
+    name: 'ADB Manager',
+    tagline: 'Windows Desktop tool for managing Android TV devices via ADB.',
+    description: 'Tools spesifik bagi teknisi instalasi untuk mempercepat proses eksekusi perintah ADB ke Android TV atau Set Top Box. Aplikasi ini berjalan murni di sistem operasi Windows.',
+    category: ProductCategory.productivity,
+    status: ProductStatus.beta,
+    accentHex: 0xFFF97316,
+    productUrl: 'https://costikstudio.com',
+    downloadUrl: 'https://drive.google.com/drive/folders/153-9t8cYYZFX_aOfaVI52KRSjKk1mYOT?usp=drive_link',
+    isFree: true,
+    isNew: true,
+    features: [
+      'Instalasi & Update aplikasi (APK) instan melalui jaringan atau kabel USB',
+      'Manajemen DCO (Clear Cache, Set, Verify, Remove)',
+      'Enable/Disable IPTV Launcher sebagai default launcher',
+      'Hapus User atau Account sistem yang tidak terpakai dari TV',
+    ],
+    isHidden: true, // Sembunyikan dari halaman publik
+  ),
 ];
 
 ProductItem? findProductById(String id) {
@@ -84,6 +107,6 @@ ProductItem? findProductById(String id) {
 
 List<ProductItem> productsByCategory(ProductCategory category) {
   return dummyProducts
-      .where((product) => product.category == category)
+      .where((product) => product.category == category && !product.isHidden)
       .toList();
 }

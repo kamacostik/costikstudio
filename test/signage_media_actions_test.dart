@@ -211,6 +211,19 @@ class _FakeSignageAdminRepository extends SignageAdminRepository {
   }) async {}
 
   @override
+  Future<void> updateDeviceEventTheme(
+    String deviceId, {
+    required SignageEventTheme eventTheme,
+  }) async {}
+
+  @override
+  Future<void> updateDeviceRunningText(
+    String deviceId, {
+    required bool runningTextEnabled,
+    String? runningText,
+  }) async {}
+
+  @override
   Future<void> updateDeviceEventBackground(
     String deviceId, {
     String? eventBackgroundUrl,
@@ -218,4 +231,15 @@ class _FakeSignageAdminRepository extends SignageAdminRepository {
 
   @override
   Future<void> deleteDevice(String deviceId) async {}
+
+  @override
+  Future<void> updateDeviceQrOverlay(
+    String deviceId, {
+    required bool qrEnabled,
+    String? qrUrl,
+    String? qrTitle,
+  }) {
+    // TODO: implement updateDeviceQrOverlay
+    throw UnimplementedError();
+  }
 }

@@ -39,6 +39,8 @@ class ProductItem {
     this.productUrl,
     this.images = const [],
     this.isFree = false,
+    this.isNew = false,
+    this.isHidden = false,
   });
 
   final String id;
@@ -54,6 +56,8 @@ class ProductItem {
   final String? productUrl;
   final List<ProductImage> images;
   final bool isFree;
+  final bool isNew;
+  final bool isHidden;
 
   bool get hasAdmin => adminUrl != null && adminUrl!.isNotEmpty;
   bool get hasDownload => downloadUrl != null && downloadUrl!.isNotEmpty;
@@ -88,6 +92,8 @@ class ProductItem {
       productUrl: productUrl,
       images: images ?? this.images,
       isFree: isFree,
+      isNew: isNew,
+      isHidden: isHidden,
     );
   }
 }

@@ -22,4 +22,4 @@ class AppExperienceScope extends InheritedWidget {
   }
 }
 
-enum AppExperience { user, admin }
+enum AppExperience { user, admin, adb }

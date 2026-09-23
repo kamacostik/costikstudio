@@ -74,6 +74,7 @@ abstract class BillingRepository {
     required int deviceCount,
     required int billingCycleMonths,
     bool autoRenew = false,
+    String? voucherCode,
   });
 
   Future<BillingSnapshot> renewIptvSubscription({

@@ -5,7 +5,9 @@
 
 create or replace function public.checkout_signage_subscription(
   device_count integer,
-  billing_cycle_months integer default 1
+  billing_cycle_months integer default 1,
+  p_auto_renew boolean default false,
+  p_voucher_code text default null
 )
 returns table (
   subscription_id uuid,
@@ -22,8 +24,13 @@ as $$
 declare
   current_user_id uuid := auth.uid();
   product public.products%rowtype;
+  promo public.promo_codes%rowtype;
+  normalized_voucher text := nullif(upper(trim(coalesce(p_voucher_code, ''))), '');
   current_balance numeric;
   total_amount numeric;
+  voucher_discount_amount numeric := 0;
+  promo_redemption_count integer := 0;
+  user_redemption_count integer := 0;
   inserted_subscription_id uuid;
   inserted_transaction_id uuid;
   inserted_invoice_id uuid;
@@ -75,6 +82,59 @@ begin
 
   total_amount := product.price_per_device * device_count * billing_cycle_months;
 
+  if normalized_voucher is not null then
+    select *
+      into promo
+    from public.promo_codes pc
+    where pc.code = normalized_voucher
+      and pc.is_active = true
+      and (pc.starts_at is null or pc.starts_at <= now())
+      and (pc.ends_at is null or pc.ends_at >= now());
+
+    if promo.id is null then
+      raise exception 'Voucher code is invalid or expired';
+    end if;
+
+    if promo.product_id != 'costik-signage' then
+      raise exception 'Voucher code is not valid for this product';
+    end if;
+
+    select count(*)
+      into promo_redemption_count
+    from public.promo_redemptions pr
+    where pr.promo_code_id = promo.id;
+
+    if promo.max_redemptions is not null
+       and promo_redemption_count >= promo.max_redemptions then
+      raise exception 'Voucher code redemption limit reached';
+    end if;
+
+    select count(*)
+      into user_redemption_count
+    from public.promo_redemptions pr
+    where pr.promo_code_id = promo.id
+      and pr.user_id = current_user_id;
+
+    if user_redemption_count >= promo.max_redemptions_per_user then
+      raise exception 'You have reached the maximum redemptions for this voucher';
+    end if;
+
+    -- For HITAINTIM specific rule or generally checking fixed_price vs percentage
+    if promo.fixed_price is not null then
+      if device_count != 1 or billing_cycle_months != 12 then
+        raise exception 'Voucher code is only valid for 1 device and 12 months billing cycle';
+      end if;
+      voucher_discount_amount := total_amount - promo.fixed_price;
+      if voucher_discount_amount < 0 then
+        voucher_discount_amount := 0;
+      end if;
+    else
+      voucher_discount_amount := round(total_amount * promo.discount_percent / 100);
+    end if;
+  end if;
+
+  total_amount := total_amount - voucher_discount_amount;
+
   if current_balance < total_amount then
     raise exception 'Insufficient wallet balance';
   end if;
@@ -119,7 +179,8 @@ begin
     total_amount,
     status,
     starts_at,
-    expires_at
+    expires_at,
+    auto_renew
   ) values (
     current_user_id,
     product.id,
@@ -128,7 +189,8 @@ begin
     total_amount,
     'active',
     now(),
-    subscription_expires_at
+    subscription_expires_at,
+    p_auto_renew
   ) returning id into inserted_subscription_id;
 
   insert into public.wallet_transactions (
@@ -161,6 +223,24 @@ begin
     now()
   ) returning id into inserted_invoice_id;
 
+  if promo.id is not null then
+    insert into public.promo_redemptions (
+      user_id,
+      promo_code_id,
+      product_id,
+      subscription_id,
+      invoice_id,
+      discount_amount
+    ) values (
+      current_user_id,
+      promo.id,
+      product.id,
+      inserted_subscription_id,
+      inserted_invoice_id,
+      voucher_discount_amount
+    );
+  end if;
+
   return query
   select
     inserted_subscription_id,
@@ -172,5 +252,5 @@ begin
 end;
 $$;
 
-revoke all on function public.checkout_signage_subscription(integer, integer) from public;
-grant execute on function public.checkout_signage_subscription(integer, integer) to authenticated;
+revoke all on function public.checkout_signage_subscription(integer, integer, boolean, text) from public;
+grant execute on function public.checkout_signage_subscription(integer, integer, boolean, text) to authenticated;

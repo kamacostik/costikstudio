@@ -40,7 +40,22 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (success) {
-      final isAdminApp = AppExperienceScope.of(context) == AppExperience.admin;
+      final experience = AppExperienceScope.of(context);
+
+      if (experience == AppExperience.adb) {
+        if (!authCubit.state.isAdmin) {
+          await authCubit.logout();
+          if (!mounted) return;
+          setState(() {
+            _errorMessage = 'Akses ditolak. ADB Manager hanya untuk admin.';
+          });
+          return;
+        }
+        context.go(AppRoutes.adbManager);
+        return;
+      }
+
+      final isAdminApp = experience == AppExperience.admin;
       if (authCubit.state.isAdmin) {
         context.go(isAdminApp ? AppRoutes.adminDashboard : AppRoutes.billing);
       } else if (isAdminApp) {
@@ -169,6 +184,82 @@ class _LoginPageState extends State<LoginPage> {
                                       ),
                                       const SizedBox(height: 18),
                                     ],
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 54,
+                                      child: OutlinedButton(
+                                        onPressed: authState.isLoading
+                                            ? null
+                                            : _handleGoogleLogin,
+                                        style: OutlinedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: Colors.black87,
+                                          side: BorderSide(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                          ),
+                                          elevation: 0,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.g_mobiledata_rounded,
+                                              size: 38,
+                                              color: Colors.blue.shade600,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            const Text(
+                                              'Lanjutkan dengan Google',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: -0.3,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 22),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Divider(
+                                            color: CostikStudioTheme.slate
+                                                .withValues(alpha: 0.2),
+                                          ),
+                                        ),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                          ),
+                                          child: Text(
+                                            'atau gunakan email',
+                                            style: TextStyle(
+                                              color: CostikStudioTheme.slate,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Divider(
+                                            color: CostikStudioTheme.slate
+                                                .withValues(alpha: 0.2),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 22),
                                     TextFormField(
                                       controller: _emailController,
                                       keyboardType: TextInputType.emailAddress,
@@ -292,23 +383,6 @@ class _LoginPageState extends State<LoginPage> {
                                           authState.isLoading
                                               ? 'Memproses...'
                                               : 'Masuk ke Dashboard',
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      height: 52,
-                                      child: OutlinedButton.icon(
-                                        onPressed: authState.isLoading
-                                            ? null
-                                            : _handleGoogleLogin,
-                                        icon: const Icon(
-                                          Icons.g_mobiledata_rounded,
-                                          size: 24,
-                                        ),
-                                        label: const Text(
-                                          'Masuk dengan Google',
                                         ),
                                       ),
                                     ),

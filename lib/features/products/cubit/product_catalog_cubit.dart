@@ -50,7 +50,8 @@ class ProductCatalogCubit extends Cubit<ProductCatalogState> {
     if (_hasLoaded && !forceRefresh) return;
     emit(state.copyWith(isLoading: true, clearError: true));
     try {
-      final products = await galleryLoader.attachAllImages(dummyProducts);
+      final publicProducts = dummyProducts.where((p) => !p.isHidden).toList();
+      final products = await galleryLoader.attachAllImages(publicProducts);
       _hasLoaded = true;
       emit(ProductCatalogState(products: products));
     } catch (error) {

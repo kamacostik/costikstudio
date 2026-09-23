@@ -37,16 +37,16 @@ begin
 
   return query
   select
-    t.id as tenant_id,
-    t.name as tenant_name,
-    sp.id as customer_user_id,
-    au.email as customer_email,
-    coalesce(sp.full_name, p.full_name, '') as customer_name,
-    s.status as subscription_status,
-    s.device_count as subscription_device_count,
-    s.expires_at as subscription_expires_at,
-    coalesce(d.device_total, 0) as device_total,
-    coalesce(d.device_active, 0) as device_active
+    t.id::uuid as tenant_id,
+    t.name::text as tenant_name,
+    sp.id::uuid as customer_user_id,
+    au.email::text as customer_email,
+    coalesce(sp.full_name, p.full_name, '')::text as customer_name,
+    s.status::text as subscription_status,
+    s.device_count::integer as subscription_device_count,
+    s.expires_at::timestamptz as subscription_expires_at,
+    coalesce(d.device_total, 0)::bigint as device_total,
+    coalesce(d.device_active, 0)::bigint as device_active
   from public.sg_tenants t
   left join public.sg_profiles sp
     on sp.tenant_id = t.id
