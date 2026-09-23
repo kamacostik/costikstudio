@@ -111,16 +111,7 @@ class SignageMediaSection extends StatelessWidget {
               for (final item in state.mediaItems)
                 DataRow(
                   cells: [
-                    DataCell(
-                      SignageReferenceCell(
-                        icon: item.mediaType == 'video'
-                            ? Icons.movie_rounded
-                            : Icons.image_rounded,
-                        iconColor: CostikStudioTheme.primary,
-                        title: item.fileName,
-                        reference: item.id ?? '-',
-                      ),
-                    ),
+                    DataCell(_MediaPreviewCell(item: item)),
                     DataCell(Text(item.mediaType.toUpperCase())),
                     DataCell(
                       ConstrainedBox(
@@ -240,8 +231,9 @@ class SignageMediaSection extends StatelessWidget {
                                   );
                                   if (file == null || !context.mounted) return;
                                   final bytes = await file.readAsBytes();
-                                  if (bytes.isEmpty || !dialogContext.mounted)
+                                  if (bytes.isEmpty || !dialogContext.mounted) {
                                     return;
+                                  }
 
                                   // Validasi format gambar menggunakan image codec
                                   try {
@@ -393,6 +385,80 @@ class SignageMediaSection extends StatelessWidget {
     if (confirmed == true && context.mounted && item.id != null) {
       await context.read<SignageAdminCubit>().deleteMedia(item.id!);
     }
+  }
+}
+
+class _MediaPreviewCell extends StatelessWidget {
+  const _MediaPreviewCell({required this.item});
+
+  final SignageMediaItem item;
+
+  bool get _isImage => item.mediaType.toLowerCase() == 'image';
+
+  String get _url => (item.publicUrl ?? item.storagePath).trim();
+
+  @override
+  Widget build(BuildContext context) {
+    final url = _url;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: 72,
+            height: 46,
+            color: CostikStudioTheme.primary.withValues(alpha: 0.08),
+            alignment: Alignment.center,
+            child: _isImage && url.isNotEmpty
+                ? Image.network(
+                    url,
+                    width: 72,
+                    height: 46,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.broken_image_rounded,
+                      size: 22,
+                      color: CostikStudioTheme.slate.withValues(alpha: 0.75),
+                    ),
+                  )
+                : Icon(
+                    Icons.movie_rounded,
+                    size: 24,
+                    color: CostikStudioTheme.primary,
+                  ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 230),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                item.fileName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: CostikStudioTheme.navy,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              Text(
+                item.id ?? '-',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: CostikStudioTheme.slate,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
